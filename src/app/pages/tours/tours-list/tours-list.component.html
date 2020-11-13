@@ -1,0 +1,29 @@
+<div class="panel panel-primary">
+    <div class="input-group mb-4">
+      <input type="text" class="form-control" [(ngModel)]="email" placeholder="Search by name"/>
+    </div>
+      
+    <div class="panel-body">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Tour Name</th>
+            <th>Category Name</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let tour of tours | filter:email; let id = index">
+            <td>{{ id + 1}}</td>
+            <td>{{tour.name}}</td>
+            <td>{{tour.categoryName.name}}</td>
+            <td>
+              <button routerLink="../update" class="btn btn-info" style="margin-left: 10px;">Edit</button>
+              <button (click)="deleteTour(tour._id)" class="btn btn-info" style="margin-left: 10px;">Remove Feedback</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
