@@ -3,7 +3,6 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { UserAuth } from 'app/_model/user-auth';
 import { environment } from 'environments/environment';
-import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 
@@ -11,17 +10,9 @@ import { map } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class AuthService {
-  private userSubject: BehaviorSubject<UserAuth>;
-    public user: Observable<UserAuth>;
+  user: any;
 
-
-  constructor(private http: HttpClient, private router: Router) {
-    this.userSubject = new BehaviorSubject<UserAuth>(JSON.parse(localStorage.getItem('user')));
-        this.user = this.userSubject.asObservable();
-   }
-   public get userValue(): UserAuth {
-    return this.userSubject.value;
-}
+  constructor(private http: HttpClient, private router: Router) { }
 
   login(email, password) {
     return this.http.post<UserAuth>(`${environment.appUrl}/admin/login`, { email, password })

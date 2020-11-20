@@ -12,10 +12,10 @@ const routes: Routes = [{
   path: '',
   component: CatagoriesComponent,
   children: [
-      { path: 'category-list', component: CategoryListComponent, canActivate: [AuthGuard]  },
-      { path: 'add', component: CreateCategoryComponent, canActivate: [AuthGuard]  },
-      { path: 'update/:id', component: UpdateCategoryComponent, canActivate: [AuthGuard]  },
-      { path: 'details/:id', component: CategoryDetailsComponent, canActivate: [AuthGuard]  },   
+      { path: 'category-list', component: CategoryListComponent},
+      { path: 'add', component: CreateCategoryComponent},
+      { path: 'update/:id', component: UpdateCategoryComponent},
+      { path: 'details/:id', component: CategoryDetailsComponent},   
   ],
   
 },];

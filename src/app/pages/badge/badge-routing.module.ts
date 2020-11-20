@@ -12,10 +12,10 @@ const routes: Routes = [{
   path: '',
   component: BadgeComponent,
   children: [
-      { path: 'badge-list', component: BadgeListComponent, canActivate: [AuthGuard] },
-      { path: 'add', component: BadgeCreateComponent, canActivate: [AuthGuard] },
-      { path: 'update/:id', component: BadgeUpdateComponent, canActivate: [AuthGuard] },
-      { path: 'details/:id', component: BadgeViewComponent, canActivate: [AuthGuard] },   
+      { path: 'badge-list', component: BadgeListComponent},
+      { path: 'add', component: BadgeCreateComponent},
+      { path: 'update/:id', component: BadgeUpdateComponent},
+      { path: 'details/:id', component: BadgeViewComponent},   
   ],
   
 },];

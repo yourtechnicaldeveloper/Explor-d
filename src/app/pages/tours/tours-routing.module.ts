@@ -11,9 +11,9 @@ const routes: Routes = [{
   path: '',
   component: ToursComponent,
   children: [
-      { path: 'tours-list', component: ToursListComponent, canActivate: [AuthGuard]  },
-      { path: 'add', component: ToursCreateComponent, canActivate: [AuthGuard]  },
-      { path: 'update', component: ToursUpdateComponent, canActivate: [AuthGuard]  },   
+      { path: 'tours-list', component: ToursListComponent},
+      { path: 'add', component: ToursCreateComponent},
+      { path: 'update', component: ToursUpdateComponent},   
   ],
   
 },];

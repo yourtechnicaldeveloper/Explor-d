@@ -19,8 +19,7 @@ import {
 } from '@nebular/theme';
 
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
-import { AuthService } from 'app/core_auth/auth/auth.service';
-import { AuthGuard } from 'app/core_auth/auth/auth.guard';
+
 
 @NgModule({
   imports: [
@@ -46,11 +45,8 @@ import { AuthGuard } from 'app/core_auth/auth/auth.guard';
     PagesComponent,
     UserListComponent,
   ],
-  providers:[
-    AuthService,
-    AuthGuard
-  ]
  
 })
 export class PagesModule {
+
 }
