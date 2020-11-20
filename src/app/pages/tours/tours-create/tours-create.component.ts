@@ -156,7 +156,7 @@ export class ToursCreateComponent implements OnInit {
     );
     
       // alert('Form Submitted succesfully!!!');
-      this.router.navigate(['../tours-list']);
+      this.router.navigate(['/pages/tours/tours-list']);
       console.table(this.form.value);
     }
     // 

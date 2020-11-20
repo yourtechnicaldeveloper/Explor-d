@@ -23,6 +23,6 @@ export class BadgeViewComponent implements OnInit {
 
   }
   list(){
-    this.router.navigate(['categories/category-list']);
+    this.router.navigate(['/pages/badge/badge-list']);
   }
 }

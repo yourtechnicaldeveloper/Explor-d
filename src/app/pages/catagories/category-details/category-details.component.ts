@@ -25,7 +25,7 @@ export class CategoryDetailsComponent implements OnInit {
 
   }
   list(){
-    this.router.navigate(['categories/category-list']);
+    this.router.navigate(['/pages/categories/category-list']);
   }
 
 }

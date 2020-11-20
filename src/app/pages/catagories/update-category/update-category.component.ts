@@ -56,7 +56,7 @@ export class UpdateCategoryComponent implements OnInit {
     );
     
       // alert('Form Submitted succesfully!!!');
-      this.router.navigate(['../category-list']);
+      this.router.navigate(['/pages/categories/category-list']);
       console.table(this.form.value);
     }
   }

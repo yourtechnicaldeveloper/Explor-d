@@ -156,7 +156,7 @@ export class BadgeUpdateComponent implements OnInit {
     );
     
       // alert('Form Submitted succesfully!!!');
-      this.router.navigateByUrl('../badge-list');
+      this.router.navigateByUrl('/pages/badge/badge-list');
       console.table(this.form.value);
     }
     // 
