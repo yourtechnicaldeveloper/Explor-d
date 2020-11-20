@@ -50,6 +50,7 @@
     "@progress/kendo-angular-dropdowns": "^4.4.1",
     "@progress/kendo-angular-l10n": "^2.0.3",
     "@swimlane/ngx-charts": "^14.0.0",
+    "angular-local-storage": "^0.7.1",
     "angular2-chartjs": "0.4.1",
     "bootstrap": "4.3.1",
     "chart.js": "2.7.1",

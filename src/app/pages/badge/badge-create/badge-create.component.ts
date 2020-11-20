@@ -148,7 +148,7 @@ export class BadgeCreateComponent implements OnInit {
     this.submitted = true;
     if (this.form.valid) {
 
-      this.http.post('http://18.224.173.145:2000/badge/create', formData, { headers: this.getHeader(FormData) }).subscribe(
+      this.http.post('http://18.217.48.28:2000/badge/create', formData, { headers: this.getHeader(FormData) }).subscribe(
       (response) => console.log(response),
       (error) => console.log(error)
       

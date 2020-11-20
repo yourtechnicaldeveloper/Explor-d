@@ -6,23 +6,28 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { ECommerceComponent } from './e-commerce/e-commerce.component';
 import { NotFoundComponent } from './miscellaneous/not-found/not-found.component';
 import { UserListComponent } from './user-list/user-list.component';
+import { AuthGuard } from 'app/core_auth/auth/auth.guard';
 
 const routes: Routes = [{
   path: '',
   component: PagesComponent,
+  canActivate:[AuthGuard],
   children: [
     {
       path: 'dashboard',
       component: ECommerceComponent,
+      canActivate:[AuthGuard]
     },
     {
       path: 'iot-dashboard',
       component: DashboardComponent,
+      canActivate:[AuthGuard]
     },
     {
       path: 'layout',
       loadChildren: () => import('./layout/layout.module')
         .then(m => m.LayoutModule),
+        
     },
     {
       path: 'forms',
@@ -68,20 +73,24 @@ const routes: Routes = [{
       path: 'categories',
       loadChildren: () => import('./catagories/catagories.module')
         .then(m => m.CatagoriesModule),
+        canActivate:[AuthGuard]
     },
     {
       path: 'tours',
       loadChildren: () => import('./tours/tours.module')
         .then(m => m.ToursModule),
+        canActivate:[AuthGuard]
     },
     {
       path: 'badge',
       loadChildren: () => import('./badge/badge.module')
         .then(m => m.BadgeModule),
+        canActivate:[AuthGuard]
     },
     {
       path: 'user',
       component: UserListComponent,
+      canActivate:[AuthGuard]
     },
     {
       path: 'miscellaneous',
@@ -92,10 +101,12 @@ const routes: Routes = [{
       path: '',
       redirectTo: 'dashboard',
       pathMatch: 'full',
+      canActivate:[AuthGuard]
     },
     {
       path: '**',
       component: NotFoundComponent,
+      canActivate:[AuthGuard]
     },
   ],
 }];

@@ -5,5 +5,5 @@
  */
 export const environment = {
   production: true,
-  appUrl: 'http://18.224.173.145:2000'
+  appUrl: 'http://18.217.48.28:2000'
 };
