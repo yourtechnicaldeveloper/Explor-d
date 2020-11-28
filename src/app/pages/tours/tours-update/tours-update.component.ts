@@ -16,7 +16,7 @@ import { NgIf } from '@angular/common';
 export class ToursUpdateComponent implements OnInit {
 
   private activeRoute: any;
-  
+  myFiles:string [] = [];
   categories: any[] = [];
   tour: any = [];
   submitted = false;
@@ -151,12 +151,15 @@ export class ToursUpdateComponent implements OnInit {
   }
   
   uploadProfile(event) {
-    const userProfile = (event.target as HTMLInputElement).files[0];
-    this.form.patchValue({
-      picture: userProfile
-    });
-    this.form.get('picture').updateValueAndValidity();
+    // const userProfile = (event.target as HTMLInputElement).files[0];
+    // this.form.patchValue({
+    //   picture: userProfile
+    // });
+    // this.form.get('picture').updateValueAndValidity();
+    for (var i = 0; i < event.target.files.length; i++) { 
+      this.myFiles.push(event.target.files[i]);
   }
+}
   
 
   uploadAudio(event) {
@@ -171,7 +174,9 @@ export class ToursUpdateComponent implements OnInit {
     //console.log(this.form.value.categoryName);
     if(this.form.get('picture').value != null)
     {
-      formData.append("picture", this.form.get('picture').value);
+      for (var i = 0; i < this.myFiles.length; i++) { 
+        formData.append("picture", this.myFiles[i]);
+      }
     }
     if(this.form.get('audio').value != null)
     {

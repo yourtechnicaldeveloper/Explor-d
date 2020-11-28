@@ -14,7 +14,7 @@ import { FileTypeValidatorDirective } from 'app/directives/file-type-validator.d
 })
 export class ToursCreateComponent implements OnInit {
   categories: any[] = [];
-
+  myFiles:string [] = [];
   submitted = false;
   latitude: number;
   longitude: number;
@@ -121,11 +121,14 @@ export class ToursCreateComponent implements OnInit {
   }
   
   uploadProfile(event) {
-    const userProfile = (event.target as HTMLInputElement).files[0];
-    this.form.patchValue({
-      picture: userProfile
-    });
-    this.form.get('picture').updateValueAndValidity();
+    // const userProfile = (event.target as HTMLInputElement).files[0];
+    // this.form.patchValue({
+    //   picture: userProfile
+    // });
+    // this.form.get('picture').updateValueAndValidity();
+    for (var i = 0; i < event.target.files.length; i++) { 
+      this.myFiles.push(event.target.files[i]);
+    }
   }
 
   uploadAudio(event) {
@@ -137,7 +140,9 @@ export class ToursCreateComponent implements OnInit {
   }
   submitForm() {
     var formData: any = new FormData();
-    formData.append("picture", this.form.get('picture').value);
+    for (var i = 0; i < this.myFiles.length; i++) { 
+      formData.append("picture", this.myFiles[i]);
+    }
     formData.append("lat", this.latitude);
     formData.append("long", this.longitude);
     formData.append("name", this.form.value.name)

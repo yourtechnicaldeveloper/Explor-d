@@ -16,7 +16,7 @@
       <tbody>
         <tr>
           <th>Picture</th>
-          <td><p><a href="{{tours.picture}}" target="_blank"><img src="{{tours.picture}}" alt="Picture"></a></p></td>
+          <td><p *ngFor="let picture of tours.picture" ><a href="{{picture}}" target="_blank"><img src="{{picture}}" alt="Picture"></a></p></td>
         </tr>
         <tr>
           <th>Name</th>
