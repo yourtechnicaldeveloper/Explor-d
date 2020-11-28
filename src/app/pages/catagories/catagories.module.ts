@@ -3,7 +3,6 @@ import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 
-
 import { CatagoriesComponent } from '../catagories/catagories.component';
 import {
   NbActionsModule,

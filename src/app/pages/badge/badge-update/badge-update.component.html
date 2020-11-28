@@ -1,12 +1,19 @@
 <div class="container">
+    <nav class="navbar navbar-expand-sm bg-primary navbar-dark">
+        <!-- Links -->
+        <ul class="navbar-nav">
+          <li class="nav-item">
+              <h2>Update Badge</h2>
+          </li>
+          <li class="nav-item right-btn">
+            <a href="/pages/badge/badge-list" routerlink="/pages/badge/badge-list" class="btn nav-link">Back</a>
+          </li>
+        </ul>
+        </nav>
     <form [formGroup]="form" (ngSubmit)="submitForm()">
         <div class="form-group input-group-lg">
-            <label for="id">Id</label>
-            <input class="form-control" placeholder="Id" formControlName="id" name="id">
-        </div>
-        <div class="form-group input-group-lg">
             <label for="name">Name</label>
-            <input class="form-control" placeholder="Name" formControlName="name">
+            <input class="form-control" placeholder="Name" formControlName="name" [(ngModel)]="badges.name">
         </div>
 
         <div class="form-group input-group-lg">
@@ -14,7 +21,7 @@
             <label for="categoryName">Tours Name</label>
                 <select formControlName="tours" class="form-control custom-select" id="tours" [multiple]="true" >
                     <option [value]="null">Select Tours</option>
-                    <option *ngFor="let tour of tours" id="tours" [value]="tour._id">{{tour.name}}</option>
+                    <option *ngFor="let tour of badges.tours" id="tours" [value]="tour._id">{{badges.tour.name}}</option>
                 </select>
                 <span class="text-danger"
                     *ngIf="(registerFormControl.tours.touched || submitted) && registerFormControl.tours.errors?.required">
@@ -25,11 +32,7 @@
 
         <div class="form-group">
             <label for="badgeIcon">Badge Icon</label>
-            <input type="file" (change)="uploadProfile($event)" id="badgeIcon" name="badgeIcon" class="form-control" formControlName="badgeIcon" >
-            <span class="text-danger"
-                *ngIf="(registerFormControl.badgeIcon.touched || submitted) && registerFormControl.badgeIcon.errors?.required">
-                Picture is required
-            </span>
+            <input type="image" src="{{badges.badgeIcon}}">
         </div>
 
         <div class="form-group input-group-lg">

@@ -1,3 +1,14 @@
+<nav class="navbar navbar-expand-sm bg-primary navbar-dark">
+  <!-- Links -->
+  <ul class="navbar-nav">
+     <li class="nav-item">
+         <h2>Create Category</h2>
+     </li>
+     <li class="nav-item right-btn">
+      <a href="/pages/categories/category-list" routerlink="/pages/categories/category-list" class="btn nav-link" ng-reflect-router-link="/pages/categories/category-list">Back</a>
+     </li>
+  </ul>
+ </nav>
 <div style="width: 500px; margin: auto;">
   <div class="submit-form">
       <form [formGroup]="form" (ngSubmit)="submitForm()">
@@ -9,7 +20,6 @@
           <label for="name">Name</label>
           <input class="form-control" placeholder="Name" formControlName="name" name="name">
         </div>
-      
       <div class="form-group">
           <button class="btn btn-info">Create</button>
       </div>

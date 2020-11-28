@@ -1,30 +1,31 @@
+
+
 <div class="container">
-    <form [formGroup]="form" (ngSubmit)="submitForm()">
+    <nav class="navbar navbar-expand-sm bg-primary navbar-dark">
+        <!-- Links -->
+        <ul class="navbar-nav">
+          <li class="nav-item">
+              <h2>Create Tour</h2>
+          </li>
+          <li class="nav-item right-btn">
+            <a href="/pages/tours/tours-list" routerlink="/pages/tours/tours-list" class="btn nav-link">Back</a>
+          </li>
+        </ul>
+        </nav>
+    <form #heroForm="ngForm" [formGroup]="form" (ngSubmit)="submitForm()">
         <div class="form-group">
             <label for="picture">Picture</label>
-            <input type="file" (change)="uploadProfile($event)" id="picture" name="picture" class="form-control" formControlName="picture" >
-            <span class="text-danger"
-                *ngIf="(registerFormControl.picture.touched || submitted) && registerFormControl.picture.errors?.required">
-                Picture is required
-            </span>
+            <input type="file" multiple (change)="uploadProfile($event)" id="picture" name="picture" class="form-control" formControlName="picture" >
         </div>
 
         <div class="form-group input-group-lg">
             <label for="name">Name</label>
             <input class="form-control" placeholder="Name" id="name" formControlName="name" name="name">
-            <span class="text-danger"
-                *ngIf="(registerFormControl.name.touched || submitted) && registerFormControl.name.errors?.required">
-                Name is required
-            </span>
         </div>
 
         <div class="form-group input-group-lg">
             <label for="description">Description</label>
             <textarea class="form-control" id="description" placeholder="Description" formControlName="description"></textarea>
-            <span class="text-danger"
-                *ngIf="(registerFormControl.name.touched || submitted) && registerFormControl.name.errors?.required">
-                Name is required
-            </span>
         </div>
 
         <div class="form-group input-group-lg">
@@ -33,28 +34,16 @@
                 <option [value]="null">Select Category</option>
                 <option *ngFor="let category of categories" id="categoryName" [value]="category._id">{{category.name}}</option>
               </select>
-              <span class="text-danger"
-                *ngIf="(registerFormControl.categoryName.touched || submitted) && registerFormControl.categoryName.errors?.required">
-                Category name is required
-            </span>
         </div>
 
         <div class="form-group">
             <label for="audio">Audio</label>
             <input type="file" (change)="uploadAudio($event)" name="audio" id="audio" class="form-control" formControlName="audio">
-            <span class="text-danger"
-                *ngIf="(registerFormControl.audio.touched || submitted) && registerFormControl.audio.errors?.required">
-                Audio File is required (Only Upload MP3 File)
-            </span>
         </div>
 
         <div class="form-group input-group-lg">
             <label for="transcript">Transcript</label>
             <textarea class="form-control" placeholder="Transcript" id="transcript" formControlName="transcript"></textarea>
-            <span class="text-danger"
-                *ngIf="(registerFormControl.transcript.touched || submitted) && registerFormControl.transcript.errors?.required">
-                Transcript is required
-            </span>
         </div>
 
         <div class="form-group input-group-lg">

@@ -27,9 +27,16 @@ import { from } from 'rxjs';
 import { AgmCoreModule } from '@agm/core';
 import { ToursDetailComponent } from './tours-detail/tours-detail.component';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
+
+import { AngMusicPlayerModule } from  'ang-music-player';
+
+import { NgSelectModule } from '@ng-select/ng-select';
+
 @NgModule({
   declarations: [ToursListComponent, ToursCreateComponent, ToursUpdateComponent, ToursComponent, ToursDetailComponent],
   imports: [
+    NgSelectModule,
+    AngMusicPlayerModule,
     Ng2SearchPipeModule,
     ToursRoutingModule,
     ReactiveFormsModule,

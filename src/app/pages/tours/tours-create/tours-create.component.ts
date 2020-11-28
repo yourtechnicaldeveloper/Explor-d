@@ -41,6 +41,7 @@ export class ToursCreateComponent implements OnInit {
       })
 
      }
+     
      reloadData(){
       this.restService.get("/category/categoryList").subscribe((data) => {
         this.categories = data.data;
@@ -150,17 +151,17 @@ export class ToursCreateComponent implements OnInit {
     if (this.form.valid) {
 
       this.http.post('http://18.217.48.28:2000/tours/create', formData, { headers: this.getHeader(FormData) }).subscribe(
-      (response) => console.log(response),
+      (response) => this.refresh(response),
       (error) => console.log(error)
       
     );
-    
-      // alert('Form Submitted succesfully!!!');
-      this.router.navigate(['/pages/tours/tours-list']);
       console.table(this.form.value);
     }
-    // 
-  
+  }
+    refresh(response){
+      if(response['meta']['status'] == 201){
+        this.router.navigate(['/pages/tours/tours-list']);
+      }    
     }
   getHeader(isFormData?) {
     let headers: HttpHeaders = new HttpHeaders();

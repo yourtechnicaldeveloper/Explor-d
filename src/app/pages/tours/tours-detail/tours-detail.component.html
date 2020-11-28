@@ -1,65 +1,59 @@
-<div style="width: 400px; margin: auto;">
-    <div *ngIf="currentTours" class="edit-form">
-      <h4>Tutorial</h4>
-      <form>
-        <div class="form-group">
-          <label for="title">Title</label>
-          <input
-            type="text"
-            class="form-control"
-            id="title"
-            [(ngModel)]="currentTours.title"
-            name="title"
-          />
-        </div>
-        <div class="form-group">
-          <label for="description">Description</label>
-          <input
-            type="text"
-            class="form-control"
-            id="description"
-            [(ngModel)]="currentTours.description"
-            name="description"
-          />
-        </div>
-  
-        <div class="form-group">
-          <label><strong>Status:</strong></label>
-          {{ currentTours.published ? "Published" : "Pending" }}
-        </div>
-      </form>
-  
-      <button
-        class="badge badge-primary mr-2"
-        *ngIf="currentTutorial.published"
-        (click)="updatePublished(false)"
-      >
-        UnPublish
-      </button>
-      <button
-        *ngIf="!currentTutorial.published"
-        class="badge badge-primary mr-2"
-        (click)="updatePublished(true)"
-      >
-        Publish
-      </button>
-  
-      <button class="badge badge-danger mr-2" (click)="deleteTours()">
-        Delete
-      </button>
-  
-      <button
-        type="submit"
-        class="badge badge-success"
-        (click)="updateTours()"
-      >
-        Update
-      </button>
-      <p>{{ message }}</p>
-    </div>
-  
-    <div *ngIf="!currentTours">
-      <br />
-      <p>Cannot access this Tutorial...</p>
-    </div>
+
+ <nav class="navbar navbar-expand-sm bg-primary navbar-dark">
+  <!-- Links -->
+  <ul class="navbar-nav">
+    <li class="nav-item">
+        <h2>Tour Detail</h2>
+    </li>
+    <li class="nav-item right-btn">
+      <a href="/pages/tours/tours-list" routerlink="/pages/tours/tours-list" class="btn nav-link">Back</a>
+    </li>
+  </ul>
+  </nav>
+  <div class="panel panel-primary">
+  <div class="panel-body">
+    <table class="table table-striped">
+      <tbody>
+        <tr>
+          <th>Picture</th>
+          <td><p><a href="{{tours.picture}}" target="_blank"><img src="{{tours.picture}}" alt="Picture"></a></p></td>
+        </tr>
+        <tr>
+          <th>Name</th>
+          <td>{{tours.name}}</td>
+        </tr>
+        <tr>
+          <th>Description</th>
+          <td>{{tours.description}}</td>
+        </tr>
+        <tr>
+          <th>Category Name</th>
+          <td>{{tours.categoryName}}</td>
+        </tr>
+        <tr>
+          <th>Audio</th>
+          <td>
+            <audio src="{{tours.audio}}" audio player controls pre-load="none"></audio>
+          </td>
+        </tr>
+        <tr>
+          <th>transcript</th>
+          <td>{{tours.transcript}}</td>
+        </tr>
+        <tr>
+          <th>Location</th>
+            <td>
+              <div class="form-group input-group-lg">
+                <div class="container">
+                      <agm-map [latitude]="latitude" [longitude]="longitude" [zoom]="zoom">
+                        <agm-marker [latitude]="latitude" [longitude]="longitude"></agm-marker>
+                      </agm-map>
+                </div>
+              </div>
+            </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
+</div>
+

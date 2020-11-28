@@ -8,7 +8,7 @@ import { first } from 'rxjs/operators';
   styleUrls: ['./tours-list.component.scss']
 })
 export class ToursListComponent implements OnInit {
-  tours = null;
+  tours: any[] = [];
   email : string;
   constructor(private restService: RestService) { }
 
@@ -22,13 +22,6 @@ export class ToursListComponent implements OnInit {
     }, (error) => {
       console.log(error)
     });
-  }
-
-  deleteTour(id: string) {
-    const tour = this.tours.find(x => x.id === id);
-    return this.tours.delete(id)
-        .pipe(first())
-        .subscribe(() => this.tours = this.tours.filter(x => x.id !== id));
   }
   
 }

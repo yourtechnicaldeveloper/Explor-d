@@ -37,11 +37,14 @@ export class CreateCategoryComponent implements OnInit {
     formData.append("name", this.form.get('name').value);
     formData.append("icon", this.form.get('icon').value);
     this.http.post('http://18.217.48.28:2000/category/create', formData, { headers: this.getHeader(FormData) }).subscribe(
-      (response) => console.log(response),
+      (response) => this.refresh(response),
       (error) => console.log(error)
     )
-  
-    this.router.navigate(['/pages/categories/category-list']);
+  }
+  refresh(response){
+    if(response['meta']['status'] == 201){
+      this.router.navigate(['/pages/categories/category-list']);
+    }    
   }
   getHeader(isFormData?) {
     let headers: HttpHeaders = new HttpHeaders();

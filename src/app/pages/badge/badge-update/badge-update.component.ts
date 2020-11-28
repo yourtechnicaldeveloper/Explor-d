@@ -1,9 +1,10 @@
 import { Component, OnInit, ViewChild, ElementRef, NgZone  } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl  } from "@angular/forms";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MapsAPILoader  } from '@agm/core';
 import { RestService } from 'app/core_auth/services/rest.service';
+import { FormDataService } from 'app/core_auth/services/formdata.service';
 
 @Component({
   selector: 'ngx-badge-update',
@@ -11,12 +12,14 @@ import { RestService } from 'app/core_auth/services/rest.service';
   styleUrls: ['./badge-update.component.scss']
 })
 export class BadgeUpdateComponent implements OnInit {
+
+  private activeRoute: any;
   id: any;
   badge: string[] = [];
   
   showMyContainer: boolean = false;
   tours: string[] = [];
-
+  badges: any;
   submitted = false;
   latitude: number;
   longitude: number;
@@ -28,7 +31,7 @@ export class BadgeUpdateComponent implements OnInit {
 
   form: FormGroup;
   constructor(private http: HttpClient, private router: Router,public fb: FormBuilder, private mapsAPILoader: MapsAPILoader,
-    private ngZone: NgZone, private restService: RestService) {
+    private ngZone: NgZone, private restService: RestService, private route: ActivatedRoute, private formDataService: FormDataService,) {
 
       this.form = this.fb.group({
         id:[''],
@@ -50,9 +53,16 @@ export class BadgeUpdateComponent implements OnInit {
      }
 
   ngOnInit(): void {
-    
-
-
+    var id;
+    this.activeRoute = this.route.params.subscribe(params => {
+    id = { "_id" : params['id'] };
+   });
+  
+  this.restService.post("/badge/view", id).subscribe((data) => {
+    this.badges = data.data;
+  }, (error) => {
+    console.log(error)
+  });
     this.reloadData();
       
     
@@ -147,9 +157,13 @@ export class BadgeUpdateComponent implements OnInit {
     
     
     this.submitted = true;
+    var id;
+    this.activeRoute = this.route.params.subscribe(params => {
+    id = { "_id" : params['id'] };
+   });
     if (this.form.valid) {
 
-      this.http.post('http://18.217.48.28:2000/badge/update', formData, { headers: this.getHeader(FormData) }).subscribe(
+      this.http.post('http://18.217.48.28:2000/badge/update' , formData, { headers: this.getHeader(FormData) }).subscribe(
       (response) => console.log(response),
       (error) => console.log(error)
       
@@ -170,6 +184,12 @@ export class BadgeUpdateComponent implements OnInit {
     }
     headers = headers.append('Authorization', localStorage.getItem('access_token'));
     return headers;
+  }
+
+  ngOnDestroy() {
+    if (this.activeRoute) {
+      this.activeRoute.unsubscribe();
+    }
   }
 
 }

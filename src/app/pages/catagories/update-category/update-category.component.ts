@@ -16,6 +16,9 @@ import { Category } from 'app/_model/category';
 })
 
 export class UpdateCategoryComponent implements OnInit {
+  isNotShowDiv = true
+  isShowDiv = false;
+  
   category: Category;
   private activeRoute: any;
   submitted = false;
@@ -29,8 +32,20 @@ export class UpdateCategoryComponent implements OnInit {
     })
   }
   
-  
+  toggleDisplayDiv() {
+    this.isShowDiv = !this.isShowDiv;
+    this.isNotShowDiv = !this.isNotShowDiv;
+  }
   ngOnInit(): void{
+    var id;
+    this.activeRoute = this.route.params.subscribe(params => {
+    id = { "_id" : params['id'] };
+   });
+    this.restService.post("/category/view", id).subscribe((data) => {
+      this.category = data.data;
+    }, (error) => {
+      console.log(error)
+    });
   
   }
 
@@ -42,23 +57,28 @@ export class UpdateCategoryComponent implements OnInit {
     this.form.get('icon').updateValueAndValidity()
   }
   submitForm() {
+    
     var formData: any = new FormData();
-    formData.append("icon", this.form.get('icon').value);
+    if(this.form.get('icon').value != null)
+    {
+      formData.append("icon", this.form.get('icon').value);
+    }
     formData.append("name", this.form.get('name').value);
     var id;
     this.activeRoute = this.route.params.subscribe(params => {
     id = params['id'];
-   });
+    });
     this.submitted = true;
     if (this.form.valid) {
-      this.http.post('http://18.217.48.28:2000/category/categoryUpdate/{{id}}', formData, { headers: this.getHeader(FormData) }).subscribe(
-      (response) => console.log(response),
+      this.http.post('http://18.217.48.28:2000/category/categoryUpdate/' + id, formData, { headers: this.getHeader(FormData) }).subscribe(
+      (response) => this.refresh(response),
     );
-    
-      // alert('Form Submitted succesfully!!!');
-      this.router.navigate(['/pages/categories/category-list']);
-      console.table(this.form.value);
     }
+  }
+  refresh(response){
+    if(response['meta']['status'] == 200){
+      this.router.navigate(['/pages/categories/category-list']);
+    }    
   }
   getHeader(isFormData?) {
     let headers: HttpHeaders = new HttpHeaders();
@@ -71,7 +91,6 @@ export class UpdateCategoryComponent implements OnInit {
   }
 
   ngOnDestroy() {
-    debugger
     if (this.activeRoute) {
       this.activeRoute.unsubscribe();
     }

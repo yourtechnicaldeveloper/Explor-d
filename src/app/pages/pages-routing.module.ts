@@ -6,6 +6,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { ECommerceComponent } from './e-commerce/e-commerce.component';
 import { NotFoundComponent } from './miscellaneous/not-found/not-found.component';
 import { UserListComponent } from './user-list/user-list.component';
+import { AuthGuard } from 'app/core_auth/auth/auth.guard';
 
 
 const routes: Routes = [{
