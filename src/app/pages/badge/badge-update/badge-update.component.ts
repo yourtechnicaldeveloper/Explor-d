@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef, NgZone  } from '@angular/core';
-import { FormBuilder, FormGroup, FormControl  } from "@angular/forms";
+import { FormBuilder, FormGroup, FormControl, Validators  } from "@angular/forms";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MapsAPILoader  } from '@agm/core';
@@ -36,12 +36,13 @@ export class BadgeUpdateComponent implements OnInit {
         badgeIcon: [null],
         latitude:[''],
         longitude:[''],
-        name: [''],
-        tours: [''],
+        name: ['', Validators.required],
+        tours: ['', Validators.required],
         toggle:[],
       })
 
      }
+     get f() { return this.form.controls; }
      toggleDisplayDiv() {
       this.isNotShowDiv = !this.isNotShowDiv;
     }
@@ -121,7 +122,7 @@ export class BadgeUpdateComponent implements OnInit {
       navigator.geolocation.getCurrentPosition((position) => {
         this.latitude = position.coords.latitude;
         this.longitude = position.coords.longitude;
-        this.zoom = 22;
+        this.zoom = 15;
       });
     }
   }

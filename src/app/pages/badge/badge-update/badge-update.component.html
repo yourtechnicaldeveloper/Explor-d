@@ -13,15 +13,23 @@
     <form [formGroup]="form" (ngSubmit)="submitForm()">
         <div class="form-group input-group-lg">
             <label for="name">Name</label>
-            <input class="form-control" placeholder="Name" formControlName="name" [(ngModel)]="badges.name">
+            <input class="form-control" placeholder="Name" formControlName="name" [(ngModel)]="badges.name" [ngClass]="{ 'is-invalid': submitted && f.name.errors }">
+            <div *ngIf="submitted && f.name.errors" class="invalid-feedback">
+                <div *ngIf="f.name.errors.required">Name is required</div>
+            </div>
         </div>
-
+        
         <div class="form-group input-group-lg">
-            <label for="categoryName">Change Badge Name</label>
-            <select formControlName="tours" class="form-control" class="form-control" id="tours" [multiple]="true">
-                <option value="" disabled>select tours</option>
-                <option *ngFor="let tour of tours" id="tours" [value]="tour._id">{{tours.name}}</option>
-              </select>
+            <div class="md-form">
+            <label for="tours">ChangeTours Name</label>
+                <select formControlName="tours" class="form-control" id="tours" [multiple]="true" [ngClass]="{ 'is-invalid': submitted && f.tours.errors }">
+                    <option [value]="null" disabled>Select Tours</option>
+                    <option *ngFor="let tour of tours" id="tours" [value]="tour._id">{{tour.name}}</option>
+                </select>
+                <div *ngIf="submitted && f.tours.errors" class="invalid-feedback">
+                    <div *ngIf="f.tours.errors.required">Tours is required</div>
+                </div>
+            </div>
         </div>
 
         <div class="form-group">
@@ -30,8 +38,7 @@
         </div>
 
         <div class="form-group input-group-lg">
-            <label for="name">Location</label>
-            <nb-toggle class="form-control" formControlName="toggle" (click)=toggleDisplayDiv()>Location</nb-toggle>
+            <nb-toggle formControlName="toggle" (click)=toggleDisplayDiv()>Location</nb-toggle>
         </div>
 
         <div class="form-group input-group-lg mapdiv" [hidden]="isNotShowDiv">
