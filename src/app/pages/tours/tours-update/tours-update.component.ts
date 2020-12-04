@@ -38,14 +38,15 @@ export class ToursUpdateComponent implements OnInit {
         picture: [null],
         lat:[''],
         long:[''],
-        name: [''],
-        description:[''],
+        name: ['', Validators.required],
+        description:['', Validators.required],
         categoryName: [''],
         audio: [null],
-        transcript:[''],
+        transcript:['', Validators.required],
       })
 
      }
+     get f() { return this.form.controls; }
     
      reloadData(){
       

@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewEncapsulation  } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpHeaders } from '@angular/common/http';
-import { FormBuilder, FormGroup } from "@angular/forms";
+import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { HttpClient } from '@angular/common/http';
 import { Location } from '@angular/common';
 @Component({
@@ -11,17 +11,19 @@ import { Location } from '@angular/common';
   encapsulation: ViewEncapsulation.None
 })
 export class CreateCategoryComponent implements OnInit {
+  isFormSubmitted = false;
   form: FormGroup;
   category: any;
   constructor(private http: HttpClient, private router: Router,public fb: FormBuilder, private location: Location   ) { 
-    this.form = this.fb.group({
-      name: [''],
-      icon: [null]
-    })
+    
   }
   
 
   ngOnInit(): void{
+    this.form = this.fb.group({
+      name: ['', Validators.required],
+      icon: [null, Validators.required]
+    })
   }
 
   uploadFile(event) {
@@ -33,6 +35,12 @@ export class CreateCategoryComponent implements OnInit {
     this.form.get('icon').updateValueAndValidity()
   }
   submitForm() {
+    this.isFormSubmitted = true;
+
+    // Return if form is invalid
+    if (this.form.invalid) {
+      return;
+    }
     var formData: any = new FormData();
     formData.append("name", this.form.get('name').value);
     formData.append("icon", this.form.get('icon').value);

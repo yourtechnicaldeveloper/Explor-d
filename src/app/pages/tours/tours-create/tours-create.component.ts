@@ -3,10 +3,9 @@ import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MapsAPILoader} from '@agm/core';
-
-
+import { RxwebValidators } from '@rxweb/reactive-form-validators';
 import { RestService } from 'app/core_auth/services/rest.service';
-import { FileTypeValidatorDirective } from 'app/directives/file-type-validator.directive';
+
 @Component({
   selector: 'ngx-tours-create',
   templateUrl: './tours-create.component.html',
@@ -28,19 +27,8 @@ export class ToursCreateComponent implements OnInit {
   constructor(private http: HttpClient, private router: Router,public fb: FormBuilder, private mapsAPILoader: MapsAPILoader,
     private ngZone: NgZone, private restService: RestService) {
 
-      this.form = this.fb.group({
-        picture: [null],
-        lat:[''],
-        long:[''],
-        name: [''],
-        description:[''],
-        categoryName: [''],
-        audio: [null],
-        transcript:[''],
-        
-      })
-
-     }
+      
+    }
      
      reloadData(){
       this.restService.get("/category/categoryList").subscribe((data) => {
@@ -49,8 +37,20 @@ export class ToursCreateComponent implements OnInit {
         console.log(error)
       });
      }
-
+// convenience getter for easy access to form fields
+get f() { return this.form.controls; }
   ngOnInit(): void {
+    this.form = this.fb.group({
+      picture: [null, [RxwebValidators.image({maxHeight:100,maxWidth:100 }), RxwebValidators.extension({extensions:["jpeg", "png"]})]],
+      lat:[''],
+      long:[''],
+      name: ['', Validators.required],
+      description:['', Validators.required],
+      categoryName: ['', Validators.required],
+      audio: [null],
+      transcript:['', Validators.required],
+      
+    });
 
 
 
@@ -139,6 +139,11 @@ export class ToursCreateComponent implements OnInit {
     this.form.get('audio').updateValueAndValidity();
   }
   submitForm() {
+    this.submitted = true;
+    if (this.form.invalid) {
+      return;
+  }
+
     var formData: any = new FormData();
     for (var i = 0; i < this.myFiles.length; i++) { 
       formData.append("picture", this.myFiles[i]);

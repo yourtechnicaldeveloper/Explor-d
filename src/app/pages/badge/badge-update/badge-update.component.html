@@ -17,56 +17,44 @@
         </div>
 
         <div class="form-group input-group-lg">
-            <div class="md-form">
-            <label for="categoryName">Tours Name</label>
-                <select formControlName="tours" class="form-control custom-select" id="tours" [multiple]="true" >
-                    <option [value]="null">Select Tours</option>
-                    <option *ngFor="let tour of badges.tours" id="tours" [value]="tour._id">{{badges.tour.name}}</option>
-                </select>
-                <span class="text-danger"
-                    *ngIf="(registerFormControl.tours.touched || submitted) && registerFormControl.tours.errors?.required">
-                    tours name is required
-                </span>
-            </div>
-        </div> 
+            <label for="categoryName">Change Badge Name</label>
+            <select formControlName="tours" class="form-control" class="form-control" id="tours" [multiple]="true">
+                <option value="" disabled>select tours</option>
+                <option *ngFor="let tour of tours" id="tours" [value]="tour._id">{{tours.name}}</option>
+              </select>
+        </div>
 
         <div class="form-group">
             <label for="badgeIcon">Badge Icon</label>
-            <input type="image" src="{{badges.badgeIcon}}">
+            <input type="file" (change)="uploadProfile($event)" id="badgeIcon" name="badgeIcon" class="form-control" formControlName="badgeIcon">
         </div>
 
         <div class="form-group input-group-lg">
             <label for="name">Location</label>
-            <nb-toggle class="form-control" formControlName="toggle" labelPosition="start" value="1" (click)="showMyContainer=!showMyContainer">Location</nb-toggle>
+            <nb-toggle class="form-control" formControlName="toggle" (click)=toggleDisplayDiv()>Location</nb-toggle>
         </div>
 
-        <div class="form-group input-group-lg mapdiv" *ngIf="showMyContainer">
+        <div class="form-group input-group-lg mapdiv" [hidden]="isNotShowDiv">
             <label for="location">Location</label>
-              
-            <div class="container">
-                <div class="form-group">
-                  <label>Enter address</label>
-                  <input type="text" class="form-control" (keydown.enter)="$event.preventDefault()" placeholder="Search Nearest Location" autocorrect="off" autocapitalize="off" spellcheck="off" type="text" #search>
-                </div>
-              
-                <agm-map [latitude]="latitude" [longitude]="longitude" [zoom]="zoom">
-                  <agm-marker [latitude]="latitude" [longitude]="longitude" [markerDraggable]="true"
-                    (dragEnd)="markerDragEnd($event)"></agm-marker>
-                </agm-map>
-              
-                <h5>Address: {{address}}</h5>
-                <div class="form-group input-group-lg">
-                    <label for="Latitude">Latitude</label>
-                    <input class="form-control" formControlName="latitude"  value="{{latitude}}">
-                </div>
-                <div class="form-group input-group-lg">
-                    <label for="Longitude">Longitude</label>
-                    <input class="form-control" formControlName="longitude" value="{{longitude}}">
-                </div>
-                
-                
-              </div>
-              
+            <div class="form-group">
+                <label>Enter address</label>
+                <input type="text" class="form-control" (keydown.enter)="$event.preventDefault()" placeholder="Search Nearest Location" autocorrect="off" autocapitalize="off" spellcheck="off" type="text" #search>
+            </div>
+            
+            <agm-map [latitude]="latitude" [longitude]="longitude" [zoom]="zoom">
+                <agm-marker [latitude]="latitude" [longitude]="longitude" [markerDraggable]="true"
+                (dragEnd)="markerDragEnd($event)"></agm-marker>
+            </agm-map>
+            
+            <!-- <h5>Address: {{address}}</h5>
+            <div class="form-group input-group-lg">
+                <label for="Latitude">Latitude</label>
+                <input class="form-control" formControlName="latitude"  value="{{latitude}}">
+            </div>
+            <div class="form-group input-group-lg">
+                <label for="Longitude">Longitude</label>
+                <input class="form-control" formControlName="longitude" value="{{longitude}}">
+            </div> -->
         </div>
 
         <div class="form-group">

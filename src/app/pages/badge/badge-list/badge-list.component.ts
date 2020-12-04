@@ -8,11 +8,9 @@ import { RestService } from 'app/core_auth/services/rest.service';
 })
 export class BadgeListComponent implements OnInit {
 
-  badge: any;
+  badges: any = [];
     
   constructor(private restService: RestService) { }
-
-  badges: any [];
 
   ngOnInit(){
     this.reloadData();
@@ -25,15 +23,4 @@ export class BadgeListComponent implements OnInit {
       console.log(error)
     });
   }
-  
-
-  deleteBadge (id: string) {
-    const badge = this.badges.find(x => x.i === id);
-    badge.isDeleting = true;
-    this.restService.delete(id)
-        .subscribe(() => {
-            this.badges = this.badges.filter(x => x.i !== id) 
-        });
-  }
-
 }

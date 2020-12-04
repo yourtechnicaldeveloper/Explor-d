@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from 'app/core_auth/auth/auth.service';
+import { stat } from 'fs';
 
 @Component({ templateUrl: 'login.component.html' ,
 styleUrls: ['./login.component.scss'],})
@@ -18,7 +19,7 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  get formControls() { return this.loginForm.controls; }
+  get f() { return this.loginForm.controls; }
 
   login() {
     this.submitted = true;
@@ -31,9 +32,10 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.loginForm.value.email, this.loginForm.value.password).subscribe((data) => {
       if (data) {
         this.router.navigateByUrl('/pages');
+        // alert('Login form submited successfully!');
       }
     }, (error) => {
-      console.log(error)
+      alert('Email OR Password incorrect!');
     });
   }
 }

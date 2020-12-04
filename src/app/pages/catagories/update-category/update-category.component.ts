@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation  } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpHeaders } from '@angular/common/http';
 import { RestService } from 'app/core_auth/services/rest.service';
-import { FormBuilder, FormGroup } from "@angular/forms";
+import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { HttpClient } from '@angular/common/http';
 import { Location } from '@angular/common';
 import { ActivatedRoute} from "@angular/router"; // ActivatedRoue is used to get the current associated components information.
@@ -27,11 +27,11 @@ export class UpdateCategoryComponent implements OnInit {
   
   constructor(private restService: RestService, private http: HttpClient, private router: Router, private route: ActivatedRoute, public fb: FormBuilder, private location: Location , private actRoute: ActivatedRoute) { 
     this.form = this.fb.group({
-      name: [''],
+      name: ['', Validators.required ],
       icon: [null]
     })
   }
-  
+  get f() { return this.form.controls; }
   toggleDisplayDiv() {
     this.isShowDiv = !this.isShowDiv;
     this.isNotShowDiv = !this.isNotShowDiv;

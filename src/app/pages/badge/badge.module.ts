@@ -19,8 +19,7 @@ import {
   NbTabsetModule,
   NbUserModule,
   NbRadioModule,
-  NbSelectModule,
-  NbListModule,
+  NbSelectModule,  NbListModule,
   NbIconModule,
 } from '@nebular/theme';
 import { NgxEchartsModule } from 'ngx-echarts';

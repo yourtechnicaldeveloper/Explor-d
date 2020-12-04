@@ -2,7 +2,7 @@
   <!-- Links -->
   <ul class="navbar-nav">
      <li class="nav-item">
-         <h2>Category Detail</h2>
+         <h2>Category Update</h2>
      </li>
      <li class="nav-item right-btn">
       <a href="/pages/categories/category-list" routerlink="/pages/categories/category-list" class="btn nav-link" ng-reflect-router-link="/pages/categories/category-list">Back</a>
@@ -25,7 +25,10 @@
         </div>
         <div class="form-group input-group-lg" [hidden]="isNotShowDiv">
           <label for="name">Name</label>
-          <input class="form-control" placeholder="Name" formControlName="name" name="name" [(ngModel)]="category.name">
+          <input class="form-control" placeholder="Name" formControlName="name" name="name" [(ngModel)]="category.name" [ngClass]="{ 'is-invalid': submitted && f.name.errors }">
+          <div *ngIf="submitted && f.name.errors" class="invalid-feedback">
+            <div *ngIf="f.name.errors.required">Name is required</div>
+        </div>
         </div>
       
       <div class="form-group">

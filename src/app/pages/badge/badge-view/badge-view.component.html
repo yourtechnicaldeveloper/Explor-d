@@ -1,50 +1,43 @@
 
  <nav class="navbar navbar-expand-sm bg-primary navbar-dark">
-    <!-- Links -->
-    <ul class="navbar-nav">
-      <li class="nav-item">
-          <h2>Tour Detail</h2>
-      </li>
-      <li class="nav-item right-btn">
-        <a href="/pages/badge/badge-list" routerlink="/pages/badge/badge-list" class="btn nav-link">Back</a>
-      </li>
-    </ul>
-    </nav>
-    <div class="panel panel-primary">
-    <div class="panel-body">
-      <table class="table table-striped">
-        <tbody>
-          <tr>
-            <th>Picture</th>
-            <td><p><a href="{{badges.badgeIcon}}" target="_blank"><img src="{{badges.badgeIcon}}" alt="Picture"></a></p></td>
-          </tr>
-          <tr>
-            <th>Name</th>
-            <td>{{badges.name}}</td>
-          </tr>
-          <tr>
-            <th>tours</th>
-            <td>{{badges.tourName}}</td>
-          </tr>
-          <tr>
-            <th>toggle</th>
-            <td>{{badges.toggle}}</td>
-          </tr>
-          <tr>
-            <th>Location</th>
-              <td>
-                <div class="form-group input-group-lg">
-                  <div class="container">
-                        <agm-map [latitude]="latitude" [longitude]="longitude" [zoom]="zoom">
-                          <agm-marker [latitude]="latitude" [longitude]="longitude"></agm-marker>
-                        </agm-map>
-                  </div>
+  <!-- Links -->
+  <ul class="navbar-nav">
+    <li class="nav-item">
+        <h2>Badge Detail</h2>
+    </li>
+    <li class="nav-item right-btn">
+      <a href="/pages/badge/badge-list" routerlink="/pages/badge/badge-list" class="btn nav-link">Back</a>
+    </li>
+  </ul>
+  </nav>
+  <div class="panel panel-primary">
+  <div class="panel-body">
+    <table class="table table-striped">
+      <tbody>
+        <tr>
+          <th>Badge Icon</th>
+          <td><p><a href="{{badges.badgeIcon}}" target="_blank"><img src="{{badges.badgeIcon}}" alt="Picture"></a></p></td>
+        </tr>
+        <tr>
+          <th>Name</th>
+          <td>{{badges.name}}</td>
+        </tr>
+        <tr>
+          <th>Tours Name</th>
+          <td><p *ngFor="let tours of badges.tours">{{tours.tourName}}</p></td>
+        </tr>
+        <tr>
+          <th>Location</th>
+            <td>
+              <div class="form-group input-group-lg">
+                <div class="container">
+                  <div #gmap style="width:100%;height:400px" ></div>
                 </div>
-              </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+              </div>
+            </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
-  
-  
+</div>
+

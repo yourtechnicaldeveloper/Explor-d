@@ -1,5 +1,5 @@
 import { Directive } from '@angular/core';
-import { FormControl, NG_VALIDATORS, Validator } from '@angular/forms';
+import { FormControl, NG_VALIDATORS, Validator, ValidatorFn, AbstractControl  } from '@angular/forms';
 
 @Directive({
   selector: '[ngxFileTypeValidator]',

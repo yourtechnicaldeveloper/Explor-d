@@ -15,35 +15,53 @@
     <form #heroForm="ngForm" [formGroup]="form" (ngSubmit)="submitForm()">
         <div class="form-group">
             <label for="picture">Picture</label>
-            <input type="file" multiple (change)="uploadProfile($event)" id="picture" name="picture" class="form-control" formControlName="picture" >
+            <input type="file" multiple (change)="uploadProfile($event)" id="picture" name="picture" class="form-control" accept="image/jpg, image/jpeg, image/png" [ngClass]="{ 'is-invalid': submitted && f.picture.errors }">
+            <div *ngIf="submitted && f.picture.errors" class="invalid-feedback">
+                <div *ngIf="f.picture.errors.required">Name is required</div>
+            </div>
         </div>
 
         <div class="form-group input-group-lg">
             <label for="name">Name</label>
-            <input class="form-control" placeholder="Name" id="name" formControlName="name" name="name">
+            <input class="form-control" placeholder="Name" formControlName="name" [ngClass]="{ 'is-invalid': submitted && f.name.errors }">
+            <div *ngIf="submitted && f.name.errors" class="invalid-feedback">
+                <div *ngIf="f.name.errors.required">Name is required</div>
+            </div>
         </div>
 
         <div class="form-group input-group-lg">
             <label for="description">Description</label>
-            <textarea class="form-control" id="description" placeholder="Description" formControlName="description"></textarea>
+            <textarea class="form-control" id="description" placeholder="Description" formControlName="description" [ngClass]="{ 'is-invalid': submitted && f.description.errors }"></textarea>
+            <div *ngIf="submitted && f.description.errors" class="invalid-feedback">
+                <div *ngIf="f.description.errors.required">Description is required</div>
+            </div>
         </div>
 
         <div class="form-group input-group-lg">
             <label for="categoryName">Category Name</label>
-            <select formControlName="categoryName" class="form-control" id="categoryName">
+            <select formControlName="categoryName" class="form-control" id="categoryName" [ngClass]="{ 'is-invalid': submitted && f.categoryName.errors }">
                 <option [value]="null">Select Category</option>
                 <option *ngFor="let category of categories" id="categoryName" [value]="category._id">{{category.name}}</option>
               </select>
+              <div *ngIf="submitted && f.categoryName.errors" class="invalid-feedback">
+                <div *ngIf="f.categoryName.errors.required">Category Name is required</div>
+            </div>
         </div>
 
         <div class="form-group">
             <label for="audio">Audio</label>
-            <input type="file" (change)="uploadAudio($event)" name="audio" id="audio" class="form-control" formControlName="audio">
+            <input type="file" (change)="uploadAudio($event)" name="audio" id="audio" class="form-control" formControlName="audio" [ngClass]="{ 'is-invalid': submitted && f.audio.errors }">
+            <div *ngIf="submitted && f.audio.errors" class="invalid-feedback">
+                <div *ngIf="f.audio.errors.required">Audio is required</div>
+            </div>
         </div>
 
         <div class="form-group input-group-lg">
             <label for="transcript">Transcript</label>
-            <textarea class="form-control" placeholder="Transcript" id="transcript" formControlName="transcript"></textarea>
+            <textarea class="form-control" placeholder="Transcript" id="transcript" formControlName="transcript" [ngClass]="{ 'is-invalid': submitted && f.transcript.errors }"></textarea>
+            <div *ngIf="submitted && f.transcript.errors" class="invalid-feedback">
+                <div *ngIf="f.transcript.errors.required">Transcript is required</div>
+            </div>
         </div>
 
         <div class="form-group input-group-lg">

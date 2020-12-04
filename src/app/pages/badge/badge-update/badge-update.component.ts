@@ -12,14 +12,12 @@ import { FormDataService } from 'app/core_auth/services/formdata.service';
   styleUrls: ['./badge-update.component.scss']
 })
 export class BadgeUpdateComponent implements OnInit {
-
+  isNotShowDiv = true
   private activeRoute: any;
-  id: any;
-  badge: string[] = [];
-  
+  _id: any;
   showMyContainer: boolean = false;
-  tours: string[] = [];
-  badges: any;
+  tours: any = [];
+  badges: any = [];
   submitted = false;
   latitude: number;
   longitude: number;
@@ -34,37 +32,39 @@ export class BadgeUpdateComponent implements OnInit {
     private ngZone: NgZone, private restService: RestService, private route: ActivatedRoute, private formDataService: FormDataService,) {
 
       this.form = this.fb.group({
-        id:[''],
+        _id:[''],
         badgeIcon: [null],
         latitude:[''],
         longitude:[''],
         name: [''],
         tours: [''],
-        toggle:[Boolean],
+        toggle:[],
       })
 
      }
-     reloadData(){
+     toggleDisplayDiv() {
+      this.isNotShowDiv = !this.isNotShowDiv;
+    }
+    reloadData(){
       this.restService.get("/tours/list").subscribe((data) => {
         this.tours = data.data;
+          }, (error) => {
+            console.log(error)
+        });
+        var id;
+        this.activeRoute = this.route.params.subscribe(params => {
+        id = { "_id" : params['id'] };
+      });
+      
+      this.restService.post("/badge/view", id).subscribe((data) => {
+        this.badges = data.data;
+        console.log(data);
       }, (error) => {
         console.log(error)
       });
-     }
-
+    };
   ngOnInit(): void {
-    var id;
-    this.activeRoute = this.route.params.subscribe(params => {
-    id = { "_id" : params['id'] };
-   });
-  
-  this.restService.post("/badge/view", id).subscribe((data) => {
-    this.badges = data.data;
-  }, (error) => {
-    console.log(error)
-  });
     this.reloadData();
-      
     
     //load Places Autocomplete
     this.mapsAPILoader.load().then(() => {
@@ -85,7 +85,7 @@ export class BadgeUpdateComponent implements OnInit {
           //set latitude, longitude and zoom
           this.latitude = place.geometry.location.lat();
           this.longitude = place.geometry.location.lng();
-          this.zoom = 12;
+          this.zoom = 22;
         });
       });
     });
@@ -105,7 +105,7 @@ export class BadgeUpdateComponent implements OnInit {
       console.log(status);
       if (status === 'OK') {
         if (results[0]) {
-          this.zoom = 12;
+          this.zoom = 22;
           this.address = results[0].formatted_address;
         } else {
           window.alert('No results found');
@@ -121,7 +121,7 @@ export class BadgeUpdateComponent implements OnInit {
       navigator.geolocation.getCurrentPosition((position) => {
         this.latitude = position.coords.latitude;
         this.longitude = position.coords.longitude;
-        this.zoom = 15;
+        this.zoom = 22;
       });
     }
   }
@@ -146,35 +146,34 @@ export class BadgeUpdateComponent implements OnInit {
   }
   
   submitForm() {
-    var formData: any = new FormData();
-    formData.append("badgeIcon", this.form.get('badgeIcon').value);
-    formData.append("lat", this.latitude);
-    formData.append("long", this.longitude);
-    formData.append("name", this.form.value.name);
-    formData.append("tours", JSON.stringify(this.form.get('tours').value));
-    formData.append("toggle", this.form.value.toggle ? 1 : 0);
-    formData.append("id", this.form.value.id);
-    
-    
-    this.submitted = true;
-    var id;
-    this.activeRoute = this.route.params.subscribe(params => {
-    id = { "_id" : params['id'] };
-   });
-    if (this.form.valid) {
-
-      this.http.post('http://18.217.48.28:2000/badge/update' , formData, { headers: this.getHeader(FormData) }).subscribe(
-      (response) => console.log(response),
-      (error) => console.log(error)
+      var formData: any = new FormData();
+      if(this.form.get('badgeIcon').value != null)
+      {
+        formData.append("badgeIcon", this.form.get('badgeIcon').value);
+      }
+      formData.append("name", this.form.value.name);
+      formData.append("tours", JSON.stringify(this.form.get('tours').value));
+      formData.append("toggle", this.form.value.toggle ? 1 : 0);
+      if (this.form.value.toggle == true){
+          formData.append("lat", this.latitude);
+          formData.append("long", this.longitude);
+      }
+      formData.append("_id", this.badges._id);
+      this.submitted = true;
       
-    );
-    
-      // alert('Form Submitted succesfully!!!');
-      this.router.navigateByUrl('/pages/badge/badge-list');
-      console.table(this.form.value);
+      if (this.form.valid) {
+
+        this.http.post('http://18.217.48.28:2000/badge/update', formData, { headers: this.getHeader(FormData) }).subscribe(
+        (response) => this.refresh(response),
+        (error) => console.log(error)
+        
+      );
     }
-    // 
-  
+  }
+    refresh(response){
+      if(response['meta']['status'] == 200){
+        this.router.navigate(['/pages/badge/badge-list']);
+      }    
     }
   getHeader(isFormData?) {
     let headers: HttpHeaders = new HttpHeaders();

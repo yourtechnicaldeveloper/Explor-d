@@ -13,29 +13,23 @@
     <form [formGroup]="form">
         <div class="form-group">
             <label for="picture">Change Picture</label>
-            <input type="file" multiple (change)="uploadProfile($event)" id="picture" name="picture" class="form-control" formControlName="picture" >
-            <span class="text-danger"
-                *ngIf="(registerFormControl.picture.touched || submitted) && registerFormControl.picture.errors?.required">
-                Picture is required
-            </span>
+            <input type="file" multiple (change)="uploadProfile($event)" id="picture" name="picture" class="form-control" formControlName="picture">
         </div>
 
         <div class="form-group input-group-lg">
             <label for="name">Name</label>
-            <input class="form-control" placeholder="Name" id="name" name="name" formControlName="name" [(ngModel)]="tour.name">
-            <span class="text-danger"
-                *ngIf="(registerFormControl.name.touched || submitted) && registerFormControl.name.errors?.required">
-                Name is required
-            </span>
+            <input class="form-control" placeholder="Name" id="name" name="name" formControlName="name" [(ngModel)]="tour.name" [ngClass]="{ 'is-invalid': submitted && f.name.errors }">
+            <div *ngIf="submitted && f.name.errors" class="invalid-feedback">
+                <div *ngIf="f.name.errors.required">Name is required</div>
+            </div>
         </div>
 
         <div class="form-group input-group-lg">
             <label for="description">Description</label>
-            <textarea class="form-control" id="description" placeholder="Description" formControlName="description" [(ngModel)]="tour.description"></textarea>
-            <span class="text-danger"
-                *ngIf="(registerFormControl.name.touched || submitted) && registerFormControl.name.errors?.required">
-                Name is required
-            </span>
+            <textarea class="form-control" id="description" placeholder="Description" formControlName="description" [(ngModel)]="tour.description" [ngClass]="{ 'is-invalid': submitted && f.description.errors }"></textarea>
+            <div *ngIf="submitted && f.description.errors" class="invalid-feedback">
+                <div *ngIf="f.description.errors.required">Name is required</div>
+            </div>
         </div>
 
         <div class="form-group input-group-lg">
@@ -44,28 +38,19 @@
                 <option value="" disabled selected="{{selectedCategory}}">{{selectedCategory}}</option>
                 <option *ngFor="let category of categories" [disabled]="tour.categoryName == category.name" id="categoryName" [value]="category._id">{{category.name}}</option>
               </select>
-              <span class="text-danger"
-                *ngIf="(registerFormControl.categoryName.touched || submitted) && registerFormControl.categoryName.errors?.required">
-                Category name is required
-            </span>
         </div>
 
         <div class="form-group">
             <label for="audio">Change Audio</label>
             <input type="file" (change)="uploadAudio($event)" name="audio" id="audio" class="form-control" formControlName="audio">
-            <span class="text-danger"
-                *ngIf="(registerFormControl.audio.touched || submitted) && registerFormControl.audio.errors?.required">
-                Audio File is required (Only Upload MP3 File)
-            </span>
         </div>
 
         <div class="form-group input-group-lg">
             <label for="transcript">Transcript</label>
-            <textarea class="form-control" placeholder="Transcript" id="transcript" formControlName="transcript" [(ngModel)]="tour.transcript"></textarea>
-            <span class="text-danger"
-                *ngIf="(registerFormControl.transcript.touched || submitted) && registerFormControl.transcript.errors?.required">
-                Transcript is required
-            </span>
+            <textarea class="form-control" placeholder="Transcript" id="transcript" formControlName="transcript" [(ngModel)]="tour.transcript" [ngClass]="{ 'is-invalid': submitted && f.transcript.errors }"></textarea>
+            <div *ngIf="submitted && f.transcript.errors" class="invalid-feedback">
+                <div *ngIf="f.transcript.errors.required">Name is required</div>
+            </div>
         </div>
 
         <div class="form-group input-group-lg">

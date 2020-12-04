@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef, NgZone  } from '@angular/core';
-import { FormBuilder, FormGroup, FormControl  } from "@angular/forms";
+import { FormBuilder, FormGroup, FormControl, Validators  } from "@angular/forms";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MapsAPILoader  } from '@agm/core';
@@ -12,17 +12,16 @@ import { RestService } from 'app/core_auth/services/rest.service';
   styleUrls: ['./badge-create.component.scss']
 })
 export class BadgeCreateComponent implements OnInit {
-  
-  selectControl = new FormControl(['1']);
-  showMyContainer: boolean = false;
-  tours: string[] = [];
-
+  isNotShowDiv = true
+  tours: any = [];
   submitted = false;
   latitude: number;
   longitude: number;
   zoom: number;
   address: string;
+
   private geoCoder;
+  
   @ViewChild('search')
   public searchElementRef: ElementRef;
 
@@ -34,12 +33,16 @@ export class BadgeCreateComponent implements OnInit {
         badgeIcon: [null],
         latitude:[''],
         longitude:[''],
-        name: [''],
-        tours: [''],
-        toggle:[Boolean],
+        name: ['', Validators.required],
+        tours: ['', Validators.required],
+        toggle:[false],
       })
 
      }
+     get f() { return this.form.controls; }
+     toggleDisplayDiv() {
+      this.isNotShowDiv = !this.isNotShowDiv;
+    }
      reloadData(){
       this.restService.get("/tours/list").subscribe((data) => {
         this.tours = data.data;
@@ -49,11 +52,6 @@ export class BadgeCreateComponent implements OnInit {
      }
 
   ngOnInit(): void {
-    this.selectControl.valueChanges.subscribe((value: any) => {
-      console.log('Selected value:', value);
-    })
-
-
     this.reloadData();
       
     
@@ -96,7 +94,7 @@ export class BadgeCreateComponent implements OnInit {
       console.log(status);
       if (status === 'OK') {
         if (results[0]) {
-          this.zoom = 12;
+          this.zoom = 14;
           this.address = results[0].formatted_address;
         } else {
           window.alert('No results found');
@@ -136,30 +134,32 @@ export class BadgeCreateComponent implements OnInit {
     this.form.get('audio').updateValueAndValidity();
   }
   submitForm() {
-    var formData: any = new FormData();
-    formData.append("badgeIcon", this.form.get('badgeIcon').value);
-    formData.append("lat", this.latitude);
-    formData.append("long", this.longitude);
-    formData.append("name", this.form.value.name);
-    formData.append("tours", JSON.stringify(this.form.get('tours').value));
-    formData.append("toggle", this.form.value.toggle ? 1 : 0);
-    
-    
-    this.submitted = true;
-    if (this.form.valid) {
+        var formData: any = new FormData();
+        formData.append("badgeIcon", this.form.get('badgeIcon').value);
+        //formData.append("lat", this.latitude);
+        //formData.append("long", this.longitude);
+        formData.append("name", this.form.value.name);
+        formData.append("tours", JSON.stringify(this.form.get('tours').value));
+        formData.append("toggle", this.form.value.toggle ? 1 : 0);
+        //console.log(JSON.stringify(this.form.get('tours').value));
+        if (this.form.value.toggle == true)
+        {
+          formData.append("lat", this.latitude);
+          formData.append("long", this.longitude);
+        }
+        this.submitted = true;
+        if (this.form.valid) {
 
-      this.http.post('http://18.217.48.28:2000/badge/create', formData, { headers: this.getHeader(FormData) }).subscribe(
-      (response) => console.log(response),
-      (error) => console.log(error)
-      
-    );
-    
-      // alert('Form Submitted succesfully!!!');
-      this.router.navigateByUrl('/pages/badge/badge-list');
-      console.table(this.form.value);
+          this.http.post('http://18.217.48.28:2000/badge/create', formData, { headers: this.getHeader(FormData) }).subscribe(
+          (response) => this.refresh(response),
+          (error) => console.log(error)
+        );
+      }
     }
-    // 
-  
+    refresh(response){
+      if(response['meta']['status'] == 201){
+        this.router.navigate(['/pages/badge/badge-list']);
+      }    
     }
   getHeader(isFormData?) {
     let headers: HttpHeaders = new HttpHeaders();

@@ -31,10 +31,13 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { AngMusicPlayerModule } from  'ang-music-player';
 
 import { NgSelectModule } from '@ng-select/ng-select';
+import {  RxReactiveFormsModule } from "@rxweb/reactive-form-validators"
+
 
 @NgModule({
   declarations: [ToursListComponent, ToursCreateComponent, ToursUpdateComponent, ToursComponent, ToursDetailComponent],
   imports: [
+    RxReactiveFormsModule,
     NgSelectModule,
     AngMusicPlayerModule,
     Ng2SearchPipeModule,
