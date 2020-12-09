@@ -33,11 +33,16 @@
         </div>
 
         <div class="form-group input-group-lg">
-            <label for="categoryName">Change Category Name</label>
-            <select formControlName="categoryName" class="form-control" id="categoryName">
-                <option value="" disabled selected="{{selectedCategory}}">{{selectedCategory}}</option>
-                <option *ngFor="let category of categories" [disabled]="tour.categoryName == category.name" id="categoryName" [value]="category._id">{{category.name}}</option>
-              </select>
+            <label for="tours">Category Name</label>
+            <ng-multiselect-dropdown 
+                [placeholder]="'Select Tours'"
+                [data]="dropdownList" [(ngModel)]="selectedItems"
+                formControlName="categoryName" 
+                [settings]="dropdownSettings"
+                (onSelect)="onItemSelect($event)"
+                (onSelectAll)="onSelectAll($event)"
+                >
+            </ng-multiselect-dropdown>
         </div>
 
         <div class="form-group">
@@ -53,17 +58,20 @@
             </div>
         </div>
 
+        <!-- <div class="form-group input-group-lg">
+            <label for="feedback">Update Feedback</label>
+            <textarea class="form-control" placeholder="Update Feedback" id="feedback" formControlName="feedback" [(ngModel)]="tour.feedback" [ngClass]="{ 'is-invalid': submitted && f.feedback.errors }"></textarea>
+            <div *ngIf="submitted && f.feedback.errors" class="invalid-feedback">
+                <div *ngIf="f.feedback.errors.required">Feedback is required</div>
+            </div>
+        </div> -->
+
         <div class="form-group input-group-lg">
             <label for="location">Location</label>
             <div class="form-group">
-                <label>Enter address</label>
-                <input type="text" class="form-control" id="search" (keydown.enter)="$event.preventDefault()" placeholder="Search Nearest Location" autocorrect="off" autocapitalize="off" spellcheck="off" type="text" #search>
+                <input id="pac-input" class="form-control" type="text" placeholder="Search Box"/>
             </div>
-            
-            <agm-map [latitude]="latitude" [longitude]="longitude" [zoom]="zoom">
-                <agm-marker [latitude]="latitude" [longitude]="longitude" [markerDraggable]="true"
-                (dragEnd)="markerDragEnd($event)"></agm-marker>
-            </agm-map>
+            <div id="map"></div>
         </div>
         <div class="form-group">
             <button (click)="submitForm()" class="btn btn-info" style="margin-left: 15px;">Update</button>

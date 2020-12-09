@@ -32,11 +32,12 @@ import { AngMusicPlayerModule } from  'ang-music-player';
 
 import { NgSelectModule } from '@ng-select/ng-select';
 import {  RxReactiveFormsModule } from "@rxweb/reactive-form-validators"
-
+import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 
 @NgModule({
   declarations: [ToursListComponent, ToursCreateComponent, ToursUpdateComponent, ToursComponent, ToursDetailComponent],
   imports: [
+    NgMultiSelectDropDownModule,
     RxReactiveFormsModule,
     NgSelectModule,
     AngMusicPlayerModule,

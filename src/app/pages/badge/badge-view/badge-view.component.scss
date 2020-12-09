@@ -1,6 +1,9 @@
 agm-map {
     height: 300px;
 }
+th{
+    width: 170px;
+}
 li.nav-item.right-btn {
     position: absolute;
     top: 15px;
@@ -28,3 +31,6 @@ td p {
 }
 td p:first-child {padding-left: 0;}
 td p:last-child {border-right: none;}
+tr.hide {
+    display: none;
+}

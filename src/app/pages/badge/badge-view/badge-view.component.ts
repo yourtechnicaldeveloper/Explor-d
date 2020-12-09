@@ -41,7 +41,8 @@ export class BadgeViewComponent implements OnInit {
       console.log('aaa');
       let marker = new google.maps.Marker({
         position: location,
-        map: this.map
+        map: this.map,
+        draggable:true
       });
   
     }
@@ -69,7 +70,6 @@ export class BadgeViewComponent implements OnInit {
     });
 
   }
-  
   
   ngOnDestroy() {
     if (this.activeRoute) {

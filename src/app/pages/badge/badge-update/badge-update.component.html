@@ -20,16 +20,16 @@
         </div>
         
         <div class="form-group input-group-lg">
-            <div class="md-form">
-            <label for="tours">ChangeTours Name</label>
-                <select formControlName="tours" class="form-control" id="tours" [multiple]="true" [ngClass]="{ 'is-invalid': submitted && f.tours.errors }">
-                    <option [value]="null" disabled>Select Tours</option>
-                    <option *ngFor="let tour of tours" id="tours" [value]="tour._id">{{tour.name}}</option>
-                </select>
-                <div *ngIf="submitted && f.tours.errors" class="invalid-feedback">
-                    <div *ngIf="f.tours.errors.required">Tours is required</div>
-                </div>
-            </div>
+            <label for="tours">Change Tours Name</label>
+            <ng-multiselect-dropdown 
+                [placeholder]="'Select Tours'" 
+                [data]="dropdownList" [(ngModel)]="selectedItems"
+                formControlName="tours" 
+                [settings]="dropdownSettings"
+                (onSelect)="onItemSelect($event)"
+                (onSelectAll)="onSelectAll($event)"
+                >
+            </ng-multiselect-dropdown>
         </div>
 
         <div class="form-group">
@@ -38,20 +38,20 @@
         </div>
 
         <div class="form-group input-group-lg">
-            <nb-toggle formControlName="toggle" (click)=toggleDisplayDiv()>Location</nb-toggle>
+            <nb-toggle formControlName="toggle" (click)=toggleDisplayDiv() [(ngModel)]="badges.toggle">Location</nb-toggle>
         </div>
 
-        <div class="form-group input-group-lg mapdiv" [hidden]="isNotShowDiv">
+        <div class="form-group input-group-lg mapdiv" [hidden]="isNotShowDiv" [ngClass]="{'show': badges.toggle == 1 }">
             <label for="location">Location</label>
             <div class="form-group">
-                <label>Enter address</label>
-                <input type="text" class="form-control" (keydown.enter)="$event.preventDefault()" placeholder="Search Nearest Location" autocorrect="off" autocapitalize="off" spellcheck="off" type="text" #search>
+                <input id="pac-input" class="form-control" type="text" placeholder="Search Box"/>
             </div>
+            <div id="map"></div>
             
-            <agm-map [latitude]="latitude" [longitude]="longitude" [zoom]="zoom">
+            <!-- <agm-map [latitude]="latitude" [longitude]="longitude" [zoom]="zoom">
                 <agm-marker [latitude]="latitude" [longitude]="longitude" [markerDraggable]="true"
                 (dragEnd)="markerDragEnd($event)"></agm-marker>
-            </agm-map>
+            </agm-map> -->
             
             <!-- <h5>Address: {{address}}</h5>
             <div class="form-group input-group-lg">

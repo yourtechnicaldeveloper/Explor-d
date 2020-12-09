@@ -14,6 +14,9 @@ import { NgIf } from '@angular/common';
 })
 
 export class ToursUpdateComponent implements OnInit {
+  dropdownList = [];
+  selectedItems = [];
+  dropdownSettings = {};
 
   private activeRoute: any;
   myFiles:string [] = [];
@@ -27,6 +30,7 @@ export class ToursUpdateComponent implements OnInit {
   private geoCoder;
   selectedCategory: any;
   prevcatid:any;
+  marker:any;
   @ViewChild('search')
   public searchElementRef: ElementRef;
   
@@ -43,6 +47,7 @@ export class ToursUpdateComponent implements OnInit {
         categoryName: [''],
         audio: [null],
         transcript:['', Validators.required],
+        // feedback:[''],
       })
 
      }
@@ -50,31 +55,16 @@ export class ToursUpdateComponent implements OnInit {
     
      reloadData(){
       
-      var id;
-      this.activeRoute = this.route.params.subscribe(params => {
-      id = { "_id" : params['id'] };
-      });
+      // var id;
+      // this.activeRoute = this.route.params.subscribe(params => {
+      // id = { "_id" : params['id'] };
+      // });
 
-      this.restService.post("/tours/view/", id).subscribe((data) => {
-        this.tour = data.data;
-        this.restService.get("/category/categoryList").subscribe((data) => {
-          this.categories = [];
-          for (let category of data.data) {
-            if(category.name == this.tour.categoryName) {
-              this.selectedCategory = category.name;
-              this.prevcatid = category._id;
-            } else {
-              this.categories.push(category);
-            }
-          }
-        }, (error) => {
-          console.log(error)
-        });
-        this.mapload();
-      }, (error) => {
-        console.log(error)
-      });
-      
+      // this.restService.post("/tours/view/", id).subscribe((data) => {
+      //   this.tour = data.data;
+      // }, (error) => {
+      //   console.log(error)
+      // });
      }
 
      
@@ -82,70 +72,119 @@ export class ToursUpdateComponent implements OnInit {
   ngOnInit(): void {
 
     this.reloadData();
-    this.mapsAPILoader.load().then(() => {
-      this.setCurrentLocation();
-      this.geoCoder = new google.maps.Geocoder;
-      let autocomplete = new google.maps.places.Autocomplete(this.searchElementRef.nativeElement);
-      autocomplete.addListener("place_changed", () => {
-        this.ngZone.run(() => {
-          //get the place result
-          let place: google.maps.places.PlaceResult = autocomplete.getPlace();
+    this.initAutocomplete();
 
-          //verify result
-          if (place.geometry === undefined || place.geometry === null) {
-            return;
+    let tmp = [];
+      this.restService.get("/category/categoryList").subscribe(data => {
+        //console.log(data.data[0]._id);
+          for (let i = 0; i < data.data.length; i++) {
+            tmp.push({ item_id: data.data[i]._id, item_text: data.data[i].name });
           }
-
-          //set latitude, longitude and zoom
-          this.latitude = place.geometry.location.lat();
-          this.longitude = place.geometry.location.lng();
-          this.zoom = 12;
-        });
+          this.dropdownList = tmp;
       });
+
+       var id;
+       this.activeRoute = this.route.params.subscribe(params => {
+       id = { "_id" : params['id'] };
+      });
+
+      this.restService.post("/tours/view", id).subscribe((data) => {
+        this.tour = data.data;
+        console.log(this.tour.categoryName);
+        this.selectedItems = [
+          { item_id: this.tour.cateId, item_text: this.tour.categoryName },
+        ];
+        
+      }, (error) => {
+        console.log(error)
+      });
+
+        this.dropdownSettings = {
+          singleSelection: true,
+          idField: "item_id",
+          textField: "item_text",
+          selectAllText: "Select All",
+          unSelectAllText: "UnSelect All",
+          itemsShowLimit: 6,
+          allowSearchFilter: true
+        };
+
+  }
+  onItemSelect(item: any) {
+    console.log(item);
+  }
+  onSelectAll(items: any) {
+    console.log(items);
+  }
+  initAutocomplete() {
+       
+    const map = new google.maps.Map(document.getElementById("map"), {
+      center: { lat: -33.8688, lng: 151.2195 },
+      zoom: 13,
+      mapTypeId: "roadmap",
     });
-  }
-
-  private mapload(){
-    //load Places Autocomplete
-   this.mapsAPILoader.load().then(() => {
-     this.setCurrentLocation();
-     this.geoCoder = new google.maps.Geocoder;
+    this.marker =
+        new google.maps.Marker({
+          map,
+          title: "place.name",
+          position: { lat: -33.8688, lng: 151.2195 },
+          draggable:true
+        })
+     google.maps.event.addListener(this.marker, 'dragend', function() {
+      
+      console.log(this.marker.getPosition().lat());
+      console.log(this.marker.getPosition().lng());
+     
    });
- }
-
-  markerDragEnd($event: google.maps.MouseEvent) {
-    console.log($event);
-    this.latitude = $event.latLng.lat();
-    this.longitude = $event.latLng.lng();
-    this.getAddress(this.latitude, this.longitude);
-  }
-
-
-  getAddress(latitude, longitude) {
-    this.geoCoder.geocode({ 'location': { lat: latitude, lng: longitude } }, (results, status) => {
-      console.log(results);
-      console.log(status);
-      if (status === 'OK') {
-        if (results[0]) {
-          this.zoom = 12;
-          this.address = results[0].formatted_address;
-        } else {
-          window.alert('No results found');
-        }
-      } else {
-        window.alert('Geocoder failed due to: ' + status);
+   map.addListener('dragend', ()=>{
+    console.log("place gytgyty");
+    console.log(this.marker.getPosition().lng());
+  });
+    // Create the search box and link it to the UI element.
+    const input = <HTMLInputElement>document.getElementById("pac-input");
+    const searchBox = new google.maps.places.SearchBox(input);
+    //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+    // Bias the SearchBox results towards current map's viewport.
+    map.addListener("bounds_changed", () => {
+      searchBox.setBounds(map.getBounds());
+    });
+    
+    searchBox.addListener("places_changed", () => {
+      const places = searchBox.getPlaces();
+  
+      if (places.length == 0) {
+        return;
       }
 
-    });
-  }
-  private setCurrentLocation() {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        this.latitude = this.tour.lat;
-        this.longitude = this.tour.long;
-        this.zoom = 15;
+      const bounds = new google.maps.LatLngBounds();
+      places.forEach((place) => {
+        if (!place.geometry) {
+          console.log("Returned place contains no geometry");
+          return;
+        }
+        const icon = {
+          url: place.icon,
+          size: new google.maps.Size(71, 71),
+          origin: new google.maps.Point(0, 0),
+          anchor: new google.maps.Point(17, 34),
+          scaledSize: new google.maps.Size(25, 25),
+        };
+        
+        this.marker.setPosition(place.geometry.location);
+        console.log("place");
+        console.log(place.geometry.location.lat());
+        
+        if (place.geometry.viewport) {
+          // Only geocodes have viewport.
+          bounds.union(place.geometry.viewport);
+        } else {
+          bounds.extend(place.geometry.location);
+        }
       });
-    }
+      map.fitBounds(bounds);
+    });
+   
+   
   }
   get registerFormControl() {
     return this.form.controls;
@@ -171,6 +210,7 @@ export class ToursUpdateComponent implements OnInit {
     this.form.get('audio').updateValueAndValidity();
   }
   submitForm() {
+    let val = [];
     var formData: any = new FormData();
     //console.log(this.form.value.categoryName);
     if(this.form.get('picture').value != null)
@@ -183,17 +223,27 @@ export class ToursUpdateComponent implements OnInit {
     {
       formData.append("audio", this.form.get('audio').value);
     }
-    if(this.form.get('categoryName').value)
-    {
-      formData.append("categoryName", this.form.get('categoryName').value);
-    }else{
-      console.log(this.prevcatid);
+    for (let i = 0; i < this.form.get('categoryName').value.length; i++) {
+      val.push(this.form.get('categoryName').value[i].item_id);
     }
-    formData.append("lat", this.latitude);
-    formData.append("long", this.longitude);
+    formData.append("categoryName", (val));
+    // if(this.form.get('categoryName').value)
+    // {
+    //   formData.append("categoryName", this.form.get('categoryName').value);
+    // }else{
+    //   console.log(this.prevcatid);
+    // }
+    formData.append("lat", this.marker.getPosition().lat());
+    formData.append("long", this.marker.getPosition().lng());
     formData.append("name", this.form.value.name);
     formData.append("description", this.form.get('description').value);
     formData.append("transcript", this.form.value.transcript);
+
+    // if(this.form.get('feedback').value != null)
+    // {
+    //   formData.append("feedback", this.form.value.feedback);
+    // }
+    
     
     var id;
     this.activeRoute = this.route.params.subscribe(params => {

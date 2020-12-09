@@ -27,6 +27,7 @@ import { RestAPIInterceptor } from './core_auth/interceptor/rest.api.Interceptor
 import { PagesModule } from './pages/pages.module';
 import { ToursModule } from '../app/pages/tours/tours.module';
 import { FileTypeValidatorDirective } from './directives/file-type-validator.directive';
+import { BadgeModule } from './pages/badge/badge.module';
 
 @NgModule({
   declarations: [AppComponent, LoginComponent, FileTypeValidatorDirective],
@@ -47,7 +48,7 @@ import { FileTypeValidatorDirective } from './directives/file-type-validator.dir
     ThemeModule.forRoot(),
     PagesModule,
     ToursModule,
-   
+    BadgeModule,
   ],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: RestAPIInterceptor, multi: true }],
   bootstrap: [AppComponent],

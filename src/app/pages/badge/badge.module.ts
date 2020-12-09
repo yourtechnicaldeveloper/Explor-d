@@ -11,7 +11,6 @@ import { AgmCoreModule } from '@agm/core';
 import {NbToggleModule} from '@nebular/theme';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 
-
 import {
   NbActionsModule,
   NbButtonModule,
@@ -35,7 +34,6 @@ import { from } from 'rxjs';
  
   declarations: [BadgeUpdateComponent, BadgeCreateComponent, BadgeViewComponent, BadgeListComponent, BadgeComponent],
   imports: [
-
     NgMultiSelectDropDownModule,
     NbToggleModule,
     BadgeRoutingModule,
