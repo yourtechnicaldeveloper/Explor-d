@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, NgZone  } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation  } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -9,7 +9,8 @@ import { RestService } from 'app/core_auth/services/rest.service';
 @Component({
   selector: 'ngx-tours-create',
   templateUrl: './tours-create.component.html',
-  styleUrls: ['./tours-create.component.scss']
+  styleUrls: ['./tours-create.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class ToursCreateComponent implements OnInit {
   dropdownList = [];

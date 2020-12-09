@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, NgZone  } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation  } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators  } from "@angular/forms";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,7 +9,8 @@ import { FormDataService } from 'app/core_auth/services/formdata.service';
 @Component({
   selector: 'ngx-badge-update',
   templateUrl: './badge-update.component.html',
-  styleUrls: ['./badge-update.component.scss']
+  styleUrls: ['./badge-update.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class BadgeUpdateComponent implements OnInit {
   isNotShowDiv = true;

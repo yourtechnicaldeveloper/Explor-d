@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, NgZone  } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation  } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators  } from "@angular/forms";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -9,7 +9,8 @@ import { RestService } from 'app/core_auth/services/rest.service';
 @Component({
   selector: 'ngx-badge-create',
   templateUrl: './badge-create.component.html',
-  styleUrls: ['./badge-create.component.scss']
+  styleUrls: ['./badge-create.component.scss'],
+  encapsulation: ViewEncapsulation.None // Add this line
 })
 export class BadgeCreateComponent implements OnInit {
   dropdownList = [];

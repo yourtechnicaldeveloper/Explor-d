@@ -1,16 +1,15 @@
-import { Component, OnInit, ViewChild, ElementRef, NgZone  } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation  } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from "@angular/forms";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MapsAPILoader} from '@agm/core';
-
 import { RestService } from 'app/core_auth/services/rest.service';
-import { Tour } from 'app/_model/tour';
-import { NgIf } from '@angular/common';
+
 @Component({
   selector: 'ngx-tours-update',
   templateUrl: './tours-update.component.html',
   styleUrls: ['./tours-update.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 
 export class ToursUpdateComponent implements OnInit {

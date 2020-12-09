@@ -42,12 +42,6 @@ body {
   padding: 0;
 }
 
-#description {
-  font-family: Roboto;
-  font-size: 15px;
-  font-weight: 300;
-}
-
 #infowindow-content .title {
   font-weight: bold;
 }
@@ -115,5 +109,11 @@ body {
   width: 345px;
 }
 
-.form-control{height: calc(1.5em + 0.75rem + 8px) !important;font-size: 17px;color: #222b45 !important;font-family: inherit;font-weight: 400;
+.form-control, .form-control::placeholder{height: calc(1.5em + 0.75rem + 8px) !important;font-size: 17px;color: #222b45 !important;font-family: inherit;font-weight: 400;color: #000;
 }
+#description, .input-group-lg > .form-control{
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 400;
+}
+.multiselect-dropdown .dropdown-btn{height: 45px !important; line-height: 1.9 !important;border: 1px solid #ced4da !important; font-size:17px;}
