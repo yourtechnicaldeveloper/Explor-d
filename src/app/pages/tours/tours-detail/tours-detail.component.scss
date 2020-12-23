@@ -1,12 +1,12 @@
 
 img {width: 90px; height: auto;}
-td p {
+td div.binding {
     display: inline-block;
     margin-right: 0px;
     border-right: 2px solid #000;
     padding: 0 10px;
 }
-td p:last-child {border-right: none;}
+td div.binding:last-child {border-right: none;}
 th {
     width: 170px;
 }
@@ -37,12 +37,13 @@ li h2 {color: #fff;}
 agm-map {
     height: 300px;
 }
-button{
+button, button:focus{
     background-color: inherit;
     border: none;
     width: 30px;
     height: 30px;
     box-shadow: none;
+    outline: none;
 }
 button svg {
     overflow: hidden;

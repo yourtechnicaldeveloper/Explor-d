@@ -50,16 +50,14 @@ export class ToursDetailComponent implements OnInit {
     this.activeRoute = this.route.params.subscribe(params => {
     id = { "_id" : params['id'] };
    });
-    
     this.restService.post("/tours/view", id).subscribe((data) => {
-      
       this.tours = data.data;
       this.ngAfterContentInit(this.tours.lat, this.tours.long);
-      //console.log(this.tours.feedback.comment)
     }, (error) => {
       console.log(error)
     });
     
+    this.DltFeedback();
       this.restService.get("/category/categoryList").subscribe((data) => {
       this.categories = data.data;
     }, (error) => {
@@ -68,23 +66,18 @@ export class ToursDetailComponent implements OnInit {
   };
   
   DltFeedback(){
-      var id;
-      this.activeRoute = this.route.params.subscribe(params => {
-      id = { "_id" : params['id'] };
-      });
       let tmp = [];
-      this.restService.post("/tours/view", id).subscribe((data) => {
-      this.tours = data.data;
-      console.log(this.tours.feedback.i);
+      console.log(this.tours.categoryName.name);
+      for (let i = 0; i < this.tours.categoryName.length; i++) {
+        tmp.push({ item_id: this.tours.categoryName._id, item_text: this.tours.categoryName.name });
+      }
+      //console.log(this.tours.feedback.i);
       //console.log(this.tours.feedback[1]._id);
       //console.log(this.tours.feedback[1]._id);
       for (let i = 0; i < this.tours.feedback.length; i++) {
         tmp.push({ item_id: this.tours.feedback[i]._id, item_text: this.tours.feedback[i].comment });
         
       }
-    }, (error) => {
-      console.log(error)
-    });
     
    this.restService.put("/tours/" + this.tours.feedback[0]._id).subscribe((data) => {
     window.location.reload();
