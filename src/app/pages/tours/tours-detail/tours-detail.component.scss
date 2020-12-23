@@ -37,3 +37,19 @@ li h2 {color: #fff;}
 agm-map {
     height: 300px;
 }
+button{
+    background-color: inherit;
+    border: none;
+    width: 30px;
+    height: 30px;
+    box-shadow: none;
+}
+button svg {
+    overflow: hidden;
+    vertical-align: middle;
+    width: 30px;
+    height: 30px;
+}
+button svg:hover{
+    fill: red;
+}

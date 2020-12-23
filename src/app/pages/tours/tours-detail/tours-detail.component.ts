@@ -2,6 +2,7 @@
 import { Component, OnInit, ViewChild, ElementRef, NgZone  } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RestService } from 'app/core_auth/services/rest.service';
+import { tap } from 'rxjs/operators';
 
 @Component({
   selector: 'ngx-tours-detail',
@@ -10,7 +11,7 @@ import { RestService } from 'app/core_auth/services/rest.service';
 })
 export class ToursDetailComponent implements OnInit {
   
-  categories: any []= [];
+  categories: any = [];
   tours: any = [];
   message = '';
   private activeRoute: any;
@@ -49,21 +50,50 @@ export class ToursDetailComponent implements OnInit {
     this.activeRoute = this.route.params.subscribe(params => {
     id = { "_id" : params['id'] };
    });
+    
     this.restService.post("/tours/view", id).subscribe((data) => {
+      
       this.tours = data.data;
       this.ngAfterContentInit(this.tours.lat, this.tours.long);
+      //console.log(this.tours.feedback.comment)
     }, (error) => {
       console.log(error)
     });
     
-    this.restService.get("/category/categoryList").subscribe((data) => {
+      this.restService.get("/category/categoryList").subscribe((data) => {
       this.categories = data.data;
     }, (error) => {
       console.log(error)
     });
   };
   
-  
+  DltFeedback(){
+      var id;
+      this.activeRoute = this.route.params.subscribe(params => {
+      id = { "_id" : params['id'] };
+      });
+      let tmp = [];
+      this.restService.post("/tours/view", id).subscribe((data) => {
+      this.tours = data.data;
+      console.log(this.tours.feedback.i);
+      //console.log(this.tours.feedback[1]._id);
+      //console.log(this.tours.feedback[1]._id);
+      for (let i = 0; i < this.tours.feedback.length; i++) {
+        tmp.push({ item_id: this.tours.feedback[i]._id, item_text: this.tours.feedback[i].comment });
+        
+      }
+    }, (error) => {
+      console.log(error)
+    });
+    
+   this.restService.put("/tours/" + this.tours.feedback[0]._id).subscribe((data) => {
+    window.location.reload();
+     
+  }, (error) => {
+    console.log(error)
+  });
+  }
+
   ngOnDestroy() {
     if (this.activeRoute) {
       this.activeRoute.unsubscribe();

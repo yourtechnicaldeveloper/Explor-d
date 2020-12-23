@@ -91,7 +91,7 @@ export class ToursUpdateComponent implements OnInit {
         this.tour = data.data;
         console.log(this.tour.categoryName);
         this.selectedItems = [
-          { item_id: this.tour.cateId, item_text: this.tour.categoryName },
+          { item_id: this.tour.cateId, item_text: this.tour.categoryName.name },
         ];
         
       }, (error) => {
