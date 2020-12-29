@@ -28,6 +28,7 @@ export class ToursUpdateComponent implements OnInit {
   address: string;
   private geoCoder;
   selectedCategory: any;
+  declare audioDuration:any;
   prevcatid:any;
   marker:any;
   @ViewChild('search')
@@ -46,6 +47,7 @@ export class ToursUpdateComponent implements OnInit {
         categoryName: [''],
         audio: [null],
         transcript:['', Validators.required],
+        audioDuration:[''],
         // feedback:[''],
       })
 
@@ -207,6 +209,15 @@ export class ToursUpdateComponent implements OnInit {
       audio: audioFile
     });
     this.form.get('audio').updateValueAndValidity();
+    //here you can check the file type for attachedFile either video or audio
+  
+    var audio = document.createElement('audio');
+    audio.preload = 'metadata';
+    audio.src = URL.createObjectURL(audioFile);
+    audio.onloadedmetadata = function() {
+      window.URL.revokeObjectURL(audio.src);
+      globalThis.audioDuration = Math.round(audio.duration*Math.pow(10,0))/Math.pow(10,0); // here you could get the duration
+    }
   }
   submitForm() {
     let val = [];
@@ -221,6 +232,10 @@ export class ToursUpdateComponent implements OnInit {
     if(this.form.get('audio').value != null)
     {
       formData.append("audio", this.form.get('audio').value);
+    }
+    if(this.form.get('audioDuration').value != null)
+    {
+      formData.append("audioDuration", globalThis.audioDuration);
     }
     for (let i = 0; i < this.form.get('categoryName').value.length; i++) {
       val.push(this.form.get('categoryName').value[i].item_id);

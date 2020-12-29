@@ -25,6 +25,7 @@ export class ToursCreateComponent implements OnInit {
   zoom: number;
   address: string;
   marker:any;
+  declare audioDuration:any;
   private geoCoder;
   @ViewChild('search')
   public searchElementRef: ElementRef;
@@ -55,7 +56,7 @@ get f() { return this.form.controls; }
       categoryName: ['', Validators.required],
       audio: [null],
       transcript:['', Validators.required],
-      
+      audioDuration:[''],
     });
 
 
@@ -180,15 +181,34 @@ get f() { return this.form.controls; }
       audio: audioFile
     });
     this.form.get('audio').updateValueAndValidity();
+    //here you can check the file type for attachedFile either video or audio
+  
+    var audio = document.createElement('audio');
+    audio.preload = 'metadata';
+    audio.src = URL.createObjectURL(audioFile);
+    audio.onloadedmetadata = function() {
+      window.URL.revokeObjectURL(audio.src);
+      globalThis.audioDuration = Math.round(audio.duration*Math.pow(10,0))/Math.pow(10,0); // here you could get the duration
+      // alert(globalThis.audioDuration);
+      // alert("hi");
+      
+      //alert (Math.round(audio.duration*Math.pow(10,0))/Math.pow(10,0));
+      //Math.round(audio.duration*Math.pow(10,0))/Math.pow(10,0);
+    }
+    
   }
+ 
   submitForm() {
+    
     this.submitted = true;
     if (this.form.invalid) {
       return;
   }
 
     var formData: any = new FormData();
+
     let val = [];
+    
     for (var i = 0; i < this.myFiles.length; i++) { 
       formData.append("picture", this.myFiles[i]);
     }
@@ -202,9 +222,9 @@ get f() { return this.form.controls; }
     formData.append("categoryName", (val));
     //formData.append("categoryName", this.form.get('categoryName').value);
     formData.append("audio", this.form.get('audio').value);
+    formData.append("audioDuration", globalThis.audioDuration);
     formData.append("transcript", this.form.value.transcript);
-    
-    
+    //console.log(globalThis.audioDuration);
     this.submitted = true;
     if (this.form.valid) {
 

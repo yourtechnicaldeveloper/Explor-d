@@ -17,7 +17,7 @@
             <label for="picture">Picture</label>
             <input type="file" multiple (change)="uploadProfile($event)" id="picture" name="picture" class="form-control" accept="image/jpg, image/jpeg, image/png" [ngClass]="{ 'is-invalid': submitted && f.picture.errors }">
             <div *ngIf="submitted && f.picture.errors" class="invalid-feedback">
-                <div *ngIf="f.picture.errors.required">Name is required</div>
+                <div *ngIf="f.picture.errors.required">Picture is required</div>
             </div>
         </div>
 

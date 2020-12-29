@@ -28,7 +28,7 @@
           <tr *ngFor="let tour of tours | filter:email; let id = index">
             <td>{{ id + 1}}</td>
             <td>{{tour.name}}</td>
-            <td>{{tour.categoryName.name}}</td>
+            <td>{{tour.categoryName && tour.categoryName.name}}</td>
             <td>
               <button (click)="setDefault()" routerLink="../view/{{tour._id}}" class="btn btn-info" style="margin-left: 10px;">View</button>
               <button (click)="setDefault()" routerLink="../update/{{tour._id}}" class="btn btn-info" style="margin-left: 10px;">Edit</button>

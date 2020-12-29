@@ -44,6 +44,7 @@ export class BadgeUpdateComponent implements OnInit {
         name: ['', Validators.required],
         tours: ['', Validators.required],
         toggle:[],
+        benefits:[''],
       })
 
      }
@@ -144,7 +145,7 @@ export class BadgeUpdateComponent implements OnInit {
       let sel = [];
       this.restService.post("/badge/view", id).subscribe((data) => {
         this.badges = data.data;
-        //console.log(this.badges.tours.length);
+        console.log(this.badges.benefits);
         for (let i = 0; i < this.badges.tours.length; i++) {
           sel.push({ item_id: this.badges.tours[i].toursId, item_text: this.badges.tours[i].tourName });
         }
@@ -193,7 +194,7 @@ export class BadgeUpdateComponent implements OnInit {
   submitForm() {
       var formData: any = new FormData();
       let val = [];
-      console.log(this.form.get('tours').value.length);
+      console.log(this.form.get('badgeIcon').value);
       if(this.form.get('badgeIcon').value != null)
       {
         formData.append("badgeIcon", this.form.get('badgeIcon').value);
@@ -209,6 +210,7 @@ export class BadgeUpdateComponent implements OnInit {
           formData.append("lat", this.marker.getPosition().lat());
           formData.append("long", this.marker.getPosition().lng());
       }
+      formData.append("benefits", JSON.stringify(this.form.value.benefits));
       formData.append("_id", this.badges._id);
       this.submitted = true;
       

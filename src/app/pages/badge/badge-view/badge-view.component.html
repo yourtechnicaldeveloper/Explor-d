@@ -26,6 +26,10 @@
           <th>Tours Name</th>
           <td><p *ngFor="let tours of badges.tours">{{tours.tourName}}</p></td>
         </tr>
+        <tr>
+          <th>Benefits</th>
+          <td>{{badges.Benefits}}</td>
+        </tr>
         <tr [ngClass]="{'hide': badges.toggle == 0 }">
           <th>Location</th>
             <td>

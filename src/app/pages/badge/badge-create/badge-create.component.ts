@@ -17,7 +17,7 @@ export class BadgeCreateComponent implements OnInit {
   selectedItems = [];
   dropdownSettings = {};
 
-  isNotShowDiv = true
+  isNotShowDiv = true;
   tours: any = [];
   submitted = false;
   latitude: number;
@@ -41,6 +41,7 @@ export class BadgeCreateComponent implements OnInit {
         name: ['', Validators.required],
         tours: ['', Validators.required],
         toggle:[false],
+        benefits:[''],
       })
 
      }
@@ -184,9 +185,11 @@ export class BadgeCreateComponent implements OnInit {
         for (let i = 0; i < this.form.get('tours').value.length; i++) {
           val.push(this.form.get('tours').value[i].item_id);
         }
+        
         formData.append("tours", JSON.stringify(val));
         formData.append("toggle", this.form.value.toggle ? 1 : 0);
         //console.log(JSON.stringify(this.form.get('tours').value));
+        formData.append("benefits", JSON.stringify(this.form.value.benefits));
         if (this.form.value.toggle == true)
         {
           formData.append("lat", this.marker.getPosition().lat());
