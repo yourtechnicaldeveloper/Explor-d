@@ -42,11 +42,11 @@ export class ToursUpdateComponent implements OnInit {
         picture: [null],
         lat:[''],
         long:[''],
-        name: ['', Validators.required],
-        description:['', Validators.required],
+        name: [''],
+        description:[''],
         categoryName: [''],
         audio: [null],
-        transcript:['', Validators.required],
+        transcript:[''],
         audioDuration:[''],
         // feedback:[''],
       })
@@ -91,9 +91,10 @@ export class ToursUpdateComponent implements OnInit {
 
       this.restService.post("/tours/view", id).subscribe((data) => {
         this.tour = data.data;
-        console.log(this.tour.categoryName);
+        //console.log(this.tour.categoryName.name);
         this.selectedItems = [
-          { item_id: this.tour.cateId, item_text: this.tour.categoryName.name },
+          { item_id: this.tour.categoryName._id, item_text: this.tour.categoryName.name },
+          //console.log(this.tour.categoryName._id)
         ];
         
       }, (error) => {
@@ -109,7 +110,6 @@ export class ToursUpdateComponent implements OnInit {
           itemsShowLimit: 6,
           allowSearchFilter: true
         };
-
   }
   onItemSelect(item: any) {
     console.log(item);
@@ -237,8 +237,12 @@ export class ToursUpdateComponent implements OnInit {
     {
       formData.append("audioDuration", globalThis.audioDuration);
     }
+    
+    //formData.append("audioDuration", globalThis.audioDuration);
+
     for (let i = 0; i < this.form.get('categoryName').value.length; i++) {
       val.push(this.form.get('categoryName').value[i].item_id);
+      console.log(this.form.get('categoryName').value[i].item_id)
     }
     formData.append("categoryName", (val));
     // if(this.form.get('categoryName').value)

@@ -189,7 +189,7 @@ export class BadgeCreateComponent implements OnInit {
         formData.append("tours", JSON.stringify(val));
         formData.append("toggle", this.form.value.toggle ? 1 : 0);
         //console.log(JSON.stringify(this.form.get('tours').value));
-        formData.append("benefits", JSON.stringify(this.form.value.benefits));
+        formData.append("benefits", this.form.value.benefits);
         if (this.form.value.toggle == true)
         {
           formData.append("lat", this.marker.getPosition().lat());

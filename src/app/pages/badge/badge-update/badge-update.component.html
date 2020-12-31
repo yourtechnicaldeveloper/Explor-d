@@ -39,7 +39,7 @@
 
         <div class="form-group input-group-lg">
             <label for="benefits">benefits</label>
-            <textarea rows="4" cols="50" class="form-control" id="benefits" placeholder="benefits" formControlName="benefits" [ngClass]="{ 'is-invalid': submitted && f.benefits.errors }"></textarea>
+            <textarea rows="4" cols="50" class="form-control" id="benefits" placeholder="benefits" formControlName="benefits" [(ngModel)]="badges.benefits" [ngClass]="{ 'is-invalid': submitted && f.benefits.errors }"></textarea>
             <div *ngIf="submitted && f.benefits.errors" class="invalid-feedback">
                 <div *ngIf="f.benefits.errors.required">Benefits is required</div>
             </div>

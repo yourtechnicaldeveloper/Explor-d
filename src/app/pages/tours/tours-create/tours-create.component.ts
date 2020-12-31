@@ -189,11 +189,6 @@ get f() { return this.form.controls; }
     audio.onloadedmetadata = function() {
       window.URL.revokeObjectURL(audio.src);
       globalThis.audioDuration = Math.round(audio.duration*Math.pow(10,0))/Math.pow(10,0); // here you could get the duration
-      // alert(globalThis.audioDuration);
-      // alert("hi");
-      
-      //alert (Math.round(audio.duration*Math.pow(10,0))/Math.pow(10,0));
-      //Math.round(audio.duration*Math.pow(10,0))/Math.pow(10,0);
     }
     
   }
@@ -224,7 +219,7 @@ get f() { return this.form.controls; }
     formData.append("audio", this.form.get('audio').value);
     formData.append("audioDuration", globalThis.audioDuration);
     formData.append("transcript", this.form.value.transcript);
-    //console.log(globalThis.audioDuration);
+    
     this.submitted = true;
     if (this.form.valid) {
 
@@ -233,7 +228,7 @@ get f() { return this.form.controls; }
       (error) => console.log(error)
       
     );
-      console.table(this.form.value);
+     // console.table(this.form.value);
     }
   }
     refresh(response){

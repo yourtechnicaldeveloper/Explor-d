@@ -58,6 +58,7 @@ export class BadgeViewComponent implements OnInit {
     });
     this.restService.post("/badge/view", id).subscribe((data) => {
       this.badges = data.data;
+      console.log(this.badges.benefits)
       this.ngAfterContentInit(this.badges.lat, this.badges.long);
     }, (error) => {
       console.log(error)
