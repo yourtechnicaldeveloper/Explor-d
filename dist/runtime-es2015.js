@@ -64,7 +64,7 @@
 /******/
 /******/ 	// script path function
 /******/ 	function jsonpScriptSrc(chunkId) {
-/******/ 		return __webpack_require__.p + "" + ({"common":"common","charts-charts-module":"charts-charts-module","tables-tables-module":"tables-tables-module","editors-editors-module":"editors-editors-module","extra-components-extra-components-module":"extra-components-extra-components-module","forms-forms-module":"forms-forms-module","layout-layout-module":"layout-layout-module","maps-maps-module":"maps-maps-module","miscellaneous-miscellaneous-module":"miscellaneous-miscellaneous-module","modal-overlays-modal-overlays-module":"modal-overlays-modal-overlays-module","ui-features-ui-features-module":"ui-features-ui-features-module"}[chunkId]||chunkId) + "-es2015.js"
+/******/ 		return __webpack_require__.p + "" + ({"catagories-catagories-module":"catagories-catagories-module","common":"common","charts-charts-module":"charts-charts-module","tables-tables-module":"tables-tables-module","editors-editors-module":"editors-editors-module","extra-components-extra-components-module":"extra-components-extra-components-module","forms-forms-module":"forms-forms-module","layout-layout-module":"layout-layout-module","maps-maps-module":"maps-maps-module","miscellaneous-miscellaneous-module":"miscellaneous-miscellaneous-module","modal-overlays-modal-overlays-module":"modal-overlays-modal-overlays-module","ui-features-ui-features-module":"ui-features-ui-features-module"}[chunkId]||chunkId) + "-es2015.js"
 /******/ 	}
 /******/
 /******/ 	// The require function

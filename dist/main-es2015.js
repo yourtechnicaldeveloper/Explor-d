@@ -1,5 +1,6522 @@
 (window["webpackJsonp"] = window["webpackJsonp"] || []).push([["main"],{
 
+/***/ "./node_modules/classlist.js/classList.js":
+/*!************************************************!*\
+  !*** ./node_modules/classlist.js/classList.js ***!
+  \************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+/*
+ * classList.js: Cross-browser full element.classList implementation.
+ * 1.1.20150312
+ *
+ * By Eli Grey, http://eligrey.com
+ * License: Dedicated to the public domain.
+ *   See https://github.com/eligrey/classList.js/blob/master/LICENSE.md
+ */
+
+/*global self, document, DOMException */
+
+/*! @source http://purl.eligrey.com/github/classList.js/blob/master/classList.js */
+
+if ("document" in self) {
+
+// Full polyfill for browsers with no classList support
+// Including IE < Edge missing SVGElement.classList
+if (!("classList" in document.createElement("_")) 
+	|| document.createElementNS && !("classList" in document.createElementNS("http://www.w3.org/2000/svg","g"))) {
+
+(function (view) {
+
+"use strict";
+
+if (!('Element' in view)) return;
+
+var
+	  classListProp = "classList"
+	, protoProp = "prototype"
+	, elemCtrProto = view.Element[protoProp]
+	, objCtr = Object
+	, strTrim = String[protoProp].trim || function () {
+		return this.replace(/^\s+|\s+$/g, "");
+	}
+	, arrIndexOf = Array[protoProp].indexOf || function (item) {
+		var
+			  i = 0
+			, len = this.length
+		;
+		for (; i < len; i++) {
+			if (i in this && this[i] === item) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	// Vendors: please allow content code to instantiate DOMExceptions
+	, DOMEx = function (type, message) {
+		this.name = type;
+		this.code = DOMException[type];
+		this.message = message;
+	}
+	, checkTokenAndGetIndex = function (classList, token) {
+		if (token === "") {
+			throw new DOMEx(
+				  "SYNTAX_ERR"
+				, "An invalid or illegal string was specified"
+			);
+		}
+		if (/\s/.test(token)) {
+			throw new DOMEx(
+				  "INVALID_CHARACTER_ERR"
+				, "String contains an invalid character"
+			);
+		}
+		return arrIndexOf.call(classList, token);
+	}
+	, ClassList = function (elem) {
+		var
+			  trimmedClasses = strTrim.call(elem.getAttribute("class") || "")
+			, classes = trimmedClasses ? trimmedClasses.split(/\s+/) : []
+			, i = 0
+			, len = classes.length
+		;
+		for (; i < len; i++) {
+			this.push(classes[i]);
+		}
+		this._updateClassName = function () {
+			elem.setAttribute("class", this.toString());
+		};
+	}
+	, classListProto = ClassList[protoProp] = []
+	, classListGetter = function () {
+		return new ClassList(this);
+	}
+;
+// Most DOMException implementations don't allow calling DOMException's toString()
+// on non-DOMExceptions. Error's toString() is sufficient here.
+DOMEx[protoProp] = Error[protoProp];
+classListProto.item = function (i) {
+	return this[i] || null;
+};
+classListProto.contains = function (token) {
+	token += "";
+	return checkTokenAndGetIndex(this, token) !== -1;
+};
+classListProto.add = function () {
+	var
+		  tokens = arguments
+		, i = 0
+		, l = tokens.length
+		, token
+		, updated = false
+	;
+	do {
+		token = tokens[i] + "";
+		if (checkTokenAndGetIndex(this, token) === -1) {
+			this.push(token);
+			updated = true;
+		}
+	}
+	while (++i < l);
+
+	if (updated) {
+		this._updateClassName();
+	}
+};
+classListProto.remove = function () {
+	var
+		  tokens = arguments
+		, i = 0
+		, l = tokens.length
+		, token
+		, updated = false
+		, index
+	;
+	do {
+		token = tokens[i] + "";
+		index = checkTokenAndGetIndex(this, token);
+		while (index !== -1) {
+			this.splice(index, 1);
+			updated = true;
+			index = checkTokenAndGetIndex(this, token);
+		}
+	}
+	while (++i < l);
+
+	if (updated) {
+		this._updateClassName();
+	}
+};
+classListProto.toggle = function (token, force) {
+	token += "";
+
+	var
+		  result = this.contains(token)
+		, method = result ?
+			force !== true && "remove"
+		:
+			force !== false && "add"
+	;
+
+	if (method) {
+		this[method](token);
+	}
+
+	if (force === true || force === false) {
+		return force;
+	} else {
+		return !result;
+	}
+};
+classListProto.toString = function () {
+	return this.join(" ");
+};
+
+if (objCtr.defineProperty) {
+	var classListPropDesc = {
+		  get: classListGetter
+		, enumerable: true
+		, configurable: true
+	};
+	try {
+		objCtr.defineProperty(elemCtrProto, classListProp, classListPropDesc);
+	} catch (ex) { // IE 8 doesn't support enumerable:true
+		if (ex.number === -0x7FF5EC54) {
+			classListPropDesc.enumerable = false;
+			objCtr.defineProperty(elemCtrProto, classListProp, classListPropDesc);
+		}
+	}
+} else if (objCtr[protoProp].__defineGetter__) {
+	elemCtrProto.__defineGetter__(classListProp, classListGetter);
+}
+
+}(self));
+
+} else {
+// There is full or partial native classList support, so just check if we need
+// to normalize the add/remove and toggle APIs.
+
+(function () {
+	"use strict";
+
+	var testElement = document.createElement("_");
+
+	testElement.classList.add("c1", "c2");
+
+	// Polyfill for IE 10/11 and Firefox <26, where classList.add and
+	// classList.remove exist but support only one argument at a time.
+	if (!testElement.classList.contains("c2")) {
+		var createMethod = function(method) {
+			var original = DOMTokenList.prototype[method];
+
+			DOMTokenList.prototype[method] = function(token) {
+				var i, len = arguments.length;
+
+				for (i = 0; i < len; i++) {
+					token = arguments[i];
+					original.call(this, token);
+				}
+			};
+		};
+		createMethod('add');
+		createMethod('remove');
+	}
+
+	testElement.classList.toggle("c3", false);
+
+	// Polyfill for IE 10 and Firefox <24, where classList.toggle does not
+	// support the second argument.
+	if (testElement.classList.contains("c3")) {
+		var _toggle = DOMTokenList.prototype.toggle;
+
+		DOMTokenList.prototype.toggle = function(token, force) {
+			if (1 in arguments && !this.contains(token) === !force) {
+				return force;
+			} else {
+				return _toggle.call(this, token);
+			}
+		};
+
+	}
+
+	testElement = null;
+}());
+
+}
+
+}
+
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/es6/reflect.js":
+/*!*********************************************!*\
+  !*** ./node_modules/core-js/es6/reflect.js ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(/*! ../modules/es6.reflect.apply */ "./node_modules/core-js/modules/es6.reflect.apply.js");
+__webpack_require__(/*! ../modules/es6.reflect.construct */ "./node_modules/core-js/modules/es6.reflect.construct.js");
+__webpack_require__(/*! ../modules/es6.reflect.define-property */ "./node_modules/core-js/modules/es6.reflect.define-property.js");
+__webpack_require__(/*! ../modules/es6.reflect.delete-property */ "./node_modules/core-js/modules/es6.reflect.delete-property.js");
+__webpack_require__(/*! ../modules/es6.reflect.enumerate */ "./node_modules/core-js/modules/es6.reflect.enumerate.js");
+__webpack_require__(/*! ../modules/es6.reflect.get */ "./node_modules/core-js/modules/es6.reflect.get.js");
+__webpack_require__(/*! ../modules/es6.reflect.get-own-property-descriptor */ "./node_modules/core-js/modules/es6.reflect.get-own-property-descriptor.js");
+__webpack_require__(/*! ../modules/es6.reflect.get-prototype-of */ "./node_modules/core-js/modules/es6.reflect.get-prototype-of.js");
+__webpack_require__(/*! ../modules/es6.reflect.has */ "./node_modules/core-js/modules/es6.reflect.has.js");
+__webpack_require__(/*! ../modules/es6.reflect.is-extensible */ "./node_modules/core-js/modules/es6.reflect.is-extensible.js");
+__webpack_require__(/*! ../modules/es6.reflect.own-keys */ "./node_modules/core-js/modules/es6.reflect.own-keys.js");
+__webpack_require__(/*! ../modules/es6.reflect.prevent-extensions */ "./node_modules/core-js/modules/es6.reflect.prevent-extensions.js");
+__webpack_require__(/*! ../modules/es6.reflect.set */ "./node_modules/core-js/modules/es6.reflect.set.js");
+__webpack_require__(/*! ../modules/es6.reflect.set-prototype-of */ "./node_modules/core-js/modules/es6.reflect.set-prototype-of.js");
+module.exports = __webpack_require__(/*! ../modules/_core */ "./node_modules/core-js/modules/_core.js").Reflect;
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/es7/array.js":
+/*!*******************************************!*\
+  !*** ./node_modules/core-js/es7/array.js ***!
+  \*******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(/*! ../modules/es7.array.includes */ "./node_modules/core-js/modules/es7.array.includes.js");
+__webpack_require__(/*! ../modules/es7.array.flat-map */ "./node_modules/core-js/modules/es7.array.flat-map.js");
+__webpack_require__(/*! ../modules/es7.array.flatten */ "./node_modules/core-js/modules/es7.array.flatten.js");
+module.exports = __webpack_require__(/*! ../modules/_core */ "./node_modules/core-js/modules/_core.js").Array;
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/es7/object.js":
+/*!********************************************!*\
+  !*** ./node_modules/core-js/es7/object.js ***!
+  \********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(/*! ../modules/es7.object.get-own-property-descriptors */ "./node_modules/core-js/modules/es7.object.get-own-property-descriptors.js");
+__webpack_require__(/*! ../modules/es7.object.values */ "./node_modules/core-js/modules/es7.object.values.js");
+__webpack_require__(/*! ../modules/es7.object.entries */ "./node_modules/core-js/modules/es7.object.entries.js");
+__webpack_require__(/*! ../modules/es7.object.define-getter */ "./node_modules/core-js/modules/es7.object.define-getter.js");
+__webpack_require__(/*! ../modules/es7.object.define-setter */ "./node_modules/core-js/modules/es7.object.define-setter.js");
+__webpack_require__(/*! ../modules/es7.object.lookup-getter */ "./node_modules/core-js/modules/es7.object.lookup-getter.js");
+__webpack_require__(/*! ../modules/es7.object.lookup-setter */ "./node_modules/core-js/modules/es7.object.lookup-setter.js");
+module.exports = __webpack_require__(/*! ../modules/_core */ "./node_modules/core-js/modules/_core.js").Object;
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/es7/reflect.js":
+/*!*********************************************!*\
+  !*** ./node_modules/core-js/es7/reflect.js ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(/*! ../modules/es7.reflect.define-metadata */ "./node_modules/core-js/modules/es7.reflect.define-metadata.js");
+__webpack_require__(/*! ../modules/es7.reflect.delete-metadata */ "./node_modules/core-js/modules/es7.reflect.delete-metadata.js");
+__webpack_require__(/*! ../modules/es7.reflect.get-metadata */ "./node_modules/core-js/modules/es7.reflect.get-metadata.js");
+__webpack_require__(/*! ../modules/es7.reflect.get-metadata-keys */ "./node_modules/core-js/modules/es7.reflect.get-metadata-keys.js");
+__webpack_require__(/*! ../modules/es7.reflect.get-own-metadata */ "./node_modules/core-js/modules/es7.reflect.get-own-metadata.js");
+__webpack_require__(/*! ../modules/es7.reflect.get-own-metadata-keys */ "./node_modules/core-js/modules/es7.reflect.get-own-metadata-keys.js");
+__webpack_require__(/*! ../modules/es7.reflect.has-metadata */ "./node_modules/core-js/modules/es7.reflect.has-metadata.js");
+__webpack_require__(/*! ../modules/es7.reflect.has-own-metadata */ "./node_modules/core-js/modules/es7.reflect.has-own-metadata.js");
+__webpack_require__(/*! ../modules/es7.reflect.metadata */ "./node_modules/core-js/modules/es7.reflect.metadata.js");
+module.exports = __webpack_require__(/*! ../modules/_core */ "./node_modules/core-js/modules/_core.js").Reflect;
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_a-function.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/core-js/modules/_a-function.js ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = function (it) {
+  if (typeof it != 'function') throw TypeError(it + ' is not a function!');
+  return it;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_add-to-unscopables.js":
+/*!*************************************************************!*\
+  !*** ./node_modules/core-js/modules/_add-to-unscopables.js ***!
+  \*************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 22.1.3.31 Array.prototype[@@unscopables]
+var UNSCOPABLES = __webpack_require__(/*! ./_wks */ "./node_modules/core-js/modules/_wks.js")('unscopables');
+var ArrayProto = Array.prototype;
+if (ArrayProto[UNSCOPABLES] == undefined) __webpack_require__(/*! ./_hide */ "./node_modules/core-js/modules/_hide.js")(ArrayProto, UNSCOPABLES, {});
+module.exports = function (key) {
+  ArrayProto[UNSCOPABLES][key] = true;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_an-instance.js":
+/*!******************************************************!*\
+  !*** ./node_modules/core-js/modules/_an-instance.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = function (it, Constructor, name, forbiddenField) {
+  if (!(it instanceof Constructor) || (forbiddenField !== undefined && forbiddenField in it)) {
+    throw TypeError(name + ': incorrect invocation!');
+  } return it;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_an-object.js":
+/*!****************************************************!*\
+  !*** ./node_modules/core-js/modules/_an-object.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+module.exports = function (it) {
+  if (!isObject(it)) throw TypeError(it + ' is not an object!');
+  return it;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_array-from-iterable.js":
+/*!**************************************************************!*\
+  !*** ./node_modules/core-js/modules/_array-from-iterable.js ***!
+  \**************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var forOf = __webpack_require__(/*! ./_for-of */ "./node_modules/core-js/modules/_for-of.js");
+
+module.exports = function (iter, ITERATOR) {
+  var result = [];
+  forOf(iter, false, result.push, result, ITERATOR);
+  return result;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_array-includes.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/core-js/modules/_array-includes.js ***!
+  \*********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// false -> Array#indexOf
+// true  -> Array#includes
+var toIObject = __webpack_require__(/*! ./_to-iobject */ "./node_modules/core-js/modules/_to-iobject.js");
+var toLength = __webpack_require__(/*! ./_to-length */ "./node_modules/core-js/modules/_to-length.js");
+var toAbsoluteIndex = __webpack_require__(/*! ./_to-absolute-index */ "./node_modules/core-js/modules/_to-absolute-index.js");
+module.exports = function (IS_INCLUDES) {
+  return function ($this, el, fromIndex) {
+    var O = toIObject($this);
+    var length = toLength(O.length);
+    var index = toAbsoluteIndex(fromIndex, length);
+    var value;
+    // Array#includes uses SameValueZero equality algorithm
+    // eslint-disable-next-line no-self-compare
+    if (IS_INCLUDES && el != el) while (length > index) {
+      value = O[index++];
+      // eslint-disable-next-line no-self-compare
+      if (value != value) return true;
+    // Array#indexOf ignores holes, Array#includes - not
+    } else for (;length > index; index++) if (IS_INCLUDES || index in O) {
+      if (O[index] === el) return IS_INCLUDES || index || 0;
+    } return !IS_INCLUDES && -1;
+  };
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_array-methods.js":
+/*!********************************************************!*\
+  !*** ./node_modules/core-js/modules/_array-methods.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 0 -> Array#forEach
+// 1 -> Array#map
+// 2 -> Array#filter
+// 3 -> Array#some
+// 4 -> Array#every
+// 5 -> Array#find
+// 6 -> Array#findIndex
+var ctx = __webpack_require__(/*! ./_ctx */ "./node_modules/core-js/modules/_ctx.js");
+var IObject = __webpack_require__(/*! ./_iobject */ "./node_modules/core-js/modules/_iobject.js");
+var toObject = __webpack_require__(/*! ./_to-object */ "./node_modules/core-js/modules/_to-object.js");
+var toLength = __webpack_require__(/*! ./_to-length */ "./node_modules/core-js/modules/_to-length.js");
+var asc = __webpack_require__(/*! ./_array-species-create */ "./node_modules/core-js/modules/_array-species-create.js");
+module.exports = function (TYPE, $create) {
+  var IS_MAP = TYPE == 1;
+  var IS_FILTER = TYPE == 2;
+  var IS_SOME = TYPE == 3;
+  var IS_EVERY = TYPE == 4;
+  var IS_FIND_INDEX = TYPE == 6;
+  var NO_HOLES = TYPE == 5 || IS_FIND_INDEX;
+  var create = $create || asc;
+  return function ($this, callbackfn, that) {
+    var O = toObject($this);
+    var self = IObject(O);
+    var f = ctx(callbackfn, that, 3);
+    var length = toLength(self.length);
+    var index = 0;
+    var result = IS_MAP ? create($this, length) : IS_FILTER ? create($this, 0) : undefined;
+    var val, res;
+    for (;length > index; index++) if (NO_HOLES || index in self) {
+      val = self[index];
+      res = f(val, index, O);
+      if (TYPE) {
+        if (IS_MAP) result[index] = res;   // map
+        else if (res) switch (TYPE) {
+          case 3: return true;             // some
+          case 5: return val;              // find
+          case 6: return index;            // findIndex
+          case 2: result.push(val);        // filter
+        } else if (IS_EVERY) return false; // every
+      }
+    }
+    return IS_FIND_INDEX ? -1 : IS_SOME || IS_EVERY ? IS_EVERY : result;
+  };
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_array-species-constructor.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/core-js/modules/_array-species-constructor.js ***!
+  \********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+var isArray = __webpack_require__(/*! ./_is-array */ "./node_modules/core-js/modules/_is-array.js");
+var SPECIES = __webpack_require__(/*! ./_wks */ "./node_modules/core-js/modules/_wks.js")('species');
+
+module.exports = function (original) {
+  var C;
+  if (isArray(original)) {
+    C = original.constructor;
+    // cross-realm fallback
+    if (typeof C == 'function' && (C === Array || isArray(C.prototype))) C = undefined;
+    if (isObject(C)) {
+      C = C[SPECIES];
+      if (C === null) C = undefined;
+    }
+  } return C === undefined ? Array : C;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_array-species-create.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/core-js/modules/_array-species-create.js ***!
+  \***************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 9.4.2.3 ArraySpeciesCreate(originalArray, length)
+var speciesConstructor = __webpack_require__(/*! ./_array-species-constructor */ "./node_modules/core-js/modules/_array-species-constructor.js");
+
+module.exports = function (original, length) {
+  return new (speciesConstructor(original))(length);
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_bind.js":
+/*!***********************************************!*\
+  !*** ./node_modules/core-js/modules/_bind.js ***!
+  \***********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var aFunction = __webpack_require__(/*! ./_a-function */ "./node_modules/core-js/modules/_a-function.js");
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+var invoke = __webpack_require__(/*! ./_invoke */ "./node_modules/core-js/modules/_invoke.js");
+var arraySlice = [].slice;
+var factories = {};
+
+var construct = function (F, len, args) {
+  if (!(len in factories)) {
+    for (var n = [], i = 0; i < len; i++) n[i] = 'a[' + i + ']';
+    // eslint-disable-next-line no-new-func
+    factories[len] = Function('F,a', 'return new F(' + n.join(',') + ')');
+  } return factories[len](F, args);
+};
+
+module.exports = Function.bind || function bind(that /* , ...args */) {
+  var fn = aFunction(this);
+  var partArgs = arraySlice.call(arguments, 1);
+  var bound = function (/* args... */) {
+    var args = partArgs.concat(arraySlice.call(arguments));
+    return this instanceof bound ? construct(fn, args.length, args) : invoke(fn, args, that);
+  };
+  if (isObject(fn.prototype)) bound.prototype = fn.prototype;
+  return bound;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_classof.js":
+/*!**************************************************!*\
+  !*** ./node_modules/core-js/modules/_classof.js ***!
+  \**************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// getting tag from 19.1.3.6 Object.prototype.toString()
+var cof = __webpack_require__(/*! ./_cof */ "./node_modules/core-js/modules/_cof.js");
+var TAG = __webpack_require__(/*! ./_wks */ "./node_modules/core-js/modules/_wks.js")('toStringTag');
+// ES3 wrong here
+var ARG = cof(function () { return arguments; }()) == 'Arguments';
+
+// fallback for IE11 Script Access Denied error
+var tryGet = function (it, key) {
+  try {
+    return it[key];
+  } catch (e) { /* empty */ }
+};
+
+module.exports = function (it) {
+  var O, T, B;
+  return it === undefined ? 'Undefined' : it === null ? 'Null'
+    // @@toStringTag case
+    : typeof (T = tryGet(O = Object(it), TAG)) == 'string' ? T
+    // builtinTag case
+    : ARG ? cof(O)
+    // ES3 arguments fallback
+    : (B = cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_cof.js":
+/*!**********************************************!*\
+  !*** ./node_modules/core-js/modules/_cof.js ***!
+  \**********************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+var toString = {}.toString;
+
+module.exports = function (it) {
+  return toString.call(it).slice(8, -1);
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_collection-strong.js":
+/*!************************************************************!*\
+  !*** ./node_modules/core-js/modules/_collection-strong.js ***!
+  \************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var dP = __webpack_require__(/*! ./_object-dp */ "./node_modules/core-js/modules/_object-dp.js").f;
+var create = __webpack_require__(/*! ./_object-create */ "./node_modules/core-js/modules/_object-create.js");
+var redefineAll = __webpack_require__(/*! ./_redefine-all */ "./node_modules/core-js/modules/_redefine-all.js");
+var ctx = __webpack_require__(/*! ./_ctx */ "./node_modules/core-js/modules/_ctx.js");
+var anInstance = __webpack_require__(/*! ./_an-instance */ "./node_modules/core-js/modules/_an-instance.js");
+var forOf = __webpack_require__(/*! ./_for-of */ "./node_modules/core-js/modules/_for-of.js");
+var $iterDefine = __webpack_require__(/*! ./_iter-define */ "./node_modules/core-js/modules/_iter-define.js");
+var step = __webpack_require__(/*! ./_iter-step */ "./node_modules/core-js/modules/_iter-step.js");
+var setSpecies = __webpack_require__(/*! ./_set-species */ "./node_modules/core-js/modules/_set-species.js");
+var DESCRIPTORS = __webpack_require__(/*! ./_descriptors */ "./node_modules/core-js/modules/_descriptors.js");
+var fastKey = __webpack_require__(/*! ./_meta */ "./node_modules/core-js/modules/_meta.js").fastKey;
+var validate = __webpack_require__(/*! ./_validate-collection */ "./node_modules/core-js/modules/_validate-collection.js");
+var SIZE = DESCRIPTORS ? '_s' : 'size';
+
+var getEntry = function (that, key) {
+  // fast case
+  var index = fastKey(key);
+  var entry;
+  if (index !== 'F') return that._i[index];
+  // frozen object case
+  for (entry = that._f; entry; entry = entry.n) {
+    if (entry.k == key) return entry;
+  }
+};
+
+module.exports = {
+  getConstructor: function (wrapper, NAME, IS_MAP, ADDER) {
+    var C = wrapper(function (that, iterable) {
+      anInstance(that, C, NAME, '_i');
+      that._t = NAME;         // collection type
+      that._i = create(null); // index
+      that._f = undefined;    // first entry
+      that._l = undefined;    // last entry
+      that[SIZE] = 0;         // size
+      if (iterable != undefined) forOf(iterable, IS_MAP, that[ADDER], that);
+    });
+    redefineAll(C.prototype, {
+      // 23.1.3.1 Map.prototype.clear()
+      // 23.2.3.2 Set.prototype.clear()
+      clear: function clear() {
+        for (var that = validate(this, NAME), data = that._i, entry = that._f; entry; entry = entry.n) {
+          entry.r = true;
+          if (entry.p) entry.p = entry.p.n = undefined;
+          delete data[entry.i];
+        }
+        that._f = that._l = undefined;
+        that[SIZE] = 0;
+      },
+      // 23.1.3.3 Map.prototype.delete(key)
+      // 23.2.3.4 Set.prototype.delete(value)
+      'delete': function (key) {
+        var that = validate(this, NAME);
+        var entry = getEntry(that, key);
+        if (entry) {
+          var next = entry.n;
+          var prev = entry.p;
+          delete that._i[entry.i];
+          entry.r = true;
+          if (prev) prev.n = next;
+          if (next) next.p = prev;
+          if (that._f == entry) that._f = next;
+          if (that._l == entry) that._l = prev;
+          that[SIZE]--;
+        } return !!entry;
+      },
+      // 23.2.3.6 Set.prototype.forEach(callbackfn, thisArg = undefined)
+      // 23.1.3.5 Map.prototype.forEach(callbackfn, thisArg = undefined)
+      forEach: function forEach(callbackfn /* , that = undefined */) {
+        validate(this, NAME);
+        var f = ctx(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+        var entry;
+        while (entry = entry ? entry.n : this._f) {
+          f(entry.v, entry.k, this);
+          // revert to the last existing entry
+          while (entry && entry.r) entry = entry.p;
+        }
+      },
+      // 23.1.3.7 Map.prototype.has(key)
+      // 23.2.3.7 Set.prototype.has(value)
+      has: function has(key) {
+        return !!getEntry(validate(this, NAME), key);
+      }
+    });
+    if (DESCRIPTORS) dP(C.prototype, 'size', {
+      get: function () {
+        return validate(this, NAME)[SIZE];
+      }
+    });
+    return C;
+  },
+  def: function (that, key, value) {
+    var entry = getEntry(that, key);
+    var prev, index;
+    // change existing entry
+    if (entry) {
+      entry.v = value;
+    // create new entry
+    } else {
+      that._l = entry = {
+        i: index = fastKey(key, true), // <- index
+        k: key,                        // <- key
+        v: value,                      // <- value
+        p: prev = that._l,             // <- previous entry
+        n: undefined,                  // <- next entry
+        r: false                       // <- removed
+      };
+      if (!that._f) that._f = entry;
+      if (prev) prev.n = entry;
+      that[SIZE]++;
+      // add to index
+      if (index !== 'F') that._i[index] = entry;
+    } return that;
+  },
+  getEntry: getEntry,
+  setStrong: function (C, NAME, IS_MAP) {
+    // add .keys, .values, .entries, [@@iterator]
+    // 23.1.3.4, 23.1.3.8, 23.1.3.11, 23.1.3.12, 23.2.3.5, 23.2.3.8, 23.2.3.10, 23.2.3.11
+    $iterDefine(C, NAME, function (iterated, kind) {
+      this._t = validate(iterated, NAME); // target
+      this._k = kind;                     // kind
+      this._l = undefined;                // previous
+    }, function () {
+      var that = this;
+      var kind = that._k;
+      var entry = that._l;
+      // revert to the last existing entry
+      while (entry && entry.r) entry = entry.p;
+      // get next entry
+      if (!that._t || !(that._l = entry = entry ? entry.n : that._t._f)) {
+        // or finish the iteration
+        that._t = undefined;
+        return step(1);
+      }
+      // return step by kind
+      if (kind == 'keys') return step(0, entry.k);
+      if (kind == 'values') return step(0, entry.v);
+      return step(0, [entry.k, entry.v]);
+    }, IS_MAP ? 'entries' : 'values', !IS_MAP, true);
+
+    // add [@@species], 23.1.2.2, 23.2.2.2
+    setSpecies(NAME);
+  }
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_collection-weak.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/core-js/modules/_collection-weak.js ***!
+  \**********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var redefineAll = __webpack_require__(/*! ./_redefine-all */ "./node_modules/core-js/modules/_redefine-all.js");
+var getWeak = __webpack_require__(/*! ./_meta */ "./node_modules/core-js/modules/_meta.js").getWeak;
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+var anInstance = __webpack_require__(/*! ./_an-instance */ "./node_modules/core-js/modules/_an-instance.js");
+var forOf = __webpack_require__(/*! ./_for-of */ "./node_modules/core-js/modules/_for-of.js");
+var createArrayMethod = __webpack_require__(/*! ./_array-methods */ "./node_modules/core-js/modules/_array-methods.js");
+var $has = __webpack_require__(/*! ./_has */ "./node_modules/core-js/modules/_has.js");
+var validate = __webpack_require__(/*! ./_validate-collection */ "./node_modules/core-js/modules/_validate-collection.js");
+var arrayFind = createArrayMethod(5);
+var arrayFindIndex = createArrayMethod(6);
+var id = 0;
+
+// fallback for uncaught frozen keys
+var uncaughtFrozenStore = function (that) {
+  return that._l || (that._l = new UncaughtFrozenStore());
+};
+var UncaughtFrozenStore = function () {
+  this.a = [];
+};
+var findUncaughtFrozen = function (store, key) {
+  return arrayFind(store.a, function (it) {
+    return it[0] === key;
+  });
+};
+UncaughtFrozenStore.prototype = {
+  get: function (key) {
+    var entry = findUncaughtFrozen(this, key);
+    if (entry) return entry[1];
+  },
+  has: function (key) {
+    return !!findUncaughtFrozen(this, key);
+  },
+  set: function (key, value) {
+    var entry = findUncaughtFrozen(this, key);
+    if (entry) entry[1] = value;
+    else this.a.push([key, value]);
+  },
+  'delete': function (key) {
+    var index = arrayFindIndex(this.a, function (it) {
+      return it[0] === key;
+    });
+    if (~index) this.a.splice(index, 1);
+    return !!~index;
+  }
+};
+
+module.exports = {
+  getConstructor: function (wrapper, NAME, IS_MAP, ADDER) {
+    var C = wrapper(function (that, iterable) {
+      anInstance(that, C, NAME, '_i');
+      that._t = NAME;      // collection type
+      that._i = id++;      // collection id
+      that._l = undefined; // leak store for uncaught frozen objects
+      if (iterable != undefined) forOf(iterable, IS_MAP, that[ADDER], that);
+    });
+    redefineAll(C.prototype, {
+      // 23.3.3.2 WeakMap.prototype.delete(key)
+      // 23.4.3.3 WeakSet.prototype.delete(value)
+      'delete': function (key) {
+        if (!isObject(key)) return false;
+        var data = getWeak(key);
+        if (data === true) return uncaughtFrozenStore(validate(this, NAME))['delete'](key);
+        return data && $has(data, this._i) && delete data[this._i];
+      },
+      // 23.3.3.4 WeakMap.prototype.has(key)
+      // 23.4.3.4 WeakSet.prototype.has(value)
+      has: function has(key) {
+        if (!isObject(key)) return false;
+        var data = getWeak(key);
+        if (data === true) return uncaughtFrozenStore(validate(this, NAME)).has(key);
+        return data && $has(data, this._i);
+      }
+    });
+    return C;
+  },
+  def: function (that, key, value) {
+    var data = getWeak(anObject(key), true);
+    if (data === true) uncaughtFrozenStore(that).set(key, value);
+    else data[that._i] = value;
+    return that;
+  },
+  ufstore: uncaughtFrozenStore
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_collection.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/core-js/modules/_collection.js ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var global = __webpack_require__(/*! ./_global */ "./node_modules/core-js/modules/_global.js");
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var redefine = __webpack_require__(/*! ./_redefine */ "./node_modules/core-js/modules/_redefine.js");
+var redefineAll = __webpack_require__(/*! ./_redefine-all */ "./node_modules/core-js/modules/_redefine-all.js");
+var meta = __webpack_require__(/*! ./_meta */ "./node_modules/core-js/modules/_meta.js");
+var forOf = __webpack_require__(/*! ./_for-of */ "./node_modules/core-js/modules/_for-of.js");
+var anInstance = __webpack_require__(/*! ./_an-instance */ "./node_modules/core-js/modules/_an-instance.js");
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+var fails = __webpack_require__(/*! ./_fails */ "./node_modules/core-js/modules/_fails.js");
+var $iterDetect = __webpack_require__(/*! ./_iter-detect */ "./node_modules/core-js/modules/_iter-detect.js");
+var setToStringTag = __webpack_require__(/*! ./_set-to-string-tag */ "./node_modules/core-js/modules/_set-to-string-tag.js");
+var inheritIfRequired = __webpack_require__(/*! ./_inherit-if-required */ "./node_modules/core-js/modules/_inherit-if-required.js");
+
+module.exports = function (NAME, wrapper, methods, common, IS_MAP, IS_WEAK) {
+  var Base = global[NAME];
+  var C = Base;
+  var ADDER = IS_MAP ? 'set' : 'add';
+  var proto = C && C.prototype;
+  var O = {};
+  var fixMethod = function (KEY) {
+    var fn = proto[KEY];
+    redefine(proto, KEY,
+      KEY == 'delete' ? function (a) {
+        return IS_WEAK && !isObject(a) ? false : fn.call(this, a === 0 ? 0 : a);
+      } : KEY == 'has' ? function has(a) {
+        return IS_WEAK && !isObject(a) ? false : fn.call(this, a === 0 ? 0 : a);
+      } : KEY == 'get' ? function get(a) {
+        return IS_WEAK && !isObject(a) ? undefined : fn.call(this, a === 0 ? 0 : a);
+      } : KEY == 'add' ? function add(a) { fn.call(this, a === 0 ? 0 : a); return this; }
+        : function set(a, b) { fn.call(this, a === 0 ? 0 : a, b); return this; }
+    );
+  };
+  if (typeof C != 'function' || !(IS_WEAK || proto.forEach && !fails(function () {
+    new C().entries().next();
+  }))) {
+    // create collection constructor
+    C = common.getConstructor(wrapper, NAME, IS_MAP, ADDER);
+    redefineAll(C.prototype, methods);
+    meta.NEED = true;
+  } else {
+    var instance = new C();
+    // early implementations not supports chaining
+    var HASNT_CHAINING = instance[ADDER](IS_WEAK ? {} : -0, 1) != instance;
+    // V8 ~  Chromium 40- weak-collections throws on primitives, but should return false
+    var THROWS_ON_PRIMITIVES = fails(function () { instance.has(1); });
+    // most early implementations doesn't supports iterables, most modern - not close it correctly
+    var ACCEPT_ITERABLES = $iterDetect(function (iter) { new C(iter); }); // eslint-disable-line no-new
+    // for early implementations -0 and +0 not the same
+    var BUGGY_ZERO = !IS_WEAK && fails(function () {
+      // V8 ~ Chromium 42- fails only with 5+ elements
+      var $instance = new C();
+      var index = 5;
+      while (index--) $instance[ADDER](index, index);
+      return !$instance.has(-0);
+    });
+    if (!ACCEPT_ITERABLES) {
+      C = wrapper(function (target, iterable) {
+        anInstance(target, C, NAME);
+        var that = inheritIfRequired(new Base(), target, C);
+        if (iterable != undefined) forOf(iterable, IS_MAP, that[ADDER], that);
+        return that;
+      });
+      C.prototype = proto;
+      proto.constructor = C;
+    }
+    if (THROWS_ON_PRIMITIVES || BUGGY_ZERO) {
+      fixMethod('delete');
+      fixMethod('has');
+      IS_MAP && fixMethod('get');
+    }
+    if (BUGGY_ZERO || HASNT_CHAINING) fixMethod(ADDER);
+    // weak collections should not contains .clear method
+    if (IS_WEAK && proto.clear) delete proto.clear;
+  }
+
+  setToStringTag(C, NAME);
+
+  O[NAME] = C;
+  $export($export.G + $export.W + $export.F * (C != Base), O);
+
+  if (!IS_WEAK) common.setStrong(C, NAME, IS_MAP);
+
+  return C;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_core.js":
+/*!***********************************************!*\
+  !*** ./node_modules/core-js/modules/_core.js ***!
+  \***********************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+var core = module.exports = { version: '2.5.1' };
+if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_create-property.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/core-js/modules/_create-property.js ***!
+  \**********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var $defineProperty = __webpack_require__(/*! ./_object-dp */ "./node_modules/core-js/modules/_object-dp.js");
+var createDesc = __webpack_require__(/*! ./_property-desc */ "./node_modules/core-js/modules/_property-desc.js");
+
+module.exports = function (object, index, value) {
+  if (index in object) $defineProperty.f(object, index, createDesc(0, value));
+  else object[index] = value;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_ctx.js":
+/*!**********************************************!*\
+  !*** ./node_modules/core-js/modules/_ctx.js ***!
+  \**********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// optional / simple context binding
+var aFunction = __webpack_require__(/*! ./_a-function */ "./node_modules/core-js/modules/_a-function.js");
+module.exports = function (fn, that, length) {
+  aFunction(fn);
+  if (that === undefined) return fn;
+  switch (length) {
+    case 1: return function (a) {
+      return fn.call(that, a);
+    };
+    case 2: return function (a, b) {
+      return fn.call(that, a, b);
+    };
+    case 3: return function (a, b, c) {
+      return fn.call(that, a, b, c);
+    };
+  }
+  return function (/* ...args */) {
+    return fn.apply(that, arguments);
+  };
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_defined.js":
+/*!**************************************************!*\
+  !*** ./node_modules/core-js/modules/_defined.js ***!
+  \**************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+// 7.2.1 RequireObjectCoercible(argument)
+module.exports = function (it) {
+  if (it == undefined) throw TypeError("Can't call method on  " + it);
+  return it;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_descriptors.js":
+/*!******************************************************!*\
+  !*** ./node_modules/core-js/modules/_descriptors.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// Thank's IE8 for his funny defineProperty
+module.exports = !__webpack_require__(/*! ./_fails */ "./node_modules/core-js/modules/_fails.js")(function () {
+  return Object.defineProperty({}, 'a', { get: function () { return 7; } }).a != 7;
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_dom-create.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/core-js/modules/_dom-create.js ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+var document = __webpack_require__(/*! ./_global */ "./node_modules/core-js/modules/_global.js").document;
+// typeof document.createElement is 'object' in old IE
+var is = isObject(document) && isObject(document.createElement);
+module.exports = function (it) {
+  return is ? document.createElement(it) : {};
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_enum-bug-keys.js":
+/*!********************************************************!*\
+  !*** ./node_modules/core-js/modules/_enum-bug-keys.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+// IE 8- don't enum bug keys
+module.exports = (
+  'constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf'
+).split(',');
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_export.js":
+/*!*************************************************!*\
+  !*** ./node_modules/core-js/modules/_export.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var global = __webpack_require__(/*! ./_global */ "./node_modules/core-js/modules/_global.js");
+var core = __webpack_require__(/*! ./_core */ "./node_modules/core-js/modules/_core.js");
+var hide = __webpack_require__(/*! ./_hide */ "./node_modules/core-js/modules/_hide.js");
+var redefine = __webpack_require__(/*! ./_redefine */ "./node_modules/core-js/modules/_redefine.js");
+var ctx = __webpack_require__(/*! ./_ctx */ "./node_modules/core-js/modules/_ctx.js");
+var PROTOTYPE = 'prototype';
+
+var $export = function (type, name, source) {
+  var IS_FORCED = type & $export.F;
+  var IS_GLOBAL = type & $export.G;
+  var IS_STATIC = type & $export.S;
+  var IS_PROTO = type & $export.P;
+  var IS_BIND = type & $export.B;
+  var target = IS_GLOBAL ? global : IS_STATIC ? global[name] || (global[name] = {}) : (global[name] || {})[PROTOTYPE];
+  var exports = IS_GLOBAL ? core : core[name] || (core[name] = {});
+  var expProto = exports[PROTOTYPE] || (exports[PROTOTYPE] = {});
+  var key, own, out, exp;
+  if (IS_GLOBAL) source = name;
+  for (key in source) {
+    // contains in native
+    own = !IS_FORCED && target && target[key] !== undefined;
+    // export native or passed
+    out = (own ? target : source)[key];
+    // bind timers to global for call from export context
+    exp = IS_BIND && own ? ctx(out, global) : IS_PROTO && typeof out == 'function' ? ctx(Function.call, out) : out;
+    // extend global
+    if (target) redefine(target, key, out, type & $export.U);
+    // export
+    if (exports[key] != out) hide(exports, key, exp);
+    if (IS_PROTO && expProto[key] != out) expProto[key] = out;
+  }
+};
+global.core = core;
+// type bitmap
+$export.F = 1;   // forced
+$export.G = 2;   // global
+$export.S = 4;   // static
+$export.P = 8;   // proto
+$export.B = 16;  // bind
+$export.W = 32;  // wrap
+$export.U = 64;  // safe
+$export.R = 128; // real proto method for `library`
+module.exports = $export;
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_fails.js":
+/*!************************************************!*\
+  !*** ./node_modules/core-js/modules/_fails.js ***!
+  \************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = function (exec) {
+  try {
+    return !!exec();
+  } catch (e) {
+    return true;
+  }
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_flatten-into-array.js":
+/*!*************************************************************!*\
+  !*** ./node_modules/core-js/modules/_flatten-into-array.js ***!
+  \*************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+// https://tc39.github.io/proposal-flatMap/#sec-FlattenIntoArray
+var isArray = __webpack_require__(/*! ./_is-array */ "./node_modules/core-js/modules/_is-array.js");
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+var toLength = __webpack_require__(/*! ./_to-length */ "./node_modules/core-js/modules/_to-length.js");
+var ctx = __webpack_require__(/*! ./_ctx */ "./node_modules/core-js/modules/_ctx.js");
+var IS_CONCAT_SPREADABLE = __webpack_require__(/*! ./_wks */ "./node_modules/core-js/modules/_wks.js")('isConcatSpreadable');
+
+function flattenIntoArray(target, original, source, sourceLen, start, depth, mapper, thisArg) {
+  var targetIndex = start;
+  var sourceIndex = 0;
+  var mapFn = mapper ? ctx(mapper, thisArg, 3) : false;
+  var element, spreadable;
+
+  while (sourceIndex < sourceLen) {
+    if (sourceIndex in source) {
+      element = mapFn ? mapFn(source[sourceIndex], sourceIndex, original) : source[sourceIndex];
+
+      spreadable = false;
+      if (isObject(element)) {
+        spreadable = element[IS_CONCAT_SPREADABLE];
+        spreadable = spreadable !== undefined ? !!spreadable : isArray(element);
+      }
+
+      if (spreadable && depth > 0) {
+        targetIndex = flattenIntoArray(target, original, element, toLength(element.length), targetIndex, depth - 1) - 1;
+      } else {
+        if (targetIndex >= 0x1fffffffffffff) throw TypeError();
+        target[targetIndex] = element;
+      }
+
+      targetIndex++;
+    }
+    sourceIndex++;
+  }
+  return targetIndex;
+}
+
+module.exports = flattenIntoArray;
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_for-of.js":
+/*!*************************************************!*\
+  !*** ./node_modules/core-js/modules/_for-of.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var ctx = __webpack_require__(/*! ./_ctx */ "./node_modules/core-js/modules/_ctx.js");
+var call = __webpack_require__(/*! ./_iter-call */ "./node_modules/core-js/modules/_iter-call.js");
+var isArrayIter = __webpack_require__(/*! ./_is-array-iter */ "./node_modules/core-js/modules/_is-array-iter.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var toLength = __webpack_require__(/*! ./_to-length */ "./node_modules/core-js/modules/_to-length.js");
+var getIterFn = __webpack_require__(/*! ./core.get-iterator-method */ "./node_modules/core-js/modules/core.get-iterator-method.js");
+var BREAK = {};
+var RETURN = {};
+var exports = module.exports = function (iterable, entries, fn, that, ITERATOR) {
+  var iterFn = ITERATOR ? function () { return iterable; } : getIterFn(iterable);
+  var f = ctx(fn, that, entries ? 2 : 1);
+  var index = 0;
+  var length, step, iterator, result;
+  if (typeof iterFn != 'function') throw TypeError(iterable + ' is not iterable!');
+  // fast case for arrays with default iterator
+  if (isArrayIter(iterFn)) for (length = toLength(iterable.length); length > index; index++) {
+    result = entries ? f(anObject(step = iterable[index])[0], step[1]) : f(iterable[index]);
+    if (result === BREAK || result === RETURN) return result;
+  } else for (iterator = iterFn.call(iterable); !(step = iterator.next()).done;) {
+    result = call(iterator, f, step.value, entries);
+    if (result === BREAK || result === RETURN) return result;
+  }
+};
+exports.BREAK = BREAK;
+exports.RETURN = RETURN;
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_global.js":
+/*!*************************************************!*\
+  !*** ./node_modules/core-js/modules/_global.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
+var global = module.exports = typeof window != 'undefined' && window.Math == Math
+  ? window : typeof self != 'undefined' && self.Math == Math ? self
+  // eslint-disable-next-line no-new-func
+  : Function('return this')();
+if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_has.js":
+/*!**********************************************!*\
+  !*** ./node_modules/core-js/modules/_has.js ***!
+  \**********************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+var hasOwnProperty = {}.hasOwnProperty;
+module.exports = function (it, key) {
+  return hasOwnProperty.call(it, key);
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_hide.js":
+/*!***********************************************!*\
+  !*** ./node_modules/core-js/modules/_hide.js ***!
+  \***********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var dP = __webpack_require__(/*! ./_object-dp */ "./node_modules/core-js/modules/_object-dp.js");
+var createDesc = __webpack_require__(/*! ./_property-desc */ "./node_modules/core-js/modules/_property-desc.js");
+module.exports = __webpack_require__(/*! ./_descriptors */ "./node_modules/core-js/modules/_descriptors.js") ? function (object, key, value) {
+  return dP.f(object, key, createDesc(1, value));
+} : function (object, key, value) {
+  object[key] = value;
+  return object;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_html.js":
+/*!***********************************************!*\
+  !*** ./node_modules/core-js/modules/_html.js ***!
+  \***********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var document = __webpack_require__(/*! ./_global */ "./node_modules/core-js/modules/_global.js").document;
+module.exports = document && document.documentElement;
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_ie8-dom-define.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/core-js/modules/_ie8-dom-define.js ***!
+  \*********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = !__webpack_require__(/*! ./_descriptors */ "./node_modules/core-js/modules/_descriptors.js") && !__webpack_require__(/*! ./_fails */ "./node_modules/core-js/modules/_fails.js")(function () {
+  return Object.defineProperty(__webpack_require__(/*! ./_dom-create */ "./node_modules/core-js/modules/_dom-create.js")('div'), 'a', { get: function () { return 7; } }).a != 7;
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_inherit-if-required.js":
+/*!**************************************************************!*\
+  !*** ./node_modules/core-js/modules/_inherit-if-required.js ***!
+  \**************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+var setPrototypeOf = __webpack_require__(/*! ./_set-proto */ "./node_modules/core-js/modules/_set-proto.js").set;
+module.exports = function (that, target, C) {
+  var S = target.constructor;
+  var P;
+  if (S !== C && typeof S == 'function' && (P = S.prototype) !== C.prototype && isObject(P) && setPrototypeOf) {
+    setPrototypeOf(that, P);
+  } return that;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_invoke.js":
+/*!*************************************************!*\
+  !*** ./node_modules/core-js/modules/_invoke.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+// fast apply, http://jsperf.lnkit.com/fast-apply/5
+module.exports = function (fn, args, that) {
+  var un = that === undefined;
+  switch (args.length) {
+    case 0: return un ? fn()
+                      : fn.call(that);
+    case 1: return un ? fn(args[0])
+                      : fn.call(that, args[0]);
+    case 2: return un ? fn(args[0], args[1])
+                      : fn.call(that, args[0], args[1]);
+    case 3: return un ? fn(args[0], args[1], args[2])
+                      : fn.call(that, args[0], args[1], args[2]);
+    case 4: return un ? fn(args[0], args[1], args[2], args[3])
+                      : fn.call(that, args[0], args[1], args[2], args[3]);
+  } return fn.apply(that, args);
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_iobject.js":
+/*!**************************************************!*\
+  !*** ./node_modules/core-js/modules/_iobject.js ***!
+  \**************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// fallback for non-array-like ES3 and non-enumerable old V8 strings
+var cof = __webpack_require__(/*! ./_cof */ "./node_modules/core-js/modules/_cof.js");
+// eslint-disable-next-line no-prototype-builtins
+module.exports = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
+  return cof(it) == 'String' ? it.split('') : Object(it);
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_is-array-iter.js":
+/*!********************************************************!*\
+  !*** ./node_modules/core-js/modules/_is-array-iter.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// check on default Array iterator
+var Iterators = __webpack_require__(/*! ./_iterators */ "./node_modules/core-js/modules/_iterators.js");
+var ITERATOR = __webpack_require__(/*! ./_wks */ "./node_modules/core-js/modules/_wks.js")('iterator');
+var ArrayProto = Array.prototype;
+
+module.exports = function (it) {
+  return it !== undefined && (Iterators.Array === it || ArrayProto[ITERATOR] === it);
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_is-array.js":
+/*!***************************************************!*\
+  !*** ./node_modules/core-js/modules/_is-array.js ***!
+  \***************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 7.2.2 IsArray(argument)
+var cof = __webpack_require__(/*! ./_cof */ "./node_modules/core-js/modules/_cof.js");
+module.exports = Array.isArray || function isArray(arg) {
+  return cof(arg) == 'Array';
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_is-object.js":
+/*!****************************************************!*\
+  !*** ./node_modules/core-js/modules/_is-object.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = function (it) {
+  return typeof it === 'object' ? it !== null : typeof it === 'function';
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_iter-call.js":
+/*!****************************************************!*\
+  !*** ./node_modules/core-js/modules/_iter-call.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// call something on iterator step with safe closing on error
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+module.exports = function (iterator, fn, value, entries) {
+  try {
+    return entries ? fn(anObject(value)[0], value[1]) : fn(value);
+  // 7.4.6 IteratorClose(iterator, completion)
+  } catch (e) {
+    var ret = iterator['return'];
+    if (ret !== undefined) anObject(ret.call(iterator));
+    throw e;
+  }
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_iter-create.js":
+/*!******************************************************!*\
+  !*** ./node_modules/core-js/modules/_iter-create.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var create = __webpack_require__(/*! ./_object-create */ "./node_modules/core-js/modules/_object-create.js");
+var descriptor = __webpack_require__(/*! ./_property-desc */ "./node_modules/core-js/modules/_property-desc.js");
+var setToStringTag = __webpack_require__(/*! ./_set-to-string-tag */ "./node_modules/core-js/modules/_set-to-string-tag.js");
+var IteratorPrototype = {};
+
+// 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
+__webpack_require__(/*! ./_hide */ "./node_modules/core-js/modules/_hide.js")(IteratorPrototype, __webpack_require__(/*! ./_wks */ "./node_modules/core-js/modules/_wks.js")('iterator'), function () { return this; });
+
+module.exports = function (Constructor, NAME, next) {
+  Constructor.prototype = create(IteratorPrototype, { next: descriptor(1, next) });
+  setToStringTag(Constructor, NAME + ' Iterator');
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_iter-define.js":
+/*!******************************************************!*\
+  !*** ./node_modules/core-js/modules/_iter-define.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var LIBRARY = __webpack_require__(/*! ./_library */ "./node_modules/core-js/modules/_library.js");
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var redefine = __webpack_require__(/*! ./_redefine */ "./node_modules/core-js/modules/_redefine.js");
+var hide = __webpack_require__(/*! ./_hide */ "./node_modules/core-js/modules/_hide.js");
+var has = __webpack_require__(/*! ./_has */ "./node_modules/core-js/modules/_has.js");
+var Iterators = __webpack_require__(/*! ./_iterators */ "./node_modules/core-js/modules/_iterators.js");
+var $iterCreate = __webpack_require__(/*! ./_iter-create */ "./node_modules/core-js/modules/_iter-create.js");
+var setToStringTag = __webpack_require__(/*! ./_set-to-string-tag */ "./node_modules/core-js/modules/_set-to-string-tag.js");
+var getPrototypeOf = __webpack_require__(/*! ./_object-gpo */ "./node_modules/core-js/modules/_object-gpo.js");
+var ITERATOR = __webpack_require__(/*! ./_wks */ "./node_modules/core-js/modules/_wks.js")('iterator');
+var BUGGY = !([].keys && 'next' in [].keys()); // Safari has buggy iterators w/o `next`
+var FF_ITERATOR = '@@iterator';
+var KEYS = 'keys';
+var VALUES = 'values';
+
+var returnThis = function () { return this; };
+
+module.exports = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED) {
+  $iterCreate(Constructor, NAME, next);
+  var getMethod = function (kind) {
+    if (!BUGGY && kind in proto) return proto[kind];
+    switch (kind) {
+      case KEYS: return function keys() { return new Constructor(this, kind); };
+      case VALUES: return function values() { return new Constructor(this, kind); };
+    } return function entries() { return new Constructor(this, kind); };
+  };
+  var TAG = NAME + ' Iterator';
+  var DEF_VALUES = DEFAULT == VALUES;
+  var VALUES_BUG = false;
+  var proto = Base.prototype;
+  var $native = proto[ITERATOR] || proto[FF_ITERATOR] || DEFAULT && proto[DEFAULT];
+  var $default = $native || getMethod(DEFAULT);
+  var $entries = DEFAULT ? !DEF_VALUES ? $default : getMethod('entries') : undefined;
+  var $anyNative = NAME == 'Array' ? proto.entries || $native : $native;
+  var methods, key, IteratorPrototype;
+  // Fix native
+  if ($anyNative) {
+    IteratorPrototype = getPrototypeOf($anyNative.call(new Base()));
+    if (IteratorPrototype !== Object.prototype && IteratorPrototype.next) {
+      // Set @@toStringTag to native iterators
+      setToStringTag(IteratorPrototype, TAG, true);
+      // fix for some old engines
+      if (!LIBRARY && !has(IteratorPrototype, ITERATOR)) hide(IteratorPrototype, ITERATOR, returnThis);
+    }
+  }
+  // fix Array#{values, @@iterator}.name in V8 / FF
+  if (DEF_VALUES && $native && $native.name !== VALUES) {
+    VALUES_BUG = true;
+    $default = function values() { return $native.call(this); };
+  }
+  // Define iterator
+  if ((!LIBRARY || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
+    hide(proto, ITERATOR, $default);
+  }
+  // Plug for library
+  Iterators[NAME] = $default;
+  Iterators[TAG] = returnThis;
+  if (DEFAULT) {
+    methods = {
+      values: DEF_VALUES ? $default : getMethod(VALUES),
+      keys: IS_SET ? $default : getMethod(KEYS),
+      entries: $entries
+    };
+    if (FORCED) for (key in methods) {
+      if (!(key in proto)) redefine(proto, key, methods[key]);
+    } else $export($export.P + $export.F * (BUGGY || VALUES_BUG), NAME, methods);
+  }
+  return methods;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_iter-detect.js":
+/*!******************************************************!*\
+  !*** ./node_modules/core-js/modules/_iter-detect.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var ITERATOR = __webpack_require__(/*! ./_wks */ "./node_modules/core-js/modules/_wks.js")('iterator');
+var SAFE_CLOSING = false;
+
+try {
+  var riter = [7][ITERATOR]();
+  riter['return'] = function () { SAFE_CLOSING = true; };
+  // eslint-disable-next-line no-throw-literal
+  Array.from(riter, function () { throw 2; });
+} catch (e) { /* empty */ }
+
+module.exports = function (exec, skipClosing) {
+  if (!skipClosing && !SAFE_CLOSING) return false;
+  var safe = false;
+  try {
+    var arr = [7];
+    var iter = arr[ITERATOR]();
+    iter.next = function () { return { done: safe = true }; };
+    arr[ITERATOR] = function () { return iter; };
+    exec(arr);
+  } catch (e) { /* empty */ }
+  return safe;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_iter-step.js":
+/*!****************************************************!*\
+  !*** ./node_modules/core-js/modules/_iter-step.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = function (done, value) {
+  return { value: value, done: !!done };
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_iterators.js":
+/*!****************************************************!*\
+  !*** ./node_modules/core-js/modules/_iterators.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = {};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_library.js":
+/*!**************************************************!*\
+  !*** ./node_modules/core-js/modules/_library.js ***!
+  \**************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = false;
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_meta.js":
+/*!***********************************************!*\
+  !*** ./node_modules/core-js/modules/_meta.js ***!
+  \***********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var META = __webpack_require__(/*! ./_uid */ "./node_modules/core-js/modules/_uid.js")('meta');
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+var has = __webpack_require__(/*! ./_has */ "./node_modules/core-js/modules/_has.js");
+var setDesc = __webpack_require__(/*! ./_object-dp */ "./node_modules/core-js/modules/_object-dp.js").f;
+var id = 0;
+var isExtensible = Object.isExtensible || function () {
+  return true;
+};
+var FREEZE = !__webpack_require__(/*! ./_fails */ "./node_modules/core-js/modules/_fails.js")(function () {
+  return isExtensible(Object.preventExtensions({}));
+});
+var setMeta = function (it) {
+  setDesc(it, META, { value: {
+    i: 'O' + ++id, // object ID
+    w: {}          // weak collections IDs
+  } });
+};
+var fastKey = function (it, create) {
+  // return primitive with prefix
+  if (!isObject(it)) return typeof it == 'symbol' ? it : (typeof it == 'string' ? 'S' : 'P') + it;
+  if (!has(it, META)) {
+    // can't set metadata to uncaught frozen object
+    if (!isExtensible(it)) return 'F';
+    // not necessary to add metadata
+    if (!create) return 'E';
+    // add missing metadata
+    setMeta(it);
+  // return object ID
+  } return it[META].i;
+};
+var getWeak = function (it, create) {
+  if (!has(it, META)) {
+    // can't set metadata to uncaught frozen object
+    if (!isExtensible(it)) return true;
+    // not necessary to add metadata
+    if (!create) return false;
+    // add missing metadata
+    setMeta(it);
+  // return hash weak collections IDs
+  } return it[META].w;
+};
+// add metadata on freeze-family methods calling
+var onFreeze = function (it) {
+  if (FREEZE && meta.NEED && isExtensible(it) && !has(it, META)) setMeta(it);
+  return it;
+};
+var meta = module.exports = {
+  KEY: META,
+  NEED: false,
+  fastKey: fastKey,
+  getWeak: getWeak,
+  onFreeze: onFreeze
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_metadata.js":
+/*!***************************************************!*\
+  !*** ./node_modules/core-js/modules/_metadata.js ***!
+  \***************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var Map = __webpack_require__(/*! ./es6.map */ "./node_modules/core-js/modules/es6.map.js");
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var shared = __webpack_require__(/*! ./_shared */ "./node_modules/core-js/modules/_shared.js")('metadata');
+var store = shared.store || (shared.store = new (__webpack_require__(/*! ./es6.weak-map */ "./node_modules/core-js/modules/es6.weak-map.js"))());
+
+var getOrCreateMetadataMap = function (target, targetKey, create) {
+  var targetMetadata = store.get(target);
+  if (!targetMetadata) {
+    if (!create) return undefined;
+    store.set(target, targetMetadata = new Map());
+  }
+  var keyMetadata = targetMetadata.get(targetKey);
+  if (!keyMetadata) {
+    if (!create) return undefined;
+    targetMetadata.set(targetKey, keyMetadata = new Map());
+  } return keyMetadata;
+};
+var ordinaryHasOwnMetadata = function (MetadataKey, O, P) {
+  var metadataMap = getOrCreateMetadataMap(O, P, false);
+  return metadataMap === undefined ? false : metadataMap.has(MetadataKey);
+};
+var ordinaryGetOwnMetadata = function (MetadataKey, O, P) {
+  var metadataMap = getOrCreateMetadataMap(O, P, false);
+  return metadataMap === undefined ? undefined : metadataMap.get(MetadataKey);
+};
+var ordinaryDefineOwnMetadata = function (MetadataKey, MetadataValue, O, P) {
+  getOrCreateMetadataMap(O, P, true).set(MetadataKey, MetadataValue);
+};
+var ordinaryOwnMetadataKeys = function (target, targetKey) {
+  var metadataMap = getOrCreateMetadataMap(target, targetKey, false);
+  var keys = [];
+  if (metadataMap) metadataMap.forEach(function (_, key) { keys.push(key); });
+  return keys;
+};
+var toMetaKey = function (it) {
+  return it === undefined || typeof it == 'symbol' ? it : String(it);
+};
+var exp = function (O) {
+  $export($export.S, 'Reflect', O);
+};
+
+module.exports = {
+  store: store,
+  map: getOrCreateMetadataMap,
+  has: ordinaryHasOwnMetadata,
+  get: ordinaryGetOwnMetadata,
+  set: ordinaryDefineOwnMetadata,
+  keys: ordinaryOwnMetadataKeys,
+  key: toMetaKey,
+  exp: exp
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_object-assign.js":
+/*!********************************************************!*\
+  !*** ./node_modules/core-js/modules/_object-assign.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+// 19.1.2.1 Object.assign(target, source, ...)
+var getKeys = __webpack_require__(/*! ./_object-keys */ "./node_modules/core-js/modules/_object-keys.js");
+var gOPS = __webpack_require__(/*! ./_object-gops */ "./node_modules/core-js/modules/_object-gops.js");
+var pIE = __webpack_require__(/*! ./_object-pie */ "./node_modules/core-js/modules/_object-pie.js");
+var toObject = __webpack_require__(/*! ./_to-object */ "./node_modules/core-js/modules/_to-object.js");
+var IObject = __webpack_require__(/*! ./_iobject */ "./node_modules/core-js/modules/_iobject.js");
+var $assign = Object.assign;
+
+// should work with symbols and should have deterministic property order (V8 bug)
+module.exports = !$assign || __webpack_require__(/*! ./_fails */ "./node_modules/core-js/modules/_fails.js")(function () {
+  var A = {};
+  var B = {};
+  // eslint-disable-next-line no-undef
+  var S = Symbol();
+  var K = 'abcdefghijklmnopqrst';
+  A[S] = 7;
+  K.split('').forEach(function (k) { B[k] = k; });
+  return $assign({}, A)[S] != 7 || Object.keys($assign({}, B)).join('') != K;
+}) ? function assign(target, source) { // eslint-disable-line no-unused-vars
+  var T = toObject(target);
+  var aLen = arguments.length;
+  var index = 1;
+  var getSymbols = gOPS.f;
+  var isEnum = pIE.f;
+  while (aLen > index) {
+    var S = IObject(arguments[index++]);
+    var keys = getSymbols ? getKeys(S).concat(getSymbols(S)) : getKeys(S);
+    var length = keys.length;
+    var j = 0;
+    var key;
+    while (length > j) if (isEnum.call(S, key = keys[j++])) T[key] = S[key];
+  } return T;
+} : $assign;
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_object-create.js":
+/*!********************************************************!*\
+  !*** ./node_modules/core-js/modules/_object-create.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var dPs = __webpack_require__(/*! ./_object-dps */ "./node_modules/core-js/modules/_object-dps.js");
+var enumBugKeys = __webpack_require__(/*! ./_enum-bug-keys */ "./node_modules/core-js/modules/_enum-bug-keys.js");
+var IE_PROTO = __webpack_require__(/*! ./_shared-key */ "./node_modules/core-js/modules/_shared-key.js")('IE_PROTO');
+var Empty = function () { /* empty */ };
+var PROTOTYPE = 'prototype';
+
+// Create object with fake `null` prototype: use iframe Object with cleared prototype
+var createDict = function () {
+  // Thrash, waste and sodomy: IE GC bug
+  var iframe = __webpack_require__(/*! ./_dom-create */ "./node_modules/core-js/modules/_dom-create.js")('iframe');
+  var i = enumBugKeys.length;
+  var lt = '<';
+  var gt = '>';
+  var iframeDocument;
+  iframe.style.display = 'none';
+  __webpack_require__(/*! ./_html */ "./node_modules/core-js/modules/_html.js").appendChild(iframe);
+  iframe.src = 'javascript:'; // eslint-disable-line no-script-url
+  // createDict = iframe.contentWindow.Object;
+  // html.removeChild(iframe);
+  iframeDocument = iframe.contentWindow.document;
+  iframeDocument.open();
+  iframeDocument.write(lt + 'script' + gt + 'document.F=Object' + lt + '/script' + gt);
+  iframeDocument.close();
+  createDict = iframeDocument.F;
+  while (i--) delete createDict[PROTOTYPE][enumBugKeys[i]];
+  return createDict();
+};
+
+module.exports = Object.create || function create(O, Properties) {
+  var result;
+  if (O !== null) {
+    Empty[PROTOTYPE] = anObject(O);
+    result = new Empty();
+    Empty[PROTOTYPE] = null;
+    // add "__proto__" for Object.getPrototypeOf polyfill
+    result[IE_PROTO] = O;
+  } else result = createDict();
+  return Properties === undefined ? result : dPs(result, Properties);
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_object-dp.js":
+/*!****************************************************!*\
+  !*** ./node_modules/core-js/modules/_object-dp.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var IE8_DOM_DEFINE = __webpack_require__(/*! ./_ie8-dom-define */ "./node_modules/core-js/modules/_ie8-dom-define.js");
+var toPrimitive = __webpack_require__(/*! ./_to-primitive */ "./node_modules/core-js/modules/_to-primitive.js");
+var dP = Object.defineProperty;
+
+exports.f = __webpack_require__(/*! ./_descriptors */ "./node_modules/core-js/modules/_descriptors.js") ? Object.defineProperty : function defineProperty(O, P, Attributes) {
+  anObject(O);
+  P = toPrimitive(P, true);
+  anObject(Attributes);
+  if (IE8_DOM_DEFINE) try {
+    return dP(O, P, Attributes);
+  } catch (e) { /* empty */ }
+  if ('get' in Attributes || 'set' in Attributes) throw TypeError('Accessors not supported!');
+  if ('value' in Attributes) O[P] = Attributes.value;
+  return O;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_object-dps.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/core-js/modules/_object-dps.js ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var dP = __webpack_require__(/*! ./_object-dp */ "./node_modules/core-js/modules/_object-dp.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var getKeys = __webpack_require__(/*! ./_object-keys */ "./node_modules/core-js/modules/_object-keys.js");
+
+module.exports = __webpack_require__(/*! ./_descriptors */ "./node_modules/core-js/modules/_descriptors.js") ? Object.defineProperties : function defineProperties(O, Properties) {
+  anObject(O);
+  var keys = getKeys(Properties);
+  var length = keys.length;
+  var i = 0;
+  var P;
+  while (length > i) dP.f(O, P = keys[i++], Properties[P]);
+  return O;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_object-forced-pam.js":
+/*!************************************************************!*\
+  !*** ./node_modules/core-js/modules/_object-forced-pam.js ***!
+  \************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+// Forced replacement prototype accessors methods
+module.exports = __webpack_require__(/*! ./_library */ "./node_modules/core-js/modules/_library.js") || !__webpack_require__(/*! ./_fails */ "./node_modules/core-js/modules/_fails.js")(function () {
+  var K = Math.random();
+  // In FF throws only define methods
+  // eslint-disable-next-line no-undef, no-useless-call
+  __defineSetter__.call(null, K, function () { /* empty */ });
+  delete __webpack_require__(/*! ./_global */ "./node_modules/core-js/modules/_global.js")[K];
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_object-gopd.js":
+/*!******************************************************!*\
+  !*** ./node_modules/core-js/modules/_object-gopd.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var pIE = __webpack_require__(/*! ./_object-pie */ "./node_modules/core-js/modules/_object-pie.js");
+var createDesc = __webpack_require__(/*! ./_property-desc */ "./node_modules/core-js/modules/_property-desc.js");
+var toIObject = __webpack_require__(/*! ./_to-iobject */ "./node_modules/core-js/modules/_to-iobject.js");
+var toPrimitive = __webpack_require__(/*! ./_to-primitive */ "./node_modules/core-js/modules/_to-primitive.js");
+var has = __webpack_require__(/*! ./_has */ "./node_modules/core-js/modules/_has.js");
+var IE8_DOM_DEFINE = __webpack_require__(/*! ./_ie8-dom-define */ "./node_modules/core-js/modules/_ie8-dom-define.js");
+var gOPD = Object.getOwnPropertyDescriptor;
+
+exports.f = __webpack_require__(/*! ./_descriptors */ "./node_modules/core-js/modules/_descriptors.js") ? gOPD : function getOwnPropertyDescriptor(O, P) {
+  O = toIObject(O);
+  P = toPrimitive(P, true);
+  if (IE8_DOM_DEFINE) try {
+    return gOPD(O, P);
+  } catch (e) { /* empty */ }
+  if (has(O, P)) return createDesc(!pIE.f.call(O, P), O[P]);
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_object-gopn.js":
+/*!******************************************************!*\
+  !*** ./node_modules/core-js/modules/_object-gopn.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 19.1.2.7 / 15.2.3.4 Object.getOwnPropertyNames(O)
+var $keys = __webpack_require__(/*! ./_object-keys-internal */ "./node_modules/core-js/modules/_object-keys-internal.js");
+var hiddenKeys = __webpack_require__(/*! ./_enum-bug-keys */ "./node_modules/core-js/modules/_enum-bug-keys.js").concat('length', 'prototype');
+
+exports.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
+  return $keys(O, hiddenKeys);
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_object-gops.js":
+/*!******************************************************!*\
+  !*** ./node_modules/core-js/modules/_object-gops.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+exports.f = Object.getOwnPropertySymbols;
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_object-gpo.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/core-js/modules/_object-gpo.js ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
+var has = __webpack_require__(/*! ./_has */ "./node_modules/core-js/modules/_has.js");
+var toObject = __webpack_require__(/*! ./_to-object */ "./node_modules/core-js/modules/_to-object.js");
+var IE_PROTO = __webpack_require__(/*! ./_shared-key */ "./node_modules/core-js/modules/_shared-key.js")('IE_PROTO');
+var ObjectProto = Object.prototype;
+
+module.exports = Object.getPrototypeOf || function (O) {
+  O = toObject(O);
+  if (has(O, IE_PROTO)) return O[IE_PROTO];
+  if (typeof O.constructor == 'function' && O instanceof O.constructor) {
+    return O.constructor.prototype;
+  } return O instanceof Object ? ObjectProto : null;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_object-keys-internal.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/core-js/modules/_object-keys-internal.js ***!
+  \***************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var has = __webpack_require__(/*! ./_has */ "./node_modules/core-js/modules/_has.js");
+var toIObject = __webpack_require__(/*! ./_to-iobject */ "./node_modules/core-js/modules/_to-iobject.js");
+var arrayIndexOf = __webpack_require__(/*! ./_array-includes */ "./node_modules/core-js/modules/_array-includes.js")(false);
+var IE_PROTO = __webpack_require__(/*! ./_shared-key */ "./node_modules/core-js/modules/_shared-key.js")('IE_PROTO');
+
+module.exports = function (object, names) {
+  var O = toIObject(object);
+  var i = 0;
+  var result = [];
+  var key;
+  for (key in O) if (key != IE_PROTO) has(O, key) && result.push(key);
+  // Don't enum bug & hidden keys
+  while (names.length > i) if (has(O, key = names[i++])) {
+    ~arrayIndexOf(result, key) || result.push(key);
+  }
+  return result;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_object-keys.js":
+/*!******************************************************!*\
+  !*** ./node_modules/core-js/modules/_object-keys.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 19.1.2.14 / 15.2.3.14 Object.keys(O)
+var $keys = __webpack_require__(/*! ./_object-keys-internal */ "./node_modules/core-js/modules/_object-keys-internal.js");
+var enumBugKeys = __webpack_require__(/*! ./_enum-bug-keys */ "./node_modules/core-js/modules/_enum-bug-keys.js");
+
+module.exports = Object.keys || function keys(O) {
+  return $keys(O, enumBugKeys);
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_object-pie.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/core-js/modules/_object-pie.js ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+exports.f = {}.propertyIsEnumerable;
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_object-to-array.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/core-js/modules/_object-to-array.js ***!
+  \**********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var getKeys = __webpack_require__(/*! ./_object-keys */ "./node_modules/core-js/modules/_object-keys.js");
+var toIObject = __webpack_require__(/*! ./_to-iobject */ "./node_modules/core-js/modules/_to-iobject.js");
+var isEnum = __webpack_require__(/*! ./_object-pie */ "./node_modules/core-js/modules/_object-pie.js").f;
+module.exports = function (isEntries) {
+  return function (it) {
+    var O = toIObject(it);
+    var keys = getKeys(O);
+    var length = keys.length;
+    var i = 0;
+    var result = [];
+    var key;
+    while (length > i) if (isEnum.call(O, key = keys[i++])) {
+      result.push(isEntries ? [key, O[key]] : O[key]);
+    } return result;
+  };
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_own-keys.js":
+/*!***************************************************!*\
+  !*** ./node_modules/core-js/modules/_own-keys.js ***!
+  \***************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// all object keys, includes non-enumerable and symbols
+var gOPN = __webpack_require__(/*! ./_object-gopn */ "./node_modules/core-js/modules/_object-gopn.js");
+var gOPS = __webpack_require__(/*! ./_object-gops */ "./node_modules/core-js/modules/_object-gops.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var Reflect = __webpack_require__(/*! ./_global */ "./node_modules/core-js/modules/_global.js").Reflect;
+module.exports = Reflect && Reflect.ownKeys || function ownKeys(it) {
+  var keys = gOPN.f(anObject(it));
+  var getSymbols = gOPS.f;
+  return getSymbols ? keys.concat(getSymbols(it)) : keys;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_property-desc.js":
+/*!********************************************************!*\
+  !*** ./node_modules/core-js/modules/_property-desc.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = function (bitmap, value) {
+  return {
+    enumerable: !(bitmap & 1),
+    configurable: !(bitmap & 2),
+    writable: !(bitmap & 4),
+    value: value
+  };
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_redefine-all.js":
+/*!*******************************************************!*\
+  !*** ./node_modules/core-js/modules/_redefine-all.js ***!
+  \*******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var redefine = __webpack_require__(/*! ./_redefine */ "./node_modules/core-js/modules/_redefine.js");
+module.exports = function (target, src, safe) {
+  for (var key in src) redefine(target, key, src[key], safe);
+  return target;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_redefine.js":
+/*!***************************************************!*\
+  !*** ./node_modules/core-js/modules/_redefine.js ***!
+  \***************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var global = __webpack_require__(/*! ./_global */ "./node_modules/core-js/modules/_global.js");
+var hide = __webpack_require__(/*! ./_hide */ "./node_modules/core-js/modules/_hide.js");
+var has = __webpack_require__(/*! ./_has */ "./node_modules/core-js/modules/_has.js");
+var SRC = __webpack_require__(/*! ./_uid */ "./node_modules/core-js/modules/_uid.js")('src');
+var TO_STRING = 'toString';
+var $toString = Function[TO_STRING];
+var TPL = ('' + $toString).split(TO_STRING);
+
+__webpack_require__(/*! ./_core */ "./node_modules/core-js/modules/_core.js").inspectSource = function (it) {
+  return $toString.call(it);
+};
+
+(module.exports = function (O, key, val, safe) {
+  var isFunction = typeof val == 'function';
+  if (isFunction) has(val, 'name') || hide(val, 'name', key);
+  if (O[key] === val) return;
+  if (isFunction) has(val, SRC) || hide(val, SRC, O[key] ? '' + O[key] : TPL.join(String(key)));
+  if (O === global) {
+    O[key] = val;
+  } else if (!safe) {
+    delete O[key];
+    hide(O, key, val);
+  } else if (O[key]) {
+    O[key] = val;
+  } else {
+    hide(O, key, val);
+  }
+// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
+})(Function.prototype, TO_STRING, function toString() {
+  return typeof this == 'function' && this[SRC] || $toString.call(this);
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_set-proto.js":
+/*!****************************************************!*\
+  !*** ./node_modules/core-js/modules/_set-proto.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// Works with __proto__ only. Old v8 can't work with null proto objects.
+/* eslint-disable no-proto */
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var check = function (O, proto) {
+  anObject(O);
+  if (!isObject(proto) && proto !== null) throw TypeError(proto + ": can't set as prototype!");
+};
+module.exports = {
+  set: Object.setPrototypeOf || ('__proto__' in {} ? // eslint-disable-line
+    function (test, buggy, set) {
+      try {
+        set = __webpack_require__(/*! ./_ctx */ "./node_modules/core-js/modules/_ctx.js")(Function.call, __webpack_require__(/*! ./_object-gopd */ "./node_modules/core-js/modules/_object-gopd.js").f(Object.prototype, '__proto__').set, 2);
+        set(test, []);
+        buggy = !(test instanceof Array);
+      } catch (e) { buggy = true; }
+      return function setPrototypeOf(O, proto) {
+        check(O, proto);
+        if (buggy) O.__proto__ = proto;
+        else set(O, proto);
+        return O;
+      };
+    }({}, false) : undefined),
+  check: check
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_set-species.js":
+/*!******************************************************!*\
+  !*** ./node_modules/core-js/modules/_set-species.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var global = __webpack_require__(/*! ./_global */ "./node_modules/core-js/modules/_global.js");
+var dP = __webpack_require__(/*! ./_object-dp */ "./node_modules/core-js/modules/_object-dp.js");
+var DESCRIPTORS = __webpack_require__(/*! ./_descriptors */ "./node_modules/core-js/modules/_descriptors.js");
+var SPECIES = __webpack_require__(/*! ./_wks */ "./node_modules/core-js/modules/_wks.js")('species');
+
+module.exports = function (KEY) {
+  var C = global[KEY];
+  if (DESCRIPTORS && C && !C[SPECIES]) dP.f(C, SPECIES, {
+    configurable: true,
+    get: function () { return this; }
+  });
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_set-to-string-tag.js":
+/*!************************************************************!*\
+  !*** ./node_modules/core-js/modules/_set-to-string-tag.js ***!
+  \************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var def = __webpack_require__(/*! ./_object-dp */ "./node_modules/core-js/modules/_object-dp.js").f;
+var has = __webpack_require__(/*! ./_has */ "./node_modules/core-js/modules/_has.js");
+var TAG = __webpack_require__(/*! ./_wks */ "./node_modules/core-js/modules/_wks.js")('toStringTag');
+
+module.exports = function (it, tag, stat) {
+  if (it && !has(it = stat ? it : it.prototype, TAG)) def(it, TAG, { configurable: true, value: tag });
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_shared-key.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/core-js/modules/_shared-key.js ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var shared = __webpack_require__(/*! ./_shared */ "./node_modules/core-js/modules/_shared.js")('keys');
+var uid = __webpack_require__(/*! ./_uid */ "./node_modules/core-js/modules/_uid.js");
+module.exports = function (key) {
+  return shared[key] || (shared[key] = uid(key));
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_shared.js":
+/*!*************************************************!*\
+  !*** ./node_modules/core-js/modules/_shared.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var global = __webpack_require__(/*! ./_global */ "./node_modules/core-js/modules/_global.js");
+var SHARED = '__core-js_shared__';
+var store = global[SHARED] || (global[SHARED] = {});
+module.exports = function (key) {
+  return store[key] || (store[key] = {});
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_to-absolute-index.js":
+/*!************************************************************!*\
+  !*** ./node_modules/core-js/modules/_to-absolute-index.js ***!
+  \************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var toInteger = __webpack_require__(/*! ./_to-integer */ "./node_modules/core-js/modules/_to-integer.js");
+var max = Math.max;
+var min = Math.min;
+module.exports = function (index, length) {
+  index = toInteger(index);
+  return index < 0 ? max(index + length, 0) : min(index, length);
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_to-integer.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/core-js/modules/_to-integer.js ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+// 7.1.4 ToInteger
+var ceil = Math.ceil;
+var floor = Math.floor;
+module.exports = function (it) {
+  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_to-iobject.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/core-js/modules/_to-iobject.js ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// to indexed object, toObject with fallback for non-array-like ES3 strings
+var IObject = __webpack_require__(/*! ./_iobject */ "./node_modules/core-js/modules/_iobject.js");
+var defined = __webpack_require__(/*! ./_defined */ "./node_modules/core-js/modules/_defined.js");
+module.exports = function (it) {
+  return IObject(defined(it));
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_to-length.js":
+/*!****************************************************!*\
+  !*** ./node_modules/core-js/modules/_to-length.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 7.1.15 ToLength
+var toInteger = __webpack_require__(/*! ./_to-integer */ "./node_modules/core-js/modules/_to-integer.js");
+var min = Math.min;
+module.exports = function (it) {
+  return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_to-object.js":
+/*!****************************************************!*\
+  !*** ./node_modules/core-js/modules/_to-object.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 7.1.13 ToObject(argument)
+var defined = __webpack_require__(/*! ./_defined */ "./node_modules/core-js/modules/_defined.js");
+module.exports = function (it) {
+  return Object(defined(it));
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_to-primitive.js":
+/*!*******************************************************!*\
+  !*** ./node_modules/core-js/modules/_to-primitive.js ***!
+  \*******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 7.1.1 ToPrimitive(input [, PreferredType])
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+// instead of the ES6 spec version, we didn't implement @@toPrimitive case
+// and the second argument - flag - preferred type is a string
+module.exports = function (it, S) {
+  if (!isObject(it)) return it;
+  var fn, val;
+  if (S && typeof (fn = it.toString) == 'function' && !isObject(val = fn.call(it))) return val;
+  if (typeof (fn = it.valueOf) == 'function' && !isObject(val = fn.call(it))) return val;
+  if (!S && typeof (fn = it.toString) == 'function' && !isObject(val = fn.call(it))) return val;
+  throw TypeError("Can't convert object to primitive value");
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_uid.js":
+/*!**********************************************!*\
+  !*** ./node_modules/core-js/modules/_uid.js ***!
+  \**********************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+var id = 0;
+var px = Math.random();
+module.exports = function (key) {
+  return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id + px).toString(36));
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_validate-collection.js":
+/*!**************************************************************!*\
+  !*** ./node_modules/core-js/modules/_validate-collection.js ***!
+  \**************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+module.exports = function (it, TYPE) {
+  if (!isObject(it) || it._t !== TYPE) throw TypeError('Incompatible receiver, ' + TYPE + ' required!');
+  return it;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/_wks.js":
+/*!**********************************************!*\
+  !*** ./node_modules/core-js/modules/_wks.js ***!
+  \**********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var store = __webpack_require__(/*! ./_shared */ "./node_modules/core-js/modules/_shared.js")('wks');
+var uid = __webpack_require__(/*! ./_uid */ "./node_modules/core-js/modules/_uid.js");
+var Symbol = __webpack_require__(/*! ./_global */ "./node_modules/core-js/modules/_global.js").Symbol;
+var USE_SYMBOL = typeof Symbol == 'function';
+
+var $exports = module.exports = function (name) {
+  return store[name] || (store[name] =
+    USE_SYMBOL && Symbol[name] || (USE_SYMBOL ? Symbol : uid)('Symbol.' + name));
+};
+
+$exports.store = store;
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/core.get-iterator-method.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/core-js/modules/core.get-iterator-method.js ***!
+  \******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var classof = __webpack_require__(/*! ./_classof */ "./node_modules/core-js/modules/_classof.js");
+var ITERATOR = __webpack_require__(/*! ./_wks */ "./node_modules/core-js/modules/_wks.js")('iterator');
+var Iterators = __webpack_require__(/*! ./_iterators */ "./node_modules/core-js/modules/_iterators.js");
+module.exports = __webpack_require__(/*! ./_core */ "./node_modules/core-js/modules/_core.js").getIteratorMethod = function (it) {
+  if (it != undefined) return it[ITERATOR]
+    || it['@@iterator']
+    || Iterators[classof(it)];
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.map.js":
+/*!*************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.map.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var strong = __webpack_require__(/*! ./_collection-strong */ "./node_modules/core-js/modules/_collection-strong.js");
+var validate = __webpack_require__(/*! ./_validate-collection */ "./node_modules/core-js/modules/_validate-collection.js");
+var MAP = 'Map';
+
+// 23.1 Map Objects
+module.exports = __webpack_require__(/*! ./_collection */ "./node_modules/core-js/modules/_collection.js")(MAP, function (get) {
+  return function Map() { return get(this, arguments.length > 0 ? arguments[0] : undefined); };
+}, {
+  // 23.1.3.6 Map.prototype.get(key)
+  get: function get(key) {
+    var entry = strong.getEntry(validate(this, MAP), key);
+    return entry && entry.v;
+  },
+  // 23.1.3.9 Map.prototype.set(key, value)
+  set: function set(key, value) {
+    return strong.def(validate(this, MAP), key === 0 ? 0 : key, value);
+  }
+}, strong, true);
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.apply.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.apply.js ***!
+  \***********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 26.1.1 Reflect.apply(target, thisArgument, argumentsList)
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var aFunction = __webpack_require__(/*! ./_a-function */ "./node_modules/core-js/modules/_a-function.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var rApply = (__webpack_require__(/*! ./_global */ "./node_modules/core-js/modules/_global.js").Reflect || {}).apply;
+var fApply = Function.apply;
+// MS Edge argumentsList argument is optional
+$export($export.S + $export.F * !__webpack_require__(/*! ./_fails */ "./node_modules/core-js/modules/_fails.js")(function () {
+  rApply(function () { /* empty */ });
+}), 'Reflect', {
+  apply: function apply(target, thisArgument, argumentsList) {
+    var T = aFunction(target);
+    var L = anObject(argumentsList);
+    return rApply ? rApply(T, thisArgument, L) : fApply.call(T, thisArgument, L);
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.construct.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.construct.js ***!
+  \***************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 26.1.2 Reflect.construct(target, argumentsList [, newTarget])
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var create = __webpack_require__(/*! ./_object-create */ "./node_modules/core-js/modules/_object-create.js");
+var aFunction = __webpack_require__(/*! ./_a-function */ "./node_modules/core-js/modules/_a-function.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+var fails = __webpack_require__(/*! ./_fails */ "./node_modules/core-js/modules/_fails.js");
+var bind = __webpack_require__(/*! ./_bind */ "./node_modules/core-js/modules/_bind.js");
+var rConstruct = (__webpack_require__(/*! ./_global */ "./node_modules/core-js/modules/_global.js").Reflect || {}).construct;
+
+// MS Edge supports only 2 arguments and argumentsList argument is optional
+// FF Nightly sets third argument as `new.target`, but does not create `this` from it
+var NEW_TARGET_BUG = fails(function () {
+  function F() { /* empty */ }
+  return !(rConstruct(function () { /* empty */ }, [], F) instanceof F);
+});
+var ARGS_BUG = !fails(function () {
+  rConstruct(function () { /* empty */ });
+});
+
+$export($export.S + $export.F * (NEW_TARGET_BUG || ARGS_BUG), 'Reflect', {
+  construct: function construct(Target, args /* , newTarget */) {
+    aFunction(Target);
+    anObject(args);
+    var newTarget = arguments.length < 3 ? Target : aFunction(arguments[2]);
+    if (ARGS_BUG && !NEW_TARGET_BUG) return rConstruct(Target, args, newTarget);
+    if (Target == newTarget) {
+      // w/o altered newTarget, optimization for 0-4 arguments
+      switch (args.length) {
+        case 0: return new Target();
+        case 1: return new Target(args[0]);
+        case 2: return new Target(args[0], args[1]);
+        case 3: return new Target(args[0], args[1], args[2]);
+        case 4: return new Target(args[0], args[1], args[2], args[3]);
+      }
+      // w/o altered newTarget, lot of arguments case
+      var $args = [null];
+      $args.push.apply($args, args);
+      return new (bind.apply(Target, $args))();
+    }
+    // with altered newTarget, not support built-in constructors
+    var proto = newTarget.prototype;
+    var instance = create(isObject(proto) ? proto : Object.prototype);
+    var result = Function.apply.call(Target, instance, args);
+    return isObject(result) ? result : instance;
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.define-property.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.define-property.js ***!
+  \*********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 26.1.3 Reflect.defineProperty(target, propertyKey, attributes)
+var dP = __webpack_require__(/*! ./_object-dp */ "./node_modules/core-js/modules/_object-dp.js");
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var toPrimitive = __webpack_require__(/*! ./_to-primitive */ "./node_modules/core-js/modules/_to-primitive.js");
+
+// MS Edge has broken Reflect.defineProperty - throwing instead of returning false
+$export($export.S + $export.F * __webpack_require__(/*! ./_fails */ "./node_modules/core-js/modules/_fails.js")(function () {
+  // eslint-disable-next-line no-undef
+  Reflect.defineProperty(dP.f({}, 1, { value: 1 }), 1, { value: 2 });
+}), 'Reflect', {
+  defineProperty: function defineProperty(target, propertyKey, attributes) {
+    anObject(target);
+    propertyKey = toPrimitive(propertyKey, true);
+    anObject(attributes);
+    try {
+      dP.f(target, propertyKey, attributes);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.delete-property.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.delete-property.js ***!
+  \*********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 26.1.4 Reflect.deleteProperty(target, propertyKey)
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var gOPD = __webpack_require__(/*! ./_object-gopd */ "./node_modules/core-js/modules/_object-gopd.js").f;
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+
+$export($export.S, 'Reflect', {
+  deleteProperty: function deleteProperty(target, propertyKey) {
+    var desc = gOPD(anObject(target), propertyKey);
+    return desc && !desc.configurable ? false : delete target[propertyKey];
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.enumerate.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.enumerate.js ***!
+  \***************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+// 26.1.5 Reflect.enumerate(target)
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var Enumerate = function (iterated) {
+  this._t = anObject(iterated); // target
+  this._i = 0;                  // next index
+  var keys = this._k = [];      // keys
+  var key;
+  for (key in iterated) keys.push(key);
+};
+__webpack_require__(/*! ./_iter-create */ "./node_modules/core-js/modules/_iter-create.js")(Enumerate, 'Object', function () {
+  var that = this;
+  var keys = that._k;
+  var key;
+  do {
+    if (that._i >= keys.length) return { value: undefined, done: true };
+  } while (!((key = keys[that._i++]) in that._t));
+  return { value: key, done: false };
+});
+
+$export($export.S, 'Reflect', {
+  enumerate: function enumerate(target) {
+    return new Enumerate(target);
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.get-own-property-descriptor.js":
+/*!*********************************************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.get-own-property-descriptor.js ***!
+  \*********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 26.1.7 Reflect.getOwnPropertyDescriptor(target, propertyKey)
+var gOPD = __webpack_require__(/*! ./_object-gopd */ "./node_modules/core-js/modules/_object-gopd.js");
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+
+$export($export.S, 'Reflect', {
+  getOwnPropertyDescriptor: function getOwnPropertyDescriptor(target, propertyKey) {
+    return gOPD.f(anObject(target), propertyKey);
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.get-prototype-of.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.get-prototype-of.js ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 26.1.8 Reflect.getPrototypeOf(target)
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var getProto = __webpack_require__(/*! ./_object-gpo */ "./node_modules/core-js/modules/_object-gpo.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+
+$export($export.S, 'Reflect', {
+  getPrototypeOf: function getPrototypeOf(target) {
+    return getProto(anObject(target));
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.get.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.get.js ***!
+  \*********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 26.1.6 Reflect.get(target, propertyKey [, receiver])
+var gOPD = __webpack_require__(/*! ./_object-gopd */ "./node_modules/core-js/modules/_object-gopd.js");
+var getPrototypeOf = __webpack_require__(/*! ./_object-gpo */ "./node_modules/core-js/modules/_object-gpo.js");
+var has = __webpack_require__(/*! ./_has */ "./node_modules/core-js/modules/_has.js");
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+
+function get(target, propertyKey /* , receiver */) {
+  var receiver = arguments.length < 3 ? target : arguments[2];
+  var desc, proto;
+  if (anObject(target) === receiver) return target[propertyKey];
+  if (desc = gOPD.f(target, propertyKey)) return has(desc, 'value')
+    ? desc.value
+    : desc.get !== undefined
+      ? desc.get.call(receiver)
+      : undefined;
+  if (isObject(proto = getPrototypeOf(target))) return get(proto, propertyKey, receiver);
+}
+
+$export($export.S, 'Reflect', { get: get });
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.has.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.has.js ***!
+  \*********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 26.1.9 Reflect.has(target, propertyKey)
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+
+$export($export.S, 'Reflect', {
+  has: function has(target, propertyKey) {
+    return propertyKey in target;
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.is-extensible.js":
+/*!*******************************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.is-extensible.js ***!
+  \*******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 26.1.10 Reflect.isExtensible(target)
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var $isExtensible = Object.isExtensible;
+
+$export($export.S, 'Reflect', {
+  isExtensible: function isExtensible(target) {
+    anObject(target);
+    return $isExtensible ? $isExtensible(target) : true;
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.own-keys.js":
+/*!**************************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.own-keys.js ***!
+  \**************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 26.1.11 Reflect.ownKeys(target)
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+
+$export($export.S, 'Reflect', { ownKeys: __webpack_require__(/*! ./_own-keys */ "./node_modules/core-js/modules/_own-keys.js") });
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.prevent-extensions.js":
+/*!************************************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.prevent-extensions.js ***!
+  \************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 26.1.12 Reflect.preventExtensions(target)
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var $preventExtensions = Object.preventExtensions;
+
+$export($export.S, 'Reflect', {
+  preventExtensions: function preventExtensions(target) {
+    anObject(target);
+    try {
+      if ($preventExtensions) $preventExtensions(target);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.set-prototype-of.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.set-prototype-of.js ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 26.1.14 Reflect.setPrototypeOf(target, proto)
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var setProto = __webpack_require__(/*! ./_set-proto */ "./node_modules/core-js/modules/_set-proto.js");
+
+if (setProto) $export($export.S, 'Reflect', {
+  setPrototypeOf: function setPrototypeOf(target, proto) {
+    setProto.check(target, proto);
+    try {
+      setProto.set(target, proto);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.reflect.set.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.reflect.set.js ***!
+  \*********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 26.1.13 Reflect.set(target, propertyKey, V [, receiver])
+var dP = __webpack_require__(/*! ./_object-dp */ "./node_modules/core-js/modules/_object-dp.js");
+var gOPD = __webpack_require__(/*! ./_object-gopd */ "./node_modules/core-js/modules/_object-gopd.js");
+var getPrototypeOf = __webpack_require__(/*! ./_object-gpo */ "./node_modules/core-js/modules/_object-gpo.js");
+var has = __webpack_require__(/*! ./_has */ "./node_modules/core-js/modules/_has.js");
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var createDesc = __webpack_require__(/*! ./_property-desc */ "./node_modules/core-js/modules/_property-desc.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+
+function set(target, propertyKey, V /* , receiver */) {
+  var receiver = arguments.length < 4 ? target : arguments[3];
+  var ownDesc = gOPD.f(anObject(target), propertyKey);
+  var existingDescriptor, proto;
+  if (!ownDesc) {
+    if (isObject(proto = getPrototypeOf(target))) {
+      return set(proto, propertyKey, V, receiver);
+    }
+    ownDesc = createDesc(0);
+  }
+  if (has(ownDesc, 'value')) {
+    if (ownDesc.writable === false || !isObject(receiver)) return false;
+    existingDescriptor = gOPD.f(receiver, propertyKey) || createDesc(0);
+    existingDescriptor.value = V;
+    dP.f(receiver, propertyKey, existingDescriptor);
+    return true;
+  }
+  return ownDesc.set === undefined ? false : (ownDesc.set.call(receiver, V), true);
+}
+
+$export($export.S, 'Reflect', { set: set });
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.set.js":
+/*!*************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.set.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var strong = __webpack_require__(/*! ./_collection-strong */ "./node_modules/core-js/modules/_collection-strong.js");
+var validate = __webpack_require__(/*! ./_validate-collection */ "./node_modules/core-js/modules/_validate-collection.js");
+var SET = 'Set';
+
+// 23.2 Set Objects
+module.exports = __webpack_require__(/*! ./_collection */ "./node_modules/core-js/modules/_collection.js")(SET, function (get) {
+  return function Set() { return get(this, arguments.length > 0 ? arguments[0] : undefined); };
+}, {
+  // 23.2.3.1 Set.prototype.add(value)
+  add: function add(value) {
+    return strong.def(validate(this, SET), value = value === 0 ? 0 : value, value);
+  }
+}, strong);
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es6.weak-map.js":
+/*!******************************************************!*\
+  !*** ./node_modules/core-js/modules/es6.weak-map.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var each = __webpack_require__(/*! ./_array-methods */ "./node_modules/core-js/modules/_array-methods.js")(0);
+var redefine = __webpack_require__(/*! ./_redefine */ "./node_modules/core-js/modules/_redefine.js");
+var meta = __webpack_require__(/*! ./_meta */ "./node_modules/core-js/modules/_meta.js");
+var assign = __webpack_require__(/*! ./_object-assign */ "./node_modules/core-js/modules/_object-assign.js");
+var weak = __webpack_require__(/*! ./_collection-weak */ "./node_modules/core-js/modules/_collection-weak.js");
+var isObject = __webpack_require__(/*! ./_is-object */ "./node_modules/core-js/modules/_is-object.js");
+var fails = __webpack_require__(/*! ./_fails */ "./node_modules/core-js/modules/_fails.js");
+var validate = __webpack_require__(/*! ./_validate-collection */ "./node_modules/core-js/modules/_validate-collection.js");
+var WEAK_MAP = 'WeakMap';
+var getWeak = meta.getWeak;
+var isExtensible = Object.isExtensible;
+var uncaughtFrozenStore = weak.ufstore;
+var tmp = {};
+var InternalMap;
+
+var wrapper = function (get) {
+  return function WeakMap() {
+    return get(this, arguments.length > 0 ? arguments[0] : undefined);
+  };
+};
+
+var methods = {
+  // 23.3.3.3 WeakMap.prototype.get(key)
+  get: function get(key) {
+    if (isObject(key)) {
+      var data = getWeak(key);
+      if (data === true) return uncaughtFrozenStore(validate(this, WEAK_MAP)).get(key);
+      return data ? data[this._i] : undefined;
+    }
+  },
+  // 23.3.3.5 WeakMap.prototype.set(key, value)
+  set: function set(key, value) {
+    return weak.def(validate(this, WEAK_MAP), key, value);
+  }
+};
+
+// 23.3 WeakMap Objects
+var $WeakMap = module.exports = __webpack_require__(/*! ./_collection */ "./node_modules/core-js/modules/_collection.js")(WEAK_MAP, wrapper, methods, weak, true, true);
+
+// IE11 WeakMap frozen keys fix
+if (fails(function () { return new $WeakMap().set((Object.freeze || Object)(tmp), 7).get(tmp) != 7; })) {
+  InternalMap = weak.getConstructor(wrapper, WEAK_MAP);
+  assign(InternalMap.prototype, methods);
+  meta.NEED = true;
+  each(['delete', 'has', 'get', 'set'], function (key) {
+    var proto = $WeakMap.prototype;
+    var method = proto[key];
+    redefine(proto, key, function (a, b) {
+      // store frozen objects on internal weakmap shim
+      if (isObject(a) && !isExtensible(a)) {
+        if (!this._f) this._f = new InternalMap();
+        var result = this._f[key](a, b);
+        return key == 'set' ? this : result;
+      // store all the rest on native weakmap
+      } return method.call(this, a, b);
+    });
+  });
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.array.flat-map.js":
+/*!************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.array.flat-map.js ***!
+  \************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+// https://tc39.github.io/proposal-flatMap/#sec-Array.prototype.flatMap
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var flattenIntoArray = __webpack_require__(/*! ./_flatten-into-array */ "./node_modules/core-js/modules/_flatten-into-array.js");
+var toObject = __webpack_require__(/*! ./_to-object */ "./node_modules/core-js/modules/_to-object.js");
+var toLength = __webpack_require__(/*! ./_to-length */ "./node_modules/core-js/modules/_to-length.js");
+var aFunction = __webpack_require__(/*! ./_a-function */ "./node_modules/core-js/modules/_a-function.js");
+var arraySpeciesCreate = __webpack_require__(/*! ./_array-species-create */ "./node_modules/core-js/modules/_array-species-create.js");
+
+$export($export.P, 'Array', {
+  flatMap: function flatMap(callbackfn /* , thisArg */) {
+    var O = toObject(this);
+    var sourceLen, A;
+    aFunction(callbackfn);
+    sourceLen = toLength(O.length);
+    A = arraySpeciesCreate(O, 0);
+    flattenIntoArray(A, O, O, sourceLen, 0, 1, callbackfn, arguments[1]);
+    return A;
+  }
+});
+
+__webpack_require__(/*! ./_add-to-unscopables */ "./node_modules/core-js/modules/_add-to-unscopables.js")('flatMap');
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.array.flatten.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.array.flatten.js ***!
+  \***********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+// https://tc39.github.io/proposal-flatMap/#sec-Array.prototype.flatten
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var flattenIntoArray = __webpack_require__(/*! ./_flatten-into-array */ "./node_modules/core-js/modules/_flatten-into-array.js");
+var toObject = __webpack_require__(/*! ./_to-object */ "./node_modules/core-js/modules/_to-object.js");
+var toLength = __webpack_require__(/*! ./_to-length */ "./node_modules/core-js/modules/_to-length.js");
+var toInteger = __webpack_require__(/*! ./_to-integer */ "./node_modules/core-js/modules/_to-integer.js");
+var arraySpeciesCreate = __webpack_require__(/*! ./_array-species-create */ "./node_modules/core-js/modules/_array-species-create.js");
+
+$export($export.P, 'Array', {
+  flatten: function flatten(/* depthArg = 1 */) {
+    var depthArg = arguments[0];
+    var O = toObject(this);
+    var sourceLen = toLength(O.length);
+    var A = arraySpeciesCreate(O, 0);
+    flattenIntoArray(A, O, O, sourceLen, 0, depthArg === undefined ? 1 : toInteger(depthArg));
+    return A;
+  }
+});
+
+__webpack_require__(/*! ./_add-to-unscopables */ "./node_modules/core-js/modules/_add-to-unscopables.js")('flatten');
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.array.includes.js":
+/*!************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.array.includes.js ***!
+  \************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+// https://github.com/tc39/Array.prototype.includes
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var $includes = __webpack_require__(/*! ./_array-includes */ "./node_modules/core-js/modules/_array-includes.js")(true);
+
+$export($export.P, 'Array', {
+  includes: function includes(el /* , fromIndex = 0 */) {
+    return $includes(this, el, arguments.length > 1 ? arguments[1] : undefined);
+  }
+});
+
+__webpack_require__(/*! ./_add-to-unscopables */ "./node_modules/core-js/modules/_add-to-unscopables.js")('includes');
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.object.define-getter.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.object.define-getter.js ***!
+  \******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var toObject = __webpack_require__(/*! ./_to-object */ "./node_modules/core-js/modules/_to-object.js");
+var aFunction = __webpack_require__(/*! ./_a-function */ "./node_modules/core-js/modules/_a-function.js");
+var $defineProperty = __webpack_require__(/*! ./_object-dp */ "./node_modules/core-js/modules/_object-dp.js");
+
+// B.2.2.2 Object.prototype.__defineGetter__(P, getter)
+__webpack_require__(/*! ./_descriptors */ "./node_modules/core-js/modules/_descriptors.js") && $export($export.P + __webpack_require__(/*! ./_object-forced-pam */ "./node_modules/core-js/modules/_object-forced-pam.js"), 'Object', {
+  __defineGetter__: function __defineGetter__(P, getter) {
+    $defineProperty.f(toObject(this), P, { get: aFunction(getter), enumerable: true, configurable: true });
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.object.define-setter.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.object.define-setter.js ***!
+  \******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var toObject = __webpack_require__(/*! ./_to-object */ "./node_modules/core-js/modules/_to-object.js");
+var aFunction = __webpack_require__(/*! ./_a-function */ "./node_modules/core-js/modules/_a-function.js");
+var $defineProperty = __webpack_require__(/*! ./_object-dp */ "./node_modules/core-js/modules/_object-dp.js");
+
+// B.2.2.3 Object.prototype.__defineSetter__(P, setter)
+__webpack_require__(/*! ./_descriptors */ "./node_modules/core-js/modules/_descriptors.js") && $export($export.P + __webpack_require__(/*! ./_object-forced-pam */ "./node_modules/core-js/modules/_object-forced-pam.js"), 'Object', {
+  __defineSetter__: function __defineSetter__(P, setter) {
+    $defineProperty.f(toObject(this), P, { set: aFunction(setter), enumerable: true, configurable: true });
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.object.entries.js":
+/*!************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.object.entries.js ***!
+  \************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// https://github.com/tc39/proposal-object-values-entries
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var $entries = __webpack_require__(/*! ./_object-to-array */ "./node_modules/core-js/modules/_object-to-array.js")(true);
+
+$export($export.S, 'Object', {
+  entries: function entries(it) {
+    return $entries(it);
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.object.get-own-property-descriptors.js":
+/*!*********************************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.object.get-own-property-descriptors.js ***!
+  \*********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// https://github.com/tc39/proposal-object-getownpropertydescriptors
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var ownKeys = __webpack_require__(/*! ./_own-keys */ "./node_modules/core-js/modules/_own-keys.js");
+var toIObject = __webpack_require__(/*! ./_to-iobject */ "./node_modules/core-js/modules/_to-iobject.js");
+var gOPD = __webpack_require__(/*! ./_object-gopd */ "./node_modules/core-js/modules/_object-gopd.js");
+var createProperty = __webpack_require__(/*! ./_create-property */ "./node_modules/core-js/modules/_create-property.js");
+
+$export($export.S, 'Object', {
+  getOwnPropertyDescriptors: function getOwnPropertyDescriptors(object) {
+    var O = toIObject(object);
+    var getDesc = gOPD.f;
+    var keys = ownKeys(O);
+    var result = {};
+    var i = 0;
+    var key, desc;
+    while (keys.length > i) {
+      desc = getDesc(O, key = keys[i++]);
+      if (desc !== undefined) createProperty(result, key, desc);
+    }
+    return result;
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.object.lookup-getter.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.object.lookup-getter.js ***!
+  \******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var toObject = __webpack_require__(/*! ./_to-object */ "./node_modules/core-js/modules/_to-object.js");
+var toPrimitive = __webpack_require__(/*! ./_to-primitive */ "./node_modules/core-js/modules/_to-primitive.js");
+var getPrototypeOf = __webpack_require__(/*! ./_object-gpo */ "./node_modules/core-js/modules/_object-gpo.js");
+var getOwnPropertyDescriptor = __webpack_require__(/*! ./_object-gopd */ "./node_modules/core-js/modules/_object-gopd.js").f;
+
+// B.2.2.4 Object.prototype.__lookupGetter__(P)
+__webpack_require__(/*! ./_descriptors */ "./node_modules/core-js/modules/_descriptors.js") && $export($export.P + __webpack_require__(/*! ./_object-forced-pam */ "./node_modules/core-js/modules/_object-forced-pam.js"), 'Object', {
+  __lookupGetter__: function __lookupGetter__(P) {
+    var O = toObject(this);
+    var K = toPrimitive(P, true);
+    var D;
+    do {
+      if (D = getOwnPropertyDescriptor(O, K)) return D.get;
+    } while (O = getPrototypeOf(O));
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.object.lookup-setter.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.object.lookup-setter.js ***!
+  \******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var toObject = __webpack_require__(/*! ./_to-object */ "./node_modules/core-js/modules/_to-object.js");
+var toPrimitive = __webpack_require__(/*! ./_to-primitive */ "./node_modules/core-js/modules/_to-primitive.js");
+var getPrototypeOf = __webpack_require__(/*! ./_object-gpo */ "./node_modules/core-js/modules/_object-gpo.js");
+var getOwnPropertyDescriptor = __webpack_require__(/*! ./_object-gopd */ "./node_modules/core-js/modules/_object-gopd.js").f;
+
+// B.2.2.5 Object.prototype.__lookupSetter__(P)
+__webpack_require__(/*! ./_descriptors */ "./node_modules/core-js/modules/_descriptors.js") && $export($export.P + __webpack_require__(/*! ./_object-forced-pam */ "./node_modules/core-js/modules/_object-forced-pam.js"), 'Object', {
+  __lookupSetter__: function __lookupSetter__(P) {
+    var O = toObject(this);
+    var K = toPrimitive(P, true);
+    var D;
+    do {
+      if (D = getOwnPropertyDescriptor(O, K)) return D.set;
+    } while (O = getPrototypeOf(O));
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.object.values.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.object.values.js ***!
+  \***********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// https://github.com/tc39/proposal-object-values-entries
+var $export = __webpack_require__(/*! ./_export */ "./node_modules/core-js/modules/_export.js");
+var $values = __webpack_require__(/*! ./_object-to-array */ "./node_modules/core-js/modules/_object-to-array.js")(false);
+
+$export($export.S, 'Object', {
+  values: function values(it) {
+    return $values(it);
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.reflect.define-metadata.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.reflect.define-metadata.js ***!
+  \*********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var metadata = __webpack_require__(/*! ./_metadata */ "./node_modules/core-js/modules/_metadata.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var toMetaKey = metadata.key;
+var ordinaryDefineOwnMetadata = metadata.set;
+
+metadata.exp({ defineMetadata: function defineMetadata(metadataKey, metadataValue, target, targetKey) {
+  ordinaryDefineOwnMetadata(metadataKey, metadataValue, anObject(target), toMetaKey(targetKey));
+} });
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.reflect.delete-metadata.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.reflect.delete-metadata.js ***!
+  \*********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var metadata = __webpack_require__(/*! ./_metadata */ "./node_modules/core-js/modules/_metadata.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var toMetaKey = metadata.key;
+var getOrCreateMetadataMap = metadata.map;
+var store = metadata.store;
+
+metadata.exp({ deleteMetadata: function deleteMetadata(metadataKey, target /* , targetKey */) {
+  var targetKey = arguments.length < 3 ? undefined : toMetaKey(arguments[2]);
+  var metadataMap = getOrCreateMetadataMap(anObject(target), targetKey, false);
+  if (metadataMap === undefined || !metadataMap['delete'](metadataKey)) return false;
+  if (metadataMap.size) return true;
+  var targetMetadata = store.get(target);
+  targetMetadata['delete'](targetKey);
+  return !!targetMetadata.size || store['delete'](target);
+} });
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.reflect.get-metadata-keys.js":
+/*!***********************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.reflect.get-metadata-keys.js ***!
+  \***********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var Set = __webpack_require__(/*! ./es6.set */ "./node_modules/core-js/modules/es6.set.js");
+var from = __webpack_require__(/*! ./_array-from-iterable */ "./node_modules/core-js/modules/_array-from-iterable.js");
+var metadata = __webpack_require__(/*! ./_metadata */ "./node_modules/core-js/modules/_metadata.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var getPrototypeOf = __webpack_require__(/*! ./_object-gpo */ "./node_modules/core-js/modules/_object-gpo.js");
+var ordinaryOwnMetadataKeys = metadata.keys;
+var toMetaKey = metadata.key;
+
+var ordinaryMetadataKeys = function (O, P) {
+  var oKeys = ordinaryOwnMetadataKeys(O, P);
+  var parent = getPrototypeOf(O);
+  if (parent === null) return oKeys;
+  var pKeys = ordinaryMetadataKeys(parent, P);
+  return pKeys.length ? oKeys.length ? from(new Set(oKeys.concat(pKeys))) : pKeys : oKeys;
+};
+
+metadata.exp({ getMetadataKeys: function getMetadataKeys(target /* , targetKey */) {
+  return ordinaryMetadataKeys(anObject(target), arguments.length < 2 ? undefined : toMetaKey(arguments[1]));
+} });
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.reflect.get-metadata.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.reflect.get-metadata.js ***!
+  \******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var metadata = __webpack_require__(/*! ./_metadata */ "./node_modules/core-js/modules/_metadata.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var getPrototypeOf = __webpack_require__(/*! ./_object-gpo */ "./node_modules/core-js/modules/_object-gpo.js");
+var ordinaryHasOwnMetadata = metadata.has;
+var ordinaryGetOwnMetadata = metadata.get;
+var toMetaKey = metadata.key;
+
+var ordinaryGetMetadata = function (MetadataKey, O, P) {
+  var hasOwn = ordinaryHasOwnMetadata(MetadataKey, O, P);
+  if (hasOwn) return ordinaryGetOwnMetadata(MetadataKey, O, P);
+  var parent = getPrototypeOf(O);
+  return parent !== null ? ordinaryGetMetadata(MetadataKey, parent, P) : undefined;
+};
+
+metadata.exp({ getMetadata: function getMetadata(metadataKey, target /* , targetKey */) {
+  return ordinaryGetMetadata(metadataKey, anObject(target), arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
+} });
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.reflect.get-own-metadata-keys.js":
+/*!***************************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.reflect.get-own-metadata-keys.js ***!
+  \***************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var metadata = __webpack_require__(/*! ./_metadata */ "./node_modules/core-js/modules/_metadata.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var ordinaryOwnMetadataKeys = metadata.keys;
+var toMetaKey = metadata.key;
+
+metadata.exp({ getOwnMetadataKeys: function getOwnMetadataKeys(target /* , targetKey */) {
+  return ordinaryOwnMetadataKeys(anObject(target), arguments.length < 2 ? undefined : toMetaKey(arguments[1]));
+} });
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.reflect.get-own-metadata.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.reflect.get-own-metadata.js ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var metadata = __webpack_require__(/*! ./_metadata */ "./node_modules/core-js/modules/_metadata.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var ordinaryGetOwnMetadata = metadata.get;
+var toMetaKey = metadata.key;
+
+metadata.exp({ getOwnMetadata: function getOwnMetadata(metadataKey, target /* , targetKey */) {
+  return ordinaryGetOwnMetadata(metadataKey, anObject(target)
+    , arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
+} });
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.reflect.has-metadata.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.reflect.has-metadata.js ***!
+  \******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var metadata = __webpack_require__(/*! ./_metadata */ "./node_modules/core-js/modules/_metadata.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var getPrototypeOf = __webpack_require__(/*! ./_object-gpo */ "./node_modules/core-js/modules/_object-gpo.js");
+var ordinaryHasOwnMetadata = metadata.has;
+var toMetaKey = metadata.key;
+
+var ordinaryHasMetadata = function (MetadataKey, O, P) {
+  var hasOwn = ordinaryHasOwnMetadata(MetadataKey, O, P);
+  if (hasOwn) return true;
+  var parent = getPrototypeOf(O);
+  return parent !== null ? ordinaryHasMetadata(MetadataKey, parent, P) : false;
+};
+
+metadata.exp({ hasMetadata: function hasMetadata(metadataKey, target /* , targetKey */) {
+  return ordinaryHasMetadata(metadataKey, anObject(target), arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
+} });
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.reflect.has-own-metadata.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.reflect.has-own-metadata.js ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var metadata = __webpack_require__(/*! ./_metadata */ "./node_modules/core-js/modules/_metadata.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var ordinaryHasOwnMetadata = metadata.has;
+var toMetaKey = metadata.key;
+
+metadata.exp({ hasOwnMetadata: function hasOwnMetadata(metadataKey, target /* , targetKey */) {
+  return ordinaryHasOwnMetadata(metadataKey, anObject(target)
+    , arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
+} });
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es7.reflect.metadata.js":
+/*!**************************************************************!*\
+  !*** ./node_modules/core-js/modules/es7.reflect.metadata.js ***!
+  \**************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var $metadata = __webpack_require__(/*! ./_metadata */ "./node_modules/core-js/modules/_metadata.js");
+var anObject = __webpack_require__(/*! ./_an-object */ "./node_modules/core-js/modules/_an-object.js");
+var aFunction = __webpack_require__(/*! ./_a-function */ "./node_modules/core-js/modules/_a-function.js");
+var toMetaKey = $metadata.key;
+var ordinaryDefineOwnMetadata = $metadata.set;
+
+$metadata.exp({ metadata: function metadata(metadataKey, metadataValue) {
+  return function decorator(target, targetKey) {
+    ordinaryDefineOwnMetadata(
+      metadataKey, metadataValue,
+      (targetKey !== undefined ? anObject : aFunction)(target),
+      toMetaKey(targetKey)
+    );
+  };
+} });
+
+
+/***/ }),
+
+/***/ "./node_modules/web-animations-js/web-animations.min.js":
+/*!**************************************************************!*\
+  !*** ./node_modules/web-animations-js/web-animations.min.js ***!
+  \**************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+!function(){var a={},b={};!function(a,b){function c(a){if("number"==typeof a)return a;var b={};for(var c in a)b[c]=a[c];return b}function d(){this._delay=0,this._endDelay=0,this._fill="none",this._iterationStart=0,this._iterations=1,this._duration=0,this._playbackRate=1,this._direction="normal",this._easing="linear",this._easingFunction=x}function e(){return a.isDeprecated("Invalid timing inputs","2016-03-02","TypeError exceptions will be thrown instead.",!0)}function f(b,c,e){var f=new d;return c&&(f.fill="both",f.duration="auto"),"number"!=typeof b||isNaN(b)?void 0!==b&&Object.getOwnPropertyNames(b).forEach(function(c){if("auto"!=b[c]){if(("number"==typeof f[c]||"duration"==c)&&("number"!=typeof b[c]||isNaN(b[c])))return;if("fill"==c&&-1==v.indexOf(b[c]))return;if("direction"==c&&-1==w.indexOf(b[c]))return;if("playbackRate"==c&&1!==b[c]&&a.isDeprecated("AnimationEffectTiming.playbackRate","2014-11-28","Use Animation.playbackRate instead."))return;f[c]=b[c]}}):f.duration=b,f}function g(a){return"number"==typeof a&&(a=isNaN(a)?{duration:0}:{duration:a}),a}function h(b,c){return b=a.numericTimingToObject(b),f(b,c)}function i(a,b,c,d){return a<0||a>1||c<0||c>1?x:function(e){function f(a,b,c){return 3*a*(1-c)*(1-c)*c+3*b*(1-c)*c*c+c*c*c}if(e<=0){var g=0;return a>0?g=b/a:!b&&c>0&&(g=d/c),g*e}if(e>=1){var h=0;return c<1?h=(d-1)/(c-1):1==c&&a<1&&(h=(b-1)/(a-1)),1+h*(e-1)}for(var i=0,j=1;i<j;){var k=(i+j)/2,l=f(a,c,k);if(Math.abs(e-l)<1e-5)return f(b,d,k);l<e?i=k:j=k}return f(b,d,k)}}function j(a,b){return function(c){if(c>=1)return 1;var d=1/a;return(c+=b*d)-c%d}}function k(a){C||(C=document.createElement("div").style),C.animationTimingFunction="",C.animationTimingFunction=a;var b=C.animationTimingFunction;if(""==b&&e())throw new TypeError(a+" is not a valid value for easing");return b}function l(a){if("linear"==a)return x;var b=E.exec(a);if(b)return i.apply(this,b.slice(1).map(Number));var c=F.exec(a);if(c)return j(Number(c[1]),A);var d=G.exec(a);return d?j(Number(d[1]),{start:y,middle:z,end:A}[d[2]]):B[a]||x}function m(a){return Math.abs(n(a)/a.playbackRate)}function n(a){return 0===a.duration||0===a.iterations?0:a.duration*a.iterations}function o(a,b,c){if(null==b)return H;var d=c.delay+a+c.endDelay;return b<Math.min(c.delay,d)?I:b>=Math.min(c.delay+a,d)?J:K}function p(a,b,c,d,e){switch(d){case I:return"backwards"==b||"both"==b?0:null;case K:return c-e;case J:return"forwards"==b||"both"==b?a:null;case H:return null}}function q(a,b,c,d,e){var f=e;return 0===a?b!==I&&(f+=c):f+=d/a,f}function r(a,b,c,d,e,f){var g=a===1/0?b%1:a%1;return 0!==g||c!==J||0===d||0===e&&0!==f||(g=1),g}function s(a,b,c,d){return a===J&&b===1/0?1/0:1===c?Math.floor(d)-1:Math.floor(d)}function t(a,b,c){var d=a;if("normal"!==a&&"reverse"!==a){var e=b;"alternate-reverse"===a&&(e+=1),d="normal",e!==1/0&&e%2!=0&&(d="reverse")}return"normal"===d?c:1-c}function u(a,b,c){var d=o(a,b,c),e=p(a,c.fill,b,d,c.delay);if(null===e)return null;var f=q(c.duration,d,c.iterations,e,c.iterationStart),g=r(f,c.iterationStart,d,c.iterations,e,c.duration),h=s(d,c.iterations,g,f),i=t(c.direction,h,g);return c._easingFunction(i)}var v="backwards|forwards|both|none".split("|"),w="reverse|alternate|alternate-reverse".split("|"),x=function(a){return a};d.prototype={_setMember:function(b,c){this["_"+b]=c,this._effect&&(this._effect._timingInput[b]=c,this._effect._timing=a.normalizeTimingInput(this._effect._timingInput),this._effect.activeDuration=a.calculateActiveDuration(this._effect._timing),this._effect._animation&&this._effect._animation._rebuildUnderlyingAnimation())},get playbackRate(){return this._playbackRate},set delay(a){this._setMember("delay",a)},get delay(){return this._delay},set endDelay(a){this._setMember("endDelay",a)},get endDelay(){return this._endDelay},set fill(a){this._setMember("fill",a)},get fill(){return this._fill},set iterationStart(a){if((isNaN(a)||a<0)&&e())throw new TypeError("iterationStart must be a non-negative number, received: "+a);this._setMember("iterationStart",a)},get iterationStart(){return this._iterationStart},set duration(a){if("auto"!=a&&(isNaN(a)||a<0)&&e())throw new TypeError("duration must be non-negative or auto, received: "+a);this._setMember("duration",a)},get duration(){return this._duration},set direction(a){this._setMember("direction",a)},get direction(){return this._direction},set easing(a){this._easingFunction=l(k(a)),this._setMember("easing",a)},get easing(){return this._easing},set iterations(a){if((isNaN(a)||a<0)&&e())throw new TypeError("iterations must be non-negative, received: "+a);this._setMember("iterations",a)},get iterations(){return this._iterations}};var y=1,z=.5,A=0,B={ease:i(.25,.1,.25,1),"ease-in":i(.42,0,1,1),"ease-out":i(0,0,.58,1),"ease-in-out":i(.42,0,.58,1),"step-start":j(1,y),"step-middle":j(1,z),"step-end":j(1,A)},C=null,D="\\s*(-?\\d+\\.?\\d*|-?\\.\\d+)\\s*",E=new RegExp("cubic-bezier\\("+D+","+D+","+D+","+D+"\\)"),F=/steps\(\s*(\d+)\s*\)/,G=/steps\(\s*(\d+)\s*,\s*(start|middle|end)\s*\)/,H=0,I=1,J=2,K=3;a.cloneTimingInput=c,a.makeTiming=f,a.numericTimingToObject=g,a.normalizeTimingInput=h,a.calculateActiveDuration=m,a.calculateIterationProgress=u,a.calculatePhase=o,a.normalizeEasing=k,a.parseEasingFunction=l}(a),function(a,b){function c(a,b){return a in k?k[a][b]||b:b}function d(a){return"display"===a||0===a.lastIndexOf("animation",0)||0===a.lastIndexOf("transition",0)}function e(a,b,e){if(!d(a)){var f=h[a];if(f){i.style[a]=b;for(var g in f){var j=f[g],k=i.style[j];e[j]=c(j,k)}}else e[a]=c(a,b)}}function f(a){var b=[];for(var c in a)if(!(c in["easing","offset","composite"])){var d=a[c];Array.isArray(d)||(d=[d]);for(var e,f=d.length,g=0;g<f;g++)e={},e.offset="offset"in a?a.offset:1==f?1:g/(f-1),"easing"in a&&(e.easing=a.easing),"composite"in a&&(e.composite=a.composite),e[c]=d[g],b.push(e)}return b.sort(function(a,b){return a.offset-b.offset}),b}function g(b){function c(){var a=d.length;null==d[a-1].offset&&(d[a-1].offset=1),a>1&&null==d[0].offset&&(d[0].offset=0);for(var b=0,c=d[0].offset,e=1;e<a;e++){var f=d[e].offset;if(null!=f){for(var g=1;g<e-b;g++)d[b+g].offset=c+(f-c)*g/(e-b);b=e,c=f}}}if(null==b)return[];window.Symbol&&Symbol.iterator&&Array.prototype.from&&b[Symbol.iterator]&&(b=Array.from(b)),Array.isArray(b)||(b=f(b));for(var d=b.map(function(b){var c={};for(var d in b){var f=b[d];if("offset"==d){if(null!=f){if(f=Number(f),!isFinite(f))throw new TypeError("Keyframe offsets must be numbers.");if(f<0||f>1)throw new TypeError("Keyframe offsets must be between 0 and 1.")}}else if("composite"==d){if("add"==f||"accumulate"==f)throw{type:DOMException.NOT_SUPPORTED_ERR,name:"NotSupportedError",message:"add compositing is not supported"};if("replace"!=f)throw new TypeError("Invalid composite mode "+f+".")}else f="easing"==d?a.normalizeEasing(f):""+f;e(d,f,c)}return void 0==c.offset&&(c.offset=null),void 0==c.easing&&(c.easing="linear"),c}),g=!0,h=-1/0,i=0;i<d.length;i++){var j=d[i].offset;if(null!=j){if(j<h)throw new TypeError("Keyframes are not loosely sorted by offset. Sort or specify offsets.");h=j}else g=!1}return d=d.filter(function(a){return a.offset>=0&&a.offset<=1}),g||c(),d}var h={background:["backgroundImage","backgroundPosition","backgroundSize","backgroundRepeat","backgroundAttachment","backgroundOrigin","backgroundClip","backgroundColor"],border:["borderTopColor","borderTopStyle","borderTopWidth","borderRightColor","borderRightStyle","borderRightWidth","borderBottomColor","borderBottomStyle","borderBottomWidth","borderLeftColor","borderLeftStyle","borderLeftWidth"],borderBottom:["borderBottomWidth","borderBottomStyle","borderBottomColor"],borderColor:["borderTopColor","borderRightColor","borderBottomColor","borderLeftColor"],borderLeft:["borderLeftWidth","borderLeftStyle","borderLeftColor"],borderRadius:["borderTopLeftRadius","borderTopRightRadius","borderBottomRightRadius","borderBottomLeftRadius"],borderRight:["borderRightWidth","borderRightStyle","borderRightColor"],borderTop:["borderTopWidth","borderTopStyle","borderTopColor"],borderWidth:["borderTopWidth","borderRightWidth","borderBottomWidth","borderLeftWidth"],flex:["flexGrow","flexShrink","flexBasis"],font:["fontFamily","fontSize","fontStyle","fontVariant","fontWeight","lineHeight"],margin:["marginTop","marginRight","marginBottom","marginLeft"],outline:["outlineColor","outlineStyle","outlineWidth"],padding:["paddingTop","paddingRight","paddingBottom","paddingLeft"]},i=document.createElementNS("http://www.w3.org/1999/xhtml","div"),j={thin:"1px",medium:"3px",thick:"5px"},k={borderBottomWidth:j,borderLeftWidth:j,borderRightWidth:j,borderTopWidth:j,fontSize:{"xx-small":"60%","x-small":"75%",small:"89%",medium:"100%",large:"120%","x-large":"150%","xx-large":"200%"},fontWeight:{normal:"400",bold:"700"},outlineWidth:j,textShadow:{none:"0px 0px 0px transparent"},boxShadow:{none:"0px 0px 0px 0px transparent"}};a.convertToArrayForm=f,a.normalizeKeyframes=g}(a),function(a){var b={};a.isDeprecated=function(a,c,d,e){var f=e?"are":"is",g=new Date,h=new Date(c);return h.setMonth(h.getMonth()+3),!(g<h&&(a in b||console.warn("Web Animations: "+a+" "+f+" deprecated and will stop working on "+h.toDateString()+". "+d),b[a]=!0,1))},a.deprecated=function(b,c,d,e){var f=e?"are":"is";if(a.isDeprecated(b,c,d,e))throw new Error(b+" "+f+" no longer supported. "+d)}}(a),function(){if(document.documentElement.animate){var c=document.documentElement.animate([],0),d=!0;if(c&&(d=!1,"play|currentTime|pause|reverse|playbackRate|cancel|finish|startTime|playState".split("|").forEach(function(a){void 0===c[a]&&(d=!0)})),!d)return}!function(a,b,c){function d(a){for(var b={},c=0;c<a.length;c++)for(var d in a[c])if("offset"!=d&&"easing"!=d&&"composite"!=d){var e={offset:a[c].offset,easing:a[c].easing,value:a[c][d]};b[d]=b[d]||[],b[d].push(e)}for(var f in b){var g=b[f];if(0!=g[0].offset||1!=g[g.length-1].offset)throw{type:DOMException.NOT_SUPPORTED_ERR,name:"NotSupportedError",message:"Partial keyframes are not supported"}}return b}function e(c){var d=[];for(var e in c)for(var f=c[e],g=0;g<f.length-1;g++){var h=g,i=g+1,j=f[h].offset,k=f[i].offset,l=j,m=k;0==g&&(l=-1/0,0==k&&(i=h)),g==f.length-2&&(m=1/0,1==j&&(h=i)),d.push({applyFrom:l,applyTo:m,startOffset:f[h].offset,endOffset:f[i].offset,easingFunction:a.parseEasingFunction(f[h].easing),property:e,interpolation:b.propertyInterpolation(e,f[h].value,f[i].value)})}return d.sort(function(a,b){return a.startOffset-b.startOffset}),d}b.convertEffectInput=function(c){var f=a.normalizeKeyframes(c),g=d(f),h=e(g);return function(a,c){if(null!=c)h.filter(function(a){return c>=a.applyFrom&&c<a.applyTo}).forEach(function(d){var e=c-d.startOffset,f=d.endOffset-d.startOffset,g=0==f?0:d.easingFunction(e/f);b.apply(a,d.property,d.interpolation(g))});else for(var d in g)"offset"!=d&&"easing"!=d&&"composite"!=d&&b.clear(a,d)}}}(a,b),function(a,b,c){function d(a){return a.replace(/-(.)/g,function(a,b){return b.toUpperCase()})}function e(a,b,c){h[c]=h[c]||[],h[c].push([a,b])}function f(a,b,c){for(var f=0;f<c.length;f++){e(a,b,d(c[f]))}}function g(c,e,f){var g=c;/-/.test(c)&&!a.isDeprecated("Hyphenated property names","2016-03-22","Use camelCase instead.",!0)&&(g=d(c)),"initial"!=e&&"initial"!=f||("initial"==e&&(e=i[g]),"initial"==f&&(f=i[g]));for(var j=e==f?[]:h[g],k=0;j&&k<j.length;k++){var l=j[k][0](e),m=j[k][0](f);if(void 0!==l&&void 0!==m){var n=j[k][1](l,m);if(n){var o=b.Interpolation.apply(null,n);return function(a){return 0==a?e:1==a?f:o(a)}}}}return b.Interpolation(!1,!0,function(a){return a?f:e})}var h={};b.addPropertiesHandler=f;var i={backgroundColor:"transparent",backgroundPosition:"0% 0%",borderBottomColor:"currentColor",borderBottomLeftRadius:"0px",borderBottomRightRadius:"0px",borderBottomWidth:"3px",borderLeftColor:"currentColor",borderLeftWidth:"3px",borderRightColor:"currentColor",borderRightWidth:"3px",borderSpacing:"2px",borderTopColor:"currentColor",borderTopLeftRadius:"0px",borderTopRightRadius:"0px",borderTopWidth:"3px",bottom:"auto",clip:"rect(0px, 0px, 0px, 0px)",color:"black",fontSize:"100%",fontWeight:"400",height:"auto",left:"auto",letterSpacing:"normal",lineHeight:"120%",marginBottom:"0px",marginLeft:"0px",marginRight:"0px",marginTop:"0px",maxHeight:"none",maxWidth:"none",minHeight:"0px",minWidth:"0px",opacity:"1.0",outlineColor:"invert",outlineOffset:"0px",outlineWidth:"3px",paddingBottom:"0px",paddingLeft:"0px",paddingRight:"0px",paddingTop:"0px",right:"auto",strokeDasharray:"none",strokeDashoffset:"0px",textIndent:"0px",textShadow:"0px 0px 0px transparent",top:"auto",transform:"",verticalAlign:"0px",visibility:"visible",width:"auto",wordSpacing:"normal",zIndex:"auto"};b.propertyInterpolation=g}(a,b),function(a,b,c){function d(b){var c=a.calculateActiveDuration(b),d=function(d){return a.calculateIterationProgress(c,d,b)};return d._totalDuration=b.delay+c+b.endDelay,d}b.KeyframeEffect=function(c,e,f,g){var h,i=d(a.normalizeTimingInput(f)),j=b.convertEffectInput(e),k=function(){j(c,h)};return k._update=function(a){return null!==(h=i(a))},k._clear=function(){j(c,null)},k._hasSameTarget=function(a){return c===a},k._target=c,k._totalDuration=i._totalDuration,k._id=g,k}}(a,b),function(a,b){function c(a,b){return!(!b.namespaceURI||-1==b.namespaceURI.indexOf("/svg"))&&(g in a||(a[g]=/Trident|MSIE|IEMobile|Edge|Android 4/i.test(a.navigator.userAgent)),a[g])}function d(a,b,c){c.enumerable=!0,c.configurable=!0,Object.defineProperty(a,b,c)}function e(a){this._element=a,this._surrogateStyle=document.createElementNS("http://www.w3.org/1999/xhtml","div").style,this._style=a.style,this._length=0,this._isAnimatedProperty={},this._updateSvgTransformAttr=c(window,a),this._savedTransformAttr=null;for(var b=0;b<this._style.length;b++){var d=this._style[b];this._surrogateStyle[d]=this._style[d]}this._updateIndices()}function f(a){if(!a._webAnimationsPatchedStyle){var b=new e(a);try{d(a,"style",{get:function(){return b}})}catch(b){a.style._set=function(b,c){a.style[b]=c},a.style._clear=function(b){a.style[b]=""}}a._webAnimationsPatchedStyle=a.style}}var g="_webAnimationsUpdateSvgTransformAttr",h={cssText:1,length:1,parentRule:1},i={getPropertyCSSValue:1,getPropertyPriority:1,getPropertyValue:1,item:1,removeProperty:1,setProperty:1},j={removeProperty:1,setProperty:1};e.prototype={get cssText(){return this._surrogateStyle.cssText},set cssText(a){for(var b={},c=0;c<this._surrogateStyle.length;c++)b[this._surrogateStyle[c]]=!0;this._surrogateStyle.cssText=a,this._updateIndices();for(var c=0;c<this._surrogateStyle.length;c++)b[this._surrogateStyle[c]]=!0;for(var d in b)this._isAnimatedProperty[d]||this._style.setProperty(d,this._surrogateStyle.getPropertyValue(d))},get length(){return this._surrogateStyle.length},get parentRule(){return this._style.parentRule},_updateIndices:function(){for(;this._length<this._surrogateStyle.length;)Object.defineProperty(this,this._length,{configurable:!0,enumerable:!1,get:function(a){return function(){return this._surrogateStyle[a]}}(this._length)}),this._length++;for(;this._length>this._surrogateStyle.length;)this._length--,Object.defineProperty(this,this._length,{configurable:!0,enumerable:!1,value:void 0})},_set:function(b,c){this._style[b]=c,this._isAnimatedProperty[b]=!0,this._updateSvgTransformAttr&&"transform"==a.unprefixedPropertyName(b)&&(null==this._savedTransformAttr&&(this._savedTransformAttr=this._element.getAttribute("transform")),this._element.setAttribute("transform",a.transformToSvgMatrix(c)))},_clear:function(b){this._style[b]=this._surrogateStyle[b],this._updateSvgTransformAttr&&"transform"==a.unprefixedPropertyName(b)&&(this._savedTransformAttr?this._element.setAttribute("transform",this._savedTransformAttr):this._element.removeAttribute("transform"),this._savedTransformAttr=null),delete this._isAnimatedProperty[b]}};for(var k in i)e.prototype[k]=function(a,b){return function(){var c=this._surrogateStyle[a].apply(this._surrogateStyle,arguments);return b&&(this._isAnimatedProperty[arguments[0]]||this._style[a].apply(this._style,arguments),this._updateIndices()),c}}(k,k in j);for(var l in document.documentElement.style)l in h||l in i||function(a){d(e.prototype,a,{get:function(){return this._surrogateStyle[a]},set:function(b){this._surrogateStyle[a]=b,this._updateIndices(),this._isAnimatedProperty[a]||(this._style[a]=b)}})}(l);a.apply=function(b,c,d){f(b),b.style._set(a.propertyName(c),d)},a.clear=function(b,c){b._webAnimationsPatchedStyle&&b.style._clear(a.propertyName(c))}}(b),function(a){window.Element.prototype.animate=function(b,c){var d="";return c&&c.id&&(d=c.id),a.timeline._play(a.KeyframeEffect(this,b,c,d))}}(b),function(a,b){function c(a,b,d){if("number"==typeof a&&"number"==typeof b)return a*(1-d)+b*d;if("boolean"==typeof a&&"boolean"==typeof b)return d<.5?a:b;if(a.length==b.length){for(var e=[],f=0;f<a.length;f++)e.push(c(a[f],b[f],d));return e}throw"Mismatched interpolation arguments "+a+":"+b}a.Interpolation=function(a,b,d){return function(e){return d(c(a,b,e))}}}(b),function(a,b){function c(a,b,c){return Math.max(Math.min(a,c),b)}function d(b,d,e){var f=a.dot(b,d);f=c(f,-1,1);var g=[];if(1===f)g=b;else for(var h=Math.acos(f),i=1*Math.sin(e*h)/Math.sqrt(1-f*f),j=0;j<4;j++)g.push(b[j]*(Math.cos(e*h)-f*i)+d[j]*i);return g}var e=function(){function a(a,b){for(var c=[[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],d=0;d<4;d++)for(var e=0;e<4;e++)for(var f=0;f<4;f++)c[d][e]+=b[d][f]*a[f][e];return c}function b(a){return 0==a[0][2]&&0==a[0][3]&&0==a[1][2]&&0==a[1][3]&&0==a[2][0]&&0==a[2][1]&&1==a[2][2]&&0==a[2][3]&&0==a[3][2]&&1==a[3][3]}function c(c,d,e,f,g){for(var h=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],i=0;i<4;i++)h[i][3]=g[i];for(var i=0;i<3;i++)for(var j=0;j<3;j++)h[3][i]+=c[j]*h[j][i];var k=f[0],l=f[1],m=f[2],n=f[3],o=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];o[0][0]=1-2*(l*l+m*m),o[0][1]=2*(k*l-m*n),o[0][2]=2*(k*m+l*n),o[1][0]=2*(k*l+m*n),o[1][1]=1-2*(k*k+m*m),o[1][2]=2*(l*m-k*n),o[2][0]=2*(k*m-l*n),o[2][1]=2*(l*m+k*n),o[2][2]=1-2*(k*k+l*l),h=a(h,o);var p=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];e[2]&&(p[2][1]=e[2],h=a(h,p)),e[1]&&(p[2][1]=0,p[2][0]=e[0],h=a(h,p)),e[0]&&(p[2][0]=0,p[1][0]=e[0],h=a(h,p));for(var i=0;i<3;i++)for(var j=0;j<3;j++)h[i][j]*=d[i];return b(h)?[h[0][0],h[0][1],h[1][0],h[1][1],h[3][0],h[3][1]]:h[0].concat(h[1],h[2],h[3])}return c}();a.composeMatrix=e,a.quat=d}(b),function(a,b,c){a.sequenceNumber=0;var d=function(a,b,c){this.target=a,this.currentTime=b,this.timelineTime=c,this.type="finish",this.bubbles=!1,this.cancelable=!1,this.currentTarget=a,this.defaultPrevented=!1,this.eventPhase=Event.AT_TARGET,this.timeStamp=Date.now()};b.Animation=function(b){this.id="",b&&b._id&&(this.id=b._id),this._sequenceNumber=a.sequenceNumber++,this._currentTime=0,this._startTime=null,this._paused=!1,this._playbackRate=1,this._inTimeline=!0,this._finishedFlag=!0,this.onfinish=null,this._finishHandlers=[],this._effect=b,this._inEffect=this._effect._update(0),this._idle=!0,this._currentTimePending=!1},b.Animation.prototype={_ensureAlive:function(){this.playbackRate<0&&0===this.currentTime?this._inEffect=this._effect._update(-1):this._inEffect=this._effect._update(this.currentTime),this._inTimeline||!this._inEffect&&this._finishedFlag||(this._inTimeline=!0,b.timeline._animations.push(this))},_tickCurrentTime:function(a,b){a!=this._currentTime&&(this._currentTime=a,this._isFinished&&!b&&(this._currentTime=this._playbackRate>0?this._totalDuration:0),this._ensureAlive())},get currentTime(){return this._idle||this._currentTimePending?null:this._currentTime},set currentTime(a){a=+a,isNaN(a)||(b.restart(),this._paused||null==this._startTime||(this._startTime=this._timeline.currentTime-a/this._playbackRate),this._currentTimePending=!1,this._currentTime!=a&&(this._idle&&(this._idle=!1,this._paused=!0),this._tickCurrentTime(a,!0),b.applyDirtiedAnimation(this)))},get startTime(){return this._startTime},set startTime(a){a=+a,isNaN(a)||this._paused||this._idle||(this._startTime=a,this._tickCurrentTime((this._timeline.currentTime-this._startTime)*this.playbackRate),b.applyDirtiedAnimation(this))},get playbackRate(){return this._playbackRate},set playbackRate(a){if(a!=this._playbackRate){var c=this.currentTime;this._playbackRate=a,this._startTime=null,"paused"!=this.playState&&"idle"!=this.playState&&(this._finishedFlag=!1,this._idle=!1,this._ensureAlive(),b.applyDirtiedAnimation(this)),null!=c&&(this.currentTime=c)}},get _isFinished(){return!this._idle&&(this._playbackRate>0&&this._currentTime>=this._totalDuration||this._playbackRate<0&&this._currentTime<=0)},get _totalDuration(){return this._effect._totalDuration},get playState(){return this._idle?"idle":null==this._startTime&&!this._paused&&0!=this.playbackRate||this._currentTimePending?"pending":this._paused?"paused":this._isFinished?"finished":"running"},_rewind:function(){if(this._playbackRate>=0)this._currentTime=0;else{if(!(this._totalDuration<1/0))throw new DOMException("Unable to rewind negative playback rate animation with infinite duration","InvalidStateError");this._currentTime=this._totalDuration}},play:function(){this._paused=!1,(this._isFinished||this._idle)&&(this._rewind(),this._startTime=null),this._finishedFlag=!1,this._idle=!1,this._ensureAlive(),b.applyDirtiedAnimation(this)},pause:function(){this._isFinished||this._paused||this._idle?this._idle&&(this._rewind(),this._idle=!1):this._currentTimePending=!0,this._startTime=null,this._paused=!0},finish:function(){this._idle||(this.currentTime=this._playbackRate>0?this._totalDuration:0,this._startTime=this._totalDuration-this.currentTime,this._currentTimePending=!1,b.applyDirtiedAnimation(this))},cancel:function(){this._inEffect&&(this._inEffect=!1,this._idle=!0,this._paused=!1,this._finishedFlag=!0,this._currentTime=0,this._startTime=null,this._effect._update(null),b.applyDirtiedAnimation(this))},reverse:function(){this.playbackRate*=-1,this.play()},addEventListener:function(a,b){"function"==typeof b&&"finish"==a&&this._finishHandlers.push(b)},removeEventListener:function(a,b){if("finish"==a){var c=this._finishHandlers.indexOf(b);c>=0&&this._finishHandlers.splice(c,1)}},_fireEvents:function(a){if(this._isFinished){if(!this._finishedFlag){var b=new d(this,this._currentTime,a),c=this._finishHandlers.concat(this.onfinish?[this.onfinish]:[]);setTimeout(function(){c.forEach(function(a){a.call(b.target,b)})},0),this._finishedFlag=!0}}else this._finishedFlag=!1},_tick:function(a,b){this._idle||this._paused||(null==this._startTime?b&&(this.startTime=a-this._currentTime/this.playbackRate):this._isFinished||this._tickCurrentTime((a-this._startTime)*this.playbackRate)),b&&(this._currentTimePending=!1,this._fireEvents(a))},get _needsTick(){return this.playState in{pending:1,running:1}||!this._finishedFlag},_targetAnimations:function(){var a=this._effect._target;return a._activeAnimations||(a._activeAnimations=[]),a._activeAnimations},_markTarget:function(){var a=this._targetAnimations();-1===a.indexOf(this)&&a.push(this)},_unmarkTarget:function(){var a=this._targetAnimations(),b=a.indexOf(this);-1!==b&&a.splice(b,1)}}}(a,b),function(a,b,c){function d(a){var b=j;j=[],a<q.currentTime&&(a=q.currentTime),q._animations.sort(e),q._animations=h(a,!0,q._animations)[0],b.forEach(function(b){b[1](a)}),g(),l=void 0}function e(a,b){return a._sequenceNumber-b._sequenceNumber}function f(){this._animations=[],this.currentTime=window.performance&&performance.now?performance.now():0}function g(){o.forEach(function(a){a()}),o.length=0}function h(a,c,d){p=!0,n=!1,b.timeline.currentTime=a,m=!1;var e=[],f=[],g=[],h=[];return d.forEach(function(b){b._tick(a,c),b._inEffect?(f.push(b._effect),b._markTarget()):(e.push(b._effect),b._unmarkTarget()),b._needsTick&&(m=!0);var d=b._inEffect||b._needsTick;b._inTimeline=d,d?g.push(b):h.push(b)}),o.push.apply(o,e),o.push.apply(o,f),m&&requestAnimationFrame(function(){}),p=!1,[g,h]}var i=window.requestAnimationFrame,j=[],k=0;window.requestAnimationFrame=function(a){var b=k++;return 0==j.length&&i(d),j.push([b,a]),b},window.cancelAnimationFrame=function(a){j.forEach(function(b){b[0]==a&&(b[1]=function(){})})},f.prototype={_play:function(c){c._timing=a.normalizeTimingInput(c.timing);var d=new b.Animation(c);return d._idle=!1,d._timeline=this,this._animations.push(d),b.restart(),b.applyDirtiedAnimation(d),d}};var l=void 0,m=!1,n=!1;b.restart=function(){return m||(m=!0,requestAnimationFrame(function(){}),n=!0),n},b.applyDirtiedAnimation=function(a){if(!p){a._markTarget();var c=a._targetAnimations();c.sort(e),h(b.timeline.currentTime,!1,c.slice())[1].forEach(function(a){var b=q._animations.indexOf(a);-1!==b&&q._animations.splice(b,1)}),g()}};var o=[],p=!1,q=new f;b.timeline=q}(a,b),function(a,b){function c(a,b){for(var c=0,d=0;d<a.length;d++)c+=a[d]*b[d];return c}function d(a,b){return[a[0]*b[0]+a[4]*b[1]+a[8]*b[2]+a[12]*b[3],a[1]*b[0]+a[5]*b[1]+a[9]*b[2]+a[13]*b[3],a[2]*b[0]+a[6]*b[1]+a[10]*b[2]+a[14]*b[3],a[3]*b[0]+a[7]*b[1]+a[11]*b[2]+a[15]*b[3],a[0]*b[4]+a[4]*b[5]+a[8]*b[6]+a[12]*b[7],a[1]*b[4]+a[5]*b[5]+a[9]*b[6]+a[13]*b[7],a[2]*b[4]+a[6]*b[5]+a[10]*b[6]+a[14]*b[7],a[3]*b[4]+a[7]*b[5]+a[11]*b[6]+a[15]*b[7],a[0]*b[8]+a[4]*b[9]+a[8]*b[10]+a[12]*b[11],a[1]*b[8]+a[5]*b[9]+a[9]*b[10]+a[13]*b[11],a[2]*b[8]+a[6]*b[9]+a[10]*b[10]+a[14]*b[11],a[3]*b[8]+a[7]*b[9]+a[11]*b[10]+a[15]*b[11],a[0]*b[12]+a[4]*b[13]+a[8]*b[14]+a[12]*b[15],a[1]*b[12]+a[5]*b[13]+a[9]*b[14]+a[13]*b[15],a[2]*b[12]+a[6]*b[13]+a[10]*b[14]+a[14]*b[15],a[3]*b[12]+a[7]*b[13]+a[11]*b[14]+a[15]*b[15]]}function e(a){var b=a.rad||0;return((a.deg||0)/360+(a.grad||0)/400+(a.turn||0))*(2*Math.PI)+b}function f(a){switch(a.t){case"rotatex":var b=e(a.d[0]);return[1,0,0,0,0,Math.cos(b),Math.sin(b),0,0,-Math.sin(b),Math.cos(b),0,0,0,0,1];case"rotatey":var b=e(a.d[0]);return[Math.cos(b),0,-Math.sin(b),0,0,1,0,0,Math.sin(b),0,Math.cos(b),0,0,0,0,1];case"rotate":case"rotatez":var b=e(a.d[0]);return[Math.cos(b),Math.sin(b),0,0,-Math.sin(b),Math.cos(b),0,0,0,0,1,0,0,0,0,1];case"rotate3d":var c=a.d[0],d=a.d[1],f=a.d[2],b=e(a.d[3]),g=c*c+d*d+f*f;if(0===g)c=1,d=0,f=0;else if(1!==g){var h=Math.sqrt(g);c/=h,d/=h,f/=h}var i=Math.sin(b/2),j=i*Math.cos(b/2),k=i*i;return[1-2*(d*d+f*f)*k,2*(c*d*k+f*j),2*(c*f*k-d*j),0,2*(c*d*k-f*j),1-2*(c*c+f*f)*k,2*(d*f*k+c*j),0,2*(c*f*k+d*j),2*(d*f*k-c*j),1-2*(c*c+d*d)*k,0,0,0,0,1];case"scale":return[a.d[0],0,0,0,0,a.d[1],0,0,0,0,1,0,0,0,0,1];case"scalex":return[a.d[0],0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];case"scaley":return[1,0,0,0,0,a.d[0],0,0,0,0,1,0,0,0,0,1];case"scalez":return[1,0,0,0,0,1,0,0,0,0,a.d[0],0,0,0,0,1];case"scale3d":return[a.d[0],0,0,0,0,a.d[1],0,0,0,0,a.d[2],0,0,0,0,1];case"skew":var l=e(a.d[0]),m=e(a.d[1]);return[1,Math.tan(m),0,0,Math.tan(l),1,0,0,0,0,1,0,0,0,0,1];case"skewx":var b=e(a.d[0]);return[1,0,0,0,Math.tan(b),1,0,0,0,0,1,0,0,0,0,1];case"skewy":var b=e(a.d[0]);return[1,Math.tan(b),0,0,0,1,0,0,0,0,1,0,0,0,0,1];case"translate":var c=a.d[0].px||0,d=a.d[1].px||0;return[1,0,0,0,0,1,0,0,0,0,1,0,c,d,0,1];case"translatex":var c=a.d[0].px||0;return[1,0,0,0,0,1,0,0,0,0,1,0,c,0,0,1];case"translatey":var d=a.d[0].px||0;return[1,0,0,0,0,1,0,0,0,0,1,0,0,d,0,1];case"translatez":var f=a.d[0].px||0;return[1,0,0,0,0,1,0,0,0,0,1,0,0,0,f,1];case"translate3d":var c=a.d[0].px||0,d=a.d[1].px||0,f=a.d[2].px||0;return[1,0,0,0,0,1,0,0,0,0,1,0,c,d,f,1];case"perspective":return[1,0,0,0,0,1,0,0,0,0,1,a.d[0].px?-1/a.d[0].px:0,0,0,0,1];case"matrix":return[a.d[0],a.d[1],0,0,a.d[2],a.d[3],0,0,0,0,1,0,a.d[4],a.d[5],0,1];case"matrix3d":return a.d}}function g(a){return 0===a.length?[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]:a.map(f).reduce(d)}function h(a){return[i(g(a))]}var i=function(){function a(a){return a[0][0]*a[1][1]*a[2][2]+a[1][0]*a[2][1]*a[0][2]+a[2][0]*a[0][1]*a[1][2]-a[0][2]*a[1][1]*a[2][0]-a[1][2]*a[2][1]*a[0][0]-a[2][2]*a[0][1]*a[1][0]}function b(b){for(var c=1/a(b),d=b[0][0],e=b[0][1],f=b[0][2],g=b[1][0],h=b[1][1],i=b[1][2],j=b[2][0],k=b[2][1],l=b[2][2],m=[[(h*l-i*k)*c,(f*k-e*l)*c,(e*i-f*h)*c,0],[(i*j-g*l)*c,(d*l-f*j)*c,(f*g-d*i)*c,0],[(g*k-h*j)*c,(j*e-d*k)*c,(d*h-e*g)*c,0]],n=[],o=0;o<3;o++){for(var p=0,q=0;q<3;q++)p+=b[3][q]*m[q][o];n.push(p)}return n.push(1),m.push(n),m}function d(a){return[[a[0][0],a[1][0],a[2][0],a[3][0]],[a[0][1],a[1][1],a[2][1],a[3][1]],[a[0][2],a[1][2],a[2][2],a[3][2]],[a[0][3],a[1][3],a[2][3],a[3][3]]]}function e(a,b){for(var c=[],d=0;d<4;d++){for(var e=0,f=0;f<4;f++)e+=a[f]*b[f][d];c.push(e)}return c}function f(a){var b=g(a);return[a[0]/b,a[1]/b,a[2]/b]}function g(a){return Math.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2])}function h(a,b,c,d){return[c*a[0]+d*b[0],c*a[1]+d*b[1],c*a[2]+d*b[2]]}function i(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}function j(j){var k=[j.slice(0,4),j.slice(4,8),j.slice(8,12),j.slice(12,16)];if(1!==k[3][3])return null;for(var l=[],m=0;m<4;m++)l.push(k[m].slice());for(var m=0;m<3;m++)l[m][3]=0;if(0===a(l))return null;var n,o=[];k[0][3]||k[1][3]||k[2][3]?(o.push(k[0][3]),o.push(k[1][3]),o.push(k[2][3]),o.push(k[3][3]),n=e(o,d(b(l)))):n=[0,0,0,1];var p=k[3].slice(0,3),q=[];q.push(k[0].slice(0,3));var r=[];r.push(g(q[0])),q[0]=f(q[0]);var s=[];q.push(k[1].slice(0,3)),s.push(c(q[0],q[1])),q[1]=h(q[1],q[0],1,-s[0]),r.push(g(q[1])),q[1]=f(q[1]),s[0]/=r[1],q.push(k[2].slice(0,3)),s.push(c(q[0],q[2])),q[2]=h(q[2],q[0],1,-s[1]),s.push(c(q[1],q[2])),q[2]=h(q[2],q[1],1,-s[2]),r.push(g(q[2])),q[2]=f(q[2]),s[1]/=r[2],s[2]/=r[2];var t=i(q[1],q[2]);if(c(q[0],t)<0)for(var m=0;m<3;m++)r[m]*=-1,q[m][0]*=-1,q[m][1]*=-1,q[m][2]*=-1;var u,v,w=q[0][0]+q[1][1]+q[2][2]+1;return w>1e-4?(u=.5/Math.sqrt(w),v=[(q[2][1]-q[1][2])*u,(q[0][2]-q[2][0])*u,(q[1][0]-q[0][1])*u,.25/u]):q[0][0]>q[1][1]&&q[0][0]>q[2][2]?(u=2*Math.sqrt(1+q[0][0]-q[1][1]-q[2][2]),v=[.25*u,(q[0][1]+q[1][0])/u,(q[0][2]+q[2][0])/u,(q[2][1]-q[1][2])/u]):q[1][1]>q[2][2]?(u=2*Math.sqrt(1+q[1][1]-q[0][0]-q[2][2]),v=[(q[0][1]+q[1][0])/u,.25*u,(q[1][2]+q[2][1])/u,(q[0][2]-q[2][0])/u]):(u=2*Math.sqrt(1+q[2][2]-q[0][0]-q[1][1]),v=[(q[0][2]+q[2][0])/u,(q[1][2]+q[2][1])/u,.25*u,(q[1][0]-q[0][1])/u]),[p,r,s,v,n]}return j}();a.dot=c,a.makeMatrixDecomposition=h,a.transformListToMatrix=g}(b),function(a){function b(a,b){var c=a.exec(b);if(c)return c=a.ignoreCase?c[0].toLowerCase():c[0],[c,b.substr(c.length)]}function c(a,b){b=b.replace(/^\s*/,"");var c=a(b);if(c)return[c[0],c[1].replace(/^\s*/,"")]}function d(a,d,e){a=c.bind(null,a);for(var f=[];;){var g=a(e);if(!g)return[f,e];if(f.push(g[0]),e=g[1],!(g=b(d,e))||""==g[1])return[f,e];e=g[1]}}function e(a,b){for(var c=0,d=0;d<b.length&&(!/\s|,/.test(b[d])||0!=c);d++)if("("==b[d])c++;else if(")"==b[d]&&(c--,0==c&&d++,c<=0))break;var e=a(b.substr(0,d));return void 0==e?void 0:[e,b.substr(d)]}function f(a,b){for(var c=a,d=b;c&&d;)c>d?c%=d:d%=c;return c=a*b/(c+d)}function g(a){return function(b){var c=a(b);return c&&(c[0]=void 0),c}}function h(a,b){return function(c){return a(c)||[b,c]}}function i(b,c){for(var d=[],e=0;e<b.length;e++){var f=a.consumeTrimmed(b[e],c);if(!f||""==f[0])return;void 0!==f[0]&&d.push(f[0]),c=f[1]}if(""==c)return d}function j(a,b,c,d,e){for(var g=[],h=[],i=[],j=f(d.length,e.length),k=0;k<j;k++){var l=b(d[k%d.length],e[k%e.length]);if(!l)return;g.push(l[0]),h.push(l[1]),i.push(l[2])}return[g,h,function(b){var d=b.map(function(a,b){return i[b](a)}).join(c);return a?a(d):d}]}function k(a,b,c){for(var d=[],e=[],f=[],g=0,h=0;h<c.length;h++)if("function"==typeof c[h]){var i=c[h](a[g],b[g++]);d.push(i[0]),e.push(i[1]),f.push(i[2])}else!function(a){d.push(!1),e.push(!1),f.push(function(){return c[a]})}(h);return[d,e,function(a){for(var b="",c=0;c<a.length;c++)b+=f[c](a[c]);return b}]}a.consumeToken=b,a.consumeTrimmed=c,a.consumeRepeated=d,a.consumeParenthesised=e,a.ignore=g,a.optional=h,a.consumeList=i,a.mergeNestedRepeated=j.bind(null,null),a.mergeWrappedNestedRepeated=j,a.mergeList=k}(b),function(a){function b(b){function c(b){var c=a.consumeToken(/^inset/i,b);return c?(d.inset=!0,c):(c=a.consumeLengthOrPercent(b))?(d.lengths.push(c[0]),c):(c=a.consumeColor(b),c?(d.color=c[0],c):void 0)}var d={inset:!1,lengths:[],color:null},e=a.consumeRepeated(c,/^/,b);if(e&&e[0].length)return[d,e[1]]}function c(c){var d=a.consumeRepeated(b,/^,/,c);if(d&&""==d[1])return d[0]}function d(b,c){for(;b.lengths.length<Math.max(b.lengths.length,c.lengths.length);)b.lengths.push({px:0});for(;c.lengths.length<Math.max(b.lengths.length,c.lengths.length);)c.lengths.push({px:0});if(b.inset==c.inset&&!!b.color==!!c.color){for(var d,e=[],f=[[],0],g=[[],0],h=0;h<b.lengths.length;h++){var i=a.mergeDimensions(b.lengths[h],c.lengths[h],2==h);f[0].push(i[0]),g[0].push(i[1]),e.push(i[2])}if(b.color&&c.color){var j=a.mergeColors(b.color,c.color);f[1]=j[0],g[1]=j[1],d=j[2]}return[f,g,function(a){for(var c=b.inset?"inset ":" ",f=0;f<e.length;f++)c+=e[f](a[0][f])+" ";return d&&(c+=d(a[1])),c}]}}function e(b,c,d,e){function f(a){return{inset:a,color:[0,0,0,0],lengths:[{px:0},{px:0},{px:0},{px:0}]}}for(var g=[],h=[],i=0;i<d.length||i<e.length;i++){var j=d[i]||f(e[i].inset),k=e[i]||f(d[i].inset);g.push(j),h.push(k)}return a.mergeNestedRepeated(b,c,g,h)}var f=e.bind(null,d,", ");a.addPropertiesHandler(c,f,["box-shadow","text-shadow"])}(b),function(a,b){function c(a){return a.toFixed(3).replace(/0+$/,"").replace(/\.$/,"")}function d(a,b,c){return Math.min(b,Math.max(a,c))}function e(a){if(/^\s*[-+]?(\d*\.)?\d+\s*$/.test(a))return Number(a)}function f(a,b){return[a,b,c]}function g(a,b){if(0!=a)return i(0,1/0)(a,b)}function h(a,b){return[a,b,function(a){return Math.round(d(1,1/0,a))}]}function i(a,b){return function(e,f){return[e,f,function(e){return c(d(a,b,e))}]}}function j(a){var b=a.trim().split(/\s*[\s,]\s*/);if(0!==b.length){for(var c=[],d=0;d<b.length;d++){var f=e(b[d]);if(void 0===f)return;c.push(f)}return c}}function k(a,b){if(a.length==b.length)return[a,b,function(a){return a.map(c).join(" ")}]}function l(a,b){return[a,b,Math.round]}a.clamp=d,a.addPropertiesHandler(j,k,["stroke-dasharray"]),a.addPropertiesHandler(e,i(0,1/0),["border-image-width","line-height"]),a.addPropertiesHandler(e,i(0,1),["opacity","shape-image-threshold"]),a.addPropertiesHandler(e,g,["flex-grow","flex-shrink"]),a.addPropertiesHandler(e,h,["orphans","widows"]),a.addPropertiesHandler(e,l,["z-index"]),a.parseNumber=e,a.parseNumberList=j,a.mergeNumbers=f,a.numberToString=c}(b),function(a,b){function c(a,b){if("visible"==a||"visible"==b)return[0,1,function(c){return c<=0?a:c>=1?b:"visible"}]}a.addPropertiesHandler(String,c,["visibility"])}(b),function(a,b){function c(a){a=a.trim(),f.fillStyle="#000",f.fillStyle=a;var b=f.fillStyle;if(f.fillStyle="#fff",f.fillStyle=a,b==f.fillStyle){f.fillRect(0,0,1,1);var c=f.getImageData(0,0,1,1).data;f.clearRect(0,0,1,1);var d=c[3]/255;return[c[0]*d,c[1]*d,c[2]*d,d]}}function d(b,c){return[b,c,function(b){function c(a){return Math.max(0,Math.min(255,a))}if(b[3])for(var d=0;d<3;d++)b[d]=Math.round(c(b[d]/b[3]));return b[3]=a.numberToString(a.clamp(0,1,b[3])),"rgba("+b.join(",")+")"}]}var e=document.createElementNS("http://www.w3.org/1999/xhtml","canvas");e.width=e.height=1;var f=e.getContext("2d");a.addPropertiesHandler(c,d,["background-color","border-bottom-color","border-left-color","border-right-color","border-top-color","color","fill","flood-color","lighting-color","outline-color","stop-color","stroke","text-decoration-color"]),a.consumeColor=a.consumeParenthesised.bind(null,c),a.mergeColors=d}(b),function(a,b){function c(a){function b(){var b=h.exec(a);g=b?b[0]:void 0}function c(){var a=Number(g);return b(),a}function d(){if("("!==g)return c();b();var a=f();return")"!==g?NaN:(b(),a)}function e(){for(var a=d();"*"===g||"/"===g;){var c=g;b();var e=d();"*"===c?a*=e:a/=e}return a}function f(){for(var a=e();"+"===g||"-"===g;){var c=g;b();var d=e();"+"===c?a+=d:a-=d}return a}var g,h=/([\+\-\w\.]+|[\(\)\*\/])/g;return b(),f()}function d(a,b){if("0"==(b=b.trim().toLowerCase())&&"px".search(a)>=0)return{px:0};if(/^[^(]*$|^calc/.test(b)){b=b.replace(/calc\(/g,"(");var d={};b=b.replace(a,function(a){return d[a]=null,"U"+a});for(var e="U("+a.source+")",f=b.replace(/[-+]?(\d*\.)?\d+([Ee][-+]?\d+)?/g,"N").replace(new RegExp("N"+e,"g"),"D").replace(/\s[+-]\s/g,"O").replace(/\s/g,""),g=[/N\*(D)/g,/(N|D)[*\/]N/g,/(N|D)O\1/g,/\((N|D)\)/g],h=0;h<g.length;)g[h].test(f)?(f=f.replace(g[h],"$1"),h=0):h++;if("D"==f){for(var i in d){var j=c(b.replace(new RegExp("U"+i,"g"),"").replace(new RegExp(e,"g"),"*0"));if(!isFinite(j))return;d[i]=j}return d}}}function e(a,b){return f(a,b,!0)}function f(b,c,d){var e,f=[];for(e in b)f.push(e);for(e in c)f.indexOf(e)<0&&f.push(e);return b=f.map(function(a){return b[a]||0}),c=f.map(function(a){return c[a]||0}),[b,c,function(b){var c=b.map(function(c,e){return 1==b.length&&d&&(c=Math.max(c,0)),a.numberToString(c)+f[e]}).join(" + ");return b.length>1?"calc("+c+")":c}]}var g="px|em|ex|ch|rem|vw|vh|vmin|vmax|cm|mm|in|pt|pc",h=d.bind(null,new RegExp(g,"g")),i=d.bind(null,new RegExp(g+"|%","g")),j=d.bind(null,/deg|rad|grad|turn/g);a.parseLength=h,a.parseLengthOrPercent=i,a.consumeLengthOrPercent=a.consumeParenthesised.bind(null,i),a.parseAngle=j,a.mergeDimensions=f;var k=a.consumeParenthesised.bind(null,h),l=a.consumeRepeated.bind(void 0,k,/^/),m=a.consumeRepeated.bind(void 0,l,/^,/);a.consumeSizePairList=m;var n=function(a){var b=m(a);if(b&&""==b[1])return b[0]},o=a.mergeNestedRepeated.bind(void 0,e," "),p=a.mergeNestedRepeated.bind(void 0,o,",");a.mergeNonNegativeSizePair=o,a.addPropertiesHandler(n,p,["background-size"]),a.addPropertiesHandler(i,e,["border-bottom-width","border-image-width","border-left-width","border-right-width","border-top-width","flex-basis","font-size","height","line-height","max-height","max-width","outline-width","width"]),a.addPropertiesHandler(i,f,["border-bottom-left-radius","border-bottom-right-radius","border-top-left-radius","border-top-right-radius","bottom","left","letter-spacing","margin-bottom","margin-left","margin-right","margin-top","min-height","min-width","outline-offset","padding-bottom","padding-left","padding-right","padding-top","perspective","right","shape-margin","stroke-dashoffset","text-indent","top","vertical-align","word-spacing"])}(b),function(a,b){function c(b){return a.consumeLengthOrPercent(b)||a.consumeToken(/^auto/,b)}function d(b){var d=a.consumeList([a.ignore(a.consumeToken.bind(null,/^rect/)),a.ignore(a.consumeToken.bind(null,/^\(/)),a.consumeRepeated.bind(null,c,/^,/),a.ignore(a.consumeToken.bind(null,/^\)/))],b);if(d&&4==d[0].length)return d[0]}function e(b,c){return"auto"==b||"auto"==c?[!0,!1,function(d){var e=d?b:c;if("auto"==e)return"auto";var f=a.mergeDimensions(e,e);return f[2](f[0])}]:a.mergeDimensions(b,c)}function f(a){return"rect("+a+")"}var g=a.mergeWrappedNestedRepeated.bind(null,f,e,", ");a.parseBox=d,a.mergeBoxes=g,a.addPropertiesHandler(d,g,["clip"])}(b),function(a,b){function c(a){return function(b){var c=0;return a.map(function(a){return a===k?b[c++]:a})}}function d(a){return a}function e(b){if("none"==(b=b.toLowerCase().trim()))return[];for(var c,d=/\s*(\w+)\(([^)]*)\)/g,e=[],f=0;c=d.exec(b);){if(c.index!=f)return;f=c.index+c[0].length;var g=c[1],h=n[g];if(!h)return;var i=c[2].split(","),j=h[0];if(j.length<i.length)return;for(var k=[],o=0;o<j.length;o++){var p,q=i[o],r=j[o];if(void 0===(p=q?{A:function(b){return"0"==b.trim()?m:a.parseAngle(b)},N:a.parseNumber,T:a.parseLengthOrPercent,L:a.parseLength}[r.toUpperCase()](q):{a:m,n:k[0],t:l}[r]))return;k.push(p)}if(e.push({t:g,d:k}),d.lastIndex==b.length)return e}}function f(a){return a.toFixed(6).replace(".000000","")}function g(b,c){if(b.decompositionPair!==c){b.decompositionPair=c;var d=a.makeMatrixDecomposition(b)}if(c.decompositionPair!==b){c.decompositionPair=b;var e=a.makeMatrixDecomposition(c)}return null==d[0]||null==e[0]?[[!1],[!0],function(a){return a?c[0].d:b[0].d}]:(d[0].push(0),e[0].push(1),[d,e,function(b){var c=a.quat(d[0][3],e[0][3],b[5]);return a.composeMatrix(b[0],b[1],b[2],c,b[4]).map(f).join(",")}])}function h(a){return a.replace(/[xy]/,"")}function i(a){return a.replace(/(x|y|z|3d)?$/,"3d")}function j(b,c){var d=a.makeMatrixDecomposition&&!0,e=!1;if(!b.length||!c.length){b.length||(e=!0,b=c,c=[]);for(var f=0;f<b.length;f++){var j=b[f].t,k=b[f].d,l="scale"==j.substr(0,5)?1:0;c.push({t:j,d:k.map(function(a){if("number"==typeof a)return l;var b={};for(var c in a)b[c]=l;return b})})}}var m=function(a,b){return"perspective"==a&&"perspective"==b||("matrix"==a||"matrix3d"==a)&&("matrix"==b||"matrix3d"==b)},o=[],p=[],q=[];if(b.length!=c.length){if(!d)return;var r=g(b,c);o=[r[0]],p=[r[1]],q=[["matrix",[r[2]]]]}else for(var f=0;f<b.length;f++){var j,s=b[f].t,t=c[f].t,u=b[f].d,v=c[f].d,w=n[s],x=n[t];if(m(s,t)){if(!d)return;var r=g([b[f]],[c[f]]);o.push(r[0]),p.push(r[1]),q.push(["matrix",[r[2]]])}else{if(s==t)j=s;else if(w[2]&&x[2]&&h(s)==h(t))j=h(s),u=w[2](u),v=x[2](v);else{if(!w[1]||!x[1]||i(s)!=i(t)){if(!d)return;var r=g(b,c);o=[r[0]],p=[r[1]],q=[["matrix",[r[2]]]];break}j=i(s),u=w[1](u),v=x[1](v)}for(var y=[],z=[],A=[],B=0;B<u.length;B++){var C="number"==typeof u[B]?a.mergeNumbers:a.mergeDimensions,r=C(u[B],v[B]);y[B]=r[0],z[B]=r[1],A.push(r[2])}o.push(y),p.push(z),q.push([j,A])}}if(e){var D=o;o=p,p=D}return[o,p,function(a){return a.map(function(a,b){var c=a.map(function(a,c){return q[b][1][c](a)}).join(",");return"matrix"==q[b][0]&&16==c.split(",").length&&(q[b][0]="matrix3d"),q[b][0]+"("+c+")"}).join(" ")}]}var k=null,l={px:0},m={deg:0},n={matrix:["NNNNNN",[k,k,0,0,k,k,0,0,0,0,1,0,k,k,0,1],d],matrix3d:["NNNNNNNNNNNNNNNN",d],rotate:["A"],rotatex:["A"],rotatey:["A"],rotatez:["A"],rotate3d:["NNNA"],perspective:["L"],scale:["Nn",c([k,k,1]),d],scalex:["N",c([k,1,1]),c([k,1])],scaley:["N",c([1,k,1]),c([1,k])],scalez:["N",c([1,1,k])],scale3d:["NNN",d],skew:["Aa",null,d],skewx:["A",null,c([k,m])],skewy:["A",null,c([m,k])],translate:["Tt",c([k,k,l]),d],translatex:["T",c([k,l,l]),c([k,l])],translatey:["T",c([l,k,l]),c([l,k])],translatez:["L",c([l,l,k])],translate3d:["TTL",d]};a.addPropertiesHandler(e,j,["transform"]),a.transformToSvgMatrix=function(b){var c=a.transformListToMatrix(e(b));return"matrix("+f(c[0])+" "+f(c[1])+" "+f(c[4])+" "+f(c[5])+" "+f(c[12])+" "+f(c[13])+")"}}(b),function(a){function b(a){var b=Number(a);if(!(isNaN(b)||b<100||b>900||b%100!=0))return b}function c(b){return b=100*Math.round(b/100),b=a.clamp(100,900,b),400===b?"normal":700===b?"bold":String(b)}function d(a,b){return[a,b,c]}a.addPropertiesHandler(b,d,["font-weight"])}(b),function(a){function b(a){var b={};for(var c in a)b[c]=-a[c];return b}function c(b){return a.consumeToken(/^(left|center|right|top|bottom)\b/i,b)||a.consumeLengthOrPercent(b)}function d(b,d){var e=a.consumeRepeated(c,/^/,d);if(e&&""==e[1]){var f=e[0];if(f[0]=f[0]||"center",f[1]=f[1]||"center",3==b&&(f[2]=f[2]||{px:0}),f.length==b){if(/top|bottom/.test(f[0])||/left|right/.test(f[1])){var h=f[0];f[0]=f[1],f[1]=h}if(/left|right|center|Object/.test(f[0])&&/top|bottom|center|Object/.test(f[1]))return f.map(function(a){return"object"==typeof a?a:g[a]})}}}function e(d){var e=a.consumeRepeated(c,/^/,d);if(e){for(var f=e[0],h=[{"%":50},{"%":50}],i=0,j=!1,k=0;k<f.length;k++){var l=f[k];"string"==typeof l?(j=/bottom|right/.test(l),i={left:0,right:0,center:i,top:1,bottom:1}[l],h[i]=g[l],"center"==l&&i++):(j&&(l=b(l),l["%"]=(l["%"]||0)+100),h[i]=l,i++,j=!1)}return[h,e[1]]}}function f(b){var c=a.consumeRepeated(e,/^,/,b);if(c&&""==c[1])return c[0]}var g={left:{"%":0},center:{"%":50},right:{"%":100},top:{"%":0},bottom:{"%":100}},h=a.mergeNestedRepeated.bind(null,a.mergeDimensions," ");a.addPropertiesHandler(d.bind(null,3),h,["transform-origin"]),a.addPropertiesHandler(d.bind(null,2),h,["perspective-origin"]),a.consumePosition=e,a.mergeOffsetList=h;var i=a.mergeNestedRepeated.bind(null,h,", ");a.addPropertiesHandler(f,i,["background-position","object-position"])}(b),function(a){function b(b){var c=a.consumeToken(/^circle/,b);if(c&&c[0])return["circle"].concat(a.consumeList([a.ignore(a.consumeToken.bind(void 0,/^\(/)),d,a.ignore(a.consumeToken.bind(void 0,/^at/)),a.consumePosition,a.ignore(a.consumeToken.bind(void 0,/^\)/))],c[1]));var f=a.consumeToken(/^ellipse/,b);if(f&&f[0])return["ellipse"].concat(a.consumeList([a.ignore(a.consumeToken.bind(void 0,/^\(/)),e,a.ignore(a.consumeToken.bind(void 0,/^at/)),a.consumePosition,a.ignore(a.consumeToken.bind(void 0,/^\)/))],f[1]));var g=a.consumeToken(/^polygon/,b);return g&&g[0]?["polygon"].concat(a.consumeList([a.ignore(a.consumeToken.bind(void 0,/^\(/)),a.optional(a.consumeToken.bind(void 0,/^nonzero\s*,|^evenodd\s*,/),"nonzero,"),a.consumeSizePairList,a.ignore(a.consumeToken.bind(void 0,/^\)/))],g[1])):void 0}function c(b,c){if(b[0]===c[0])return"circle"==b[0]?a.mergeList(b.slice(1),c.slice(1),["circle(",a.mergeDimensions," at ",a.mergeOffsetList,")"]):"ellipse"==b[0]?a.mergeList(b.slice(1),c.slice(1),["ellipse(",a.mergeNonNegativeSizePair," at ",a.mergeOffsetList,")"]):"polygon"==b[0]&&b[1]==c[1]?a.mergeList(b.slice(2),c.slice(2),["polygon(",b[1],g,")"]):void 0}var d=a.consumeParenthesised.bind(null,a.parseLengthOrPercent),e=a.consumeRepeated.bind(void 0,d,/^/),f=a.mergeNestedRepeated.bind(void 0,a.mergeDimensions," "),g=a.mergeNestedRepeated.bind(void 0,f,",");a.addPropertiesHandler(b,c,["shape-outside"])}(b),function(a,b){function c(a,b){b.concat([a]).forEach(function(b){b in document.documentElement.style&&(d[a]=b),e[b]=a})}var d={},e={};c("transform",["webkitTransform","msTransform"]),c("transformOrigin",["webkitTransformOrigin"]),c("perspective",["webkitPerspective"]),c("perspectiveOrigin",["webkitPerspectiveOrigin"]),a.propertyName=function(a){return d[a]||a},a.unprefixedPropertyName=function(a){return e[a]||a}}(b)}(),function(){if(void 0===document.createElement("div").animate([]).oncancel){var a;if(window.performance&&performance.now)var a=function(){return performance.now()};else var a=function(){return Date.now()};var b=function(a,b,c){this.target=a,this.currentTime=b,this.timelineTime=c,this.type="cancel",this.bubbles=!1,this.cancelable=!1,this.currentTarget=a,this.defaultPrevented=!1,this.eventPhase=Event.AT_TARGET,this.timeStamp=Date.now()},c=window.Element.prototype.animate;window.Element.prototype.animate=function(d,e){var f=c.call(this,d,e);f._cancelHandlers=[],f.oncancel=null;var g=f.cancel;f.cancel=function(){g.call(this);var c=new b(this,null,a()),d=this._cancelHandlers.concat(this.oncancel?[this.oncancel]:[]);setTimeout(function(){d.forEach(function(a){a.call(c.target,c)})},0)};var h=f.addEventListener;f.addEventListener=function(a,b){"function"==typeof b&&"cancel"==a?this._cancelHandlers.push(b):h.call(this,a,b)};var i=f.removeEventListener;return f.removeEventListener=function(a,b){if("cancel"==a){var c=this._cancelHandlers.indexOf(b);c>=0&&this._cancelHandlers.splice(c,1)}else i.call(this,a,b)},f}}}(),function(a){var b=document.documentElement,c=null,d=!1;try{var e=getComputedStyle(b).getPropertyValue("opacity"),f="0"==e?"1":"0";c=b.animate({opacity:[f,f]},{duration:1}),c.currentTime=0,d=getComputedStyle(b).getPropertyValue("opacity")==f}catch(a){}finally{c&&c.cancel()}if(!d){var g=window.Element.prototype.animate;window.Element.prototype.animate=function(b,c){return window.Symbol&&Symbol.iterator&&Array.prototype.from&&b[Symbol.iterator]&&(b=Array.from(b)),Array.isArray(b)||null===b||(b=a.convertToArrayForm(b)),g.call(this,b,c)}}}(a)}();
+//# sourceMappingURL=web-animations.min.js.map
+
+/***/ }),
+
+/***/ "./node_modules/zone.js/dist/zone-evergreen.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/zone.js/dist/zone-evergreen.js ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
+* @license Angular v9.1.0-next.4+61.sha-e552591.with-local-changes
+* (c) 2010-2020 Google LLC. https://angular.io/
+* License: MIT
+*/
+(function (factory) {
+     true ? !(__WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) :
+				__WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)) :
+    undefined;
+}((function () { 'use strict';
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const Zone$1 = (function (global) {
+        const performance = global['performance'];
+        function mark(name) { performance && performance['mark'] && performance['mark'](name); }
+        function performanceMeasure(name, label) {
+            performance && performance['measure'] && performance['measure'](name, label);
+        }
+        mark('Zone');
+        // Initialize before it's accessed below.
+        // __Zone_symbol_prefix global can be used to override the default zone
+        // symbol prefix with a custom one if needed.
+        const symbolPrefix = global['__Zone_symbol_prefix'] || '__zone_symbol__';
+        function __symbol__(name) { return symbolPrefix + name; }
+        const checkDuplicate = global[__symbol__('forceDuplicateZoneCheck')] === true;
+        if (global['Zone']) {
+            // if global['Zone'] already exists (maybe zone.js was already loaded or
+            // some other lib also registered a global object named Zone), we may need
+            // to throw an error, but sometimes user may not want this error.
+            // For example,
+            // we have two web pages, page1 includes zone.js, page2 doesn't.
+            // and the 1st time user load page1 and page2, everything work fine,
+            // but when user load page2 again, error occurs because global['Zone'] already exists.
+            // so we add a flag to let user choose whether to throw this error or not.
+            // By default, if existing Zone is from zone.js, we will not throw the error.
+            if (checkDuplicate || typeof global['Zone'].__symbol__ !== 'function') {
+                throw new Error('Zone already loaded.');
+            }
+            else {
+                return global['Zone'];
+            }
+        }
+        class Zone {
+            constructor(parent, zoneSpec) {
+                this._parent = parent;
+                this._name = zoneSpec ? zoneSpec.name || 'unnamed' : '<root>';
+                this._properties = zoneSpec && zoneSpec.properties || {};
+                this._zoneDelegate =
+                    new ZoneDelegate(this, this._parent && this._parent._zoneDelegate, zoneSpec);
+            }
+            static assertZonePatched() {
+                if (global['Promise'] !== patches['ZoneAwarePromise']) {
+                    throw new Error('Zone.js has detected that ZoneAwarePromise `(window|global).Promise` ' +
+                        'has been overwritten.\n' +
+                        'Most likely cause is that a Promise polyfill has been loaded ' +
+                        'after Zone.js (Polyfilling Promise api is not necessary when zone.js is loaded. ' +
+                        'If you must load one, do so before loading zone.js.)');
+                }
+            }
+            static get root() {
+                let zone = Zone.current;
+                while (zone.parent) {
+                    zone = zone.parent;
+                }
+                return zone;
+            }
+            static get current() { return _currentZoneFrame.zone; }
+            static get currentTask() { return _currentTask; }
+            // tslint:disable-next-line:require-internal-with-underscore
+            static __load_patch(name, fn) {
+                if (patches.hasOwnProperty(name)) {
+                    if (checkDuplicate) {
+                        throw Error('Already loaded patch: ' + name);
+                    }
+                }
+                else if (!global['__Zone_disable_' + name]) {
+                    const perfName = 'Zone:' + name;
+                    mark(perfName);
+                    patches[name] = fn(global, Zone, _api);
+                    performanceMeasure(perfName, perfName);
+                }
+            }
+            get parent() { return this._parent; }
+            get name() { return this._name; }
+            get(key) {
+                const zone = this.getZoneWith(key);
+                if (zone)
+                    return zone._properties[key];
+            }
+            getZoneWith(key) {
+                let current = this;
+                while (current) {
+                    if (current._properties.hasOwnProperty(key)) {
+                        return current;
+                    }
+                    current = current._parent;
+                }
+                return null;
+            }
+            fork(zoneSpec) {
+                if (!zoneSpec)
+                    throw new Error('ZoneSpec required!');
+                return this._zoneDelegate.fork(this, zoneSpec);
+            }
+            wrap(callback, source) {
+                if (typeof callback !== 'function') {
+                    throw new Error('Expecting function got: ' + callback);
+                }
+                const _callback = this._zoneDelegate.intercept(this, callback, source);
+                const zone = this;
+                return function () {
+                    return zone.runGuarded(_callback, this, arguments, source);
+                };
+            }
+            run(callback, applyThis, applyArgs, source) {
+                _currentZoneFrame = { parent: _currentZoneFrame, zone: this };
+                try {
+                    return this._zoneDelegate.invoke(this, callback, applyThis, applyArgs, source);
+                }
+                finally {
+                    _currentZoneFrame = _currentZoneFrame.parent;
+                }
+            }
+            runGuarded(callback, applyThis = null, applyArgs, source) {
+                _currentZoneFrame = { parent: _currentZoneFrame, zone: this };
+                try {
+                    try {
+                        return this._zoneDelegate.invoke(this, callback, applyThis, applyArgs, source);
+                    }
+                    catch (error) {
+                        if (this._zoneDelegate.handleError(this, error)) {
+                            throw error;
+                        }
+                    }
+                }
+                finally {
+                    _currentZoneFrame = _currentZoneFrame.parent;
+                }
+            }
+            runTask(task, applyThis, applyArgs) {
+                if (task.zone != this) {
+                    throw new Error('A task can only be run in the zone of creation! (Creation: ' +
+                        (task.zone || NO_ZONE).name + '; Execution: ' + this.name + ')');
+                }
+                // https://github.com/angular/zone.js/issues/778, sometimes eventTask
+                // will run in notScheduled(canceled) state, we should not try to
+                // run such kind of task but just return
+                if (task.state === notScheduled && (task.type === eventTask || task.type === macroTask)) {
+                    return;
+                }
+                const reEntryGuard = task.state != running;
+                reEntryGuard && task._transitionTo(running, scheduled);
+                task.runCount++;
+                const previousTask = _currentTask;
+                _currentTask = task;
+                _currentZoneFrame = { parent: _currentZoneFrame, zone: this };
+                try {
+                    if (task.type == macroTask && task.data && !task.data.isPeriodic) {
+                        task.cancelFn = undefined;
+                    }
+                    try {
+                        return this._zoneDelegate.invokeTask(this, task, applyThis, applyArgs);
+                    }
+                    catch (error) {
+                        if (this._zoneDelegate.handleError(this, error)) {
+                            throw error;
+                        }
+                    }
+                }
+                finally {
+                    // if the task's state is notScheduled or unknown, then it has already been cancelled
+                    // we should not reset the state to scheduled
+                    if (task.state !== notScheduled && task.state !== unknown) {
+                        if (task.type == eventTask || (task.data && task.data.isPeriodic)) {
+                            reEntryGuard && task._transitionTo(scheduled, running);
+                        }
+                        else {
+                            task.runCount = 0;
+                            this._updateTaskCount(task, -1);
+                            reEntryGuard &&
+                                task._transitionTo(notScheduled, running, notScheduled);
+                        }
+                    }
+                    _currentZoneFrame = _currentZoneFrame.parent;
+                    _currentTask = previousTask;
+                }
+            }
+            scheduleTask(task) {
+                if (task.zone && task.zone !== this) {
+                    // check if the task was rescheduled, the newZone
+                    // should not be the children of the original zone
+                    let newZone = this;
+                    while (newZone) {
+                        if (newZone === task.zone) {
+                            throw Error(`can not reschedule task to ${this.name} which is descendants of the original zone ${task.zone.name}`);
+                        }
+                        newZone = newZone.parent;
+                    }
+                }
+                task._transitionTo(scheduling, notScheduled);
+                const zoneDelegates = [];
+                task._zoneDelegates = zoneDelegates;
+                task._zone = this;
+                try {
+                    task = this._zoneDelegate.scheduleTask(this, task);
+                }
+                catch (err) {
+                    // should set task's state to unknown when scheduleTask throw error
+                    // because the err may from reschedule, so the fromState maybe notScheduled
+                    task._transitionTo(unknown, scheduling, notScheduled);
+                    // TODO: @JiaLiPassion, should we check the result from handleError?
+                    this._zoneDelegate.handleError(this, err);
+                    throw err;
+                }
+                if (task._zoneDelegates === zoneDelegates) {
+                    // we have to check because internally the delegate can reschedule the task.
+                    this._updateTaskCount(task, 1);
+                }
+                if (task.state == scheduling) {
+                    task._transitionTo(scheduled, scheduling);
+                }
+                return task;
+            }
+            scheduleMicroTask(source, callback, data, customSchedule) {
+                return this.scheduleTask(new ZoneTask(microTask, source, callback, data, customSchedule, undefined));
+            }
+            scheduleMacroTask(source, callback, data, customSchedule, customCancel) {
+                return this.scheduleTask(new ZoneTask(macroTask, source, callback, data, customSchedule, customCancel));
+            }
+            scheduleEventTask(source, callback, data, customSchedule, customCancel) {
+                return this.scheduleTask(new ZoneTask(eventTask, source, callback, data, customSchedule, customCancel));
+            }
+            cancelTask(task) {
+                if (task.zone != this)
+                    throw new Error('A task can only be cancelled in the zone of creation! (Creation: ' +
+                        (task.zone || NO_ZONE).name + '; Execution: ' + this.name + ')');
+                task._transitionTo(canceling, scheduled, running);
+                try {
+                    this._zoneDelegate.cancelTask(this, task);
+                }
+                catch (err) {
+                    // if error occurs when cancelTask, transit the state to unknown
+                    task._transitionTo(unknown, canceling);
+                    this._zoneDelegate.handleError(this, err);
+                    throw err;
+                }
+                this._updateTaskCount(task, -1);
+                task._transitionTo(notScheduled, canceling);
+                task.runCount = 0;
+                return task;
+            }
+            _updateTaskCount(task, count) {
+                const zoneDelegates = task._zoneDelegates;
+                if (count == -1) {
+                    task._zoneDelegates = null;
+                }
+                for (let i = 0; i < zoneDelegates.length; i++) {
+                    zoneDelegates[i]._updateTaskCount(task.type, count);
+                }
+            }
+        }
+        // tslint:disable-next-line:require-internal-with-underscore
+        Zone.__symbol__ = __symbol__;
+        const DELEGATE_ZS = {
+            name: '',
+            onHasTask: (delegate, _, target, hasTaskState) => delegate.hasTask(target, hasTaskState),
+            onScheduleTask: (delegate, _, target, task) => delegate.scheduleTask(target, task),
+            onInvokeTask: (delegate, _, target, task, applyThis, applyArgs) => delegate.invokeTask(target, task, applyThis, applyArgs),
+            onCancelTask: (delegate, _, target, task) => delegate.cancelTask(target, task)
+        };
+        class ZoneDelegate {
+            constructor(zone, parentDelegate, zoneSpec) {
+                this._taskCounts = { 'microTask': 0, 'macroTask': 0, 'eventTask': 0 };
+                this.zone = zone;
+                this._parentDelegate = parentDelegate;
+                this._forkZS =
+                    zoneSpec && (zoneSpec && zoneSpec.onFork ? zoneSpec : parentDelegate._forkZS);
+                this._forkDlgt = zoneSpec && (zoneSpec.onFork ? parentDelegate : parentDelegate._forkDlgt);
+                this._forkCurrZone =
+                    zoneSpec && (zoneSpec.onFork ? this.zone : parentDelegate._forkCurrZone);
+                this._interceptZS =
+                    zoneSpec && (zoneSpec.onIntercept ? zoneSpec : parentDelegate._interceptZS);
+                this._interceptDlgt =
+                    zoneSpec && (zoneSpec.onIntercept ? parentDelegate : parentDelegate._interceptDlgt);
+                this._interceptCurrZone =
+                    zoneSpec && (zoneSpec.onIntercept ? this.zone : parentDelegate._interceptCurrZone);
+                this._invokeZS = zoneSpec && (zoneSpec.onInvoke ? zoneSpec : parentDelegate._invokeZS);
+                this._invokeDlgt =
+                    zoneSpec && (zoneSpec.onInvoke ? parentDelegate : parentDelegate._invokeDlgt);
+                this._invokeCurrZone =
+                    zoneSpec && (zoneSpec.onInvoke ? this.zone : parentDelegate._invokeCurrZone);
+                this._handleErrorZS =
+                    zoneSpec && (zoneSpec.onHandleError ? zoneSpec : parentDelegate._handleErrorZS);
+                this._handleErrorDlgt = zoneSpec &&
+                    (zoneSpec.onHandleError ? parentDelegate : parentDelegate._handleErrorDlgt);
+                this._handleErrorCurrZone =
+                    zoneSpec && (zoneSpec.onHandleError ? this.zone : parentDelegate._handleErrorCurrZone);
+                this._scheduleTaskZS =
+                    zoneSpec && (zoneSpec.onScheduleTask ? zoneSpec : parentDelegate._scheduleTaskZS);
+                this._scheduleTaskDlgt = zoneSpec &&
+                    (zoneSpec.onScheduleTask ? parentDelegate : parentDelegate._scheduleTaskDlgt);
+                this._scheduleTaskCurrZone = zoneSpec &&
+                    (zoneSpec.onScheduleTask ? this.zone : parentDelegate._scheduleTaskCurrZone);
+                this._invokeTaskZS =
+                    zoneSpec && (zoneSpec.onInvokeTask ? zoneSpec : parentDelegate._invokeTaskZS);
+                this._invokeTaskDlgt =
+                    zoneSpec && (zoneSpec.onInvokeTask ? parentDelegate : parentDelegate._invokeTaskDlgt);
+                this._invokeTaskCurrZone =
+                    zoneSpec && (zoneSpec.onInvokeTask ? this.zone : parentDelegate._invokeTaskCurrZone);
+                this._cancelTaskZS =
+                    zoneSpec && (zoneSpec.onCancelTask ? zoneSpec : parentDelegate._cancelTaskZS);
+                this._cancelTaskDlgt =
+                    zoneSpec && (zoneSpec.onCancelTask ? parentDelegate : parentDelegate._cancelTaskDlgt);
+                this._cancelTaskCurrZone =
+                    zoneSpec && (zoneSpec.onCancelTask ? this.zone : parentDelegate._cancelTaskCurrZone);
+                this._hasTaskZS = null;
+                this._hasTaskDlgt = null;
+                this._hasTaskDlgtOwner = null;
+                this._hasTaskCurrZone = null;
+                const zoneSpecHasTask = zoneSpec && zoneSpec.onHasTask;
+                const parentHasTask = parentDelegate && parentDelegate._hasTaskZS;
+                if (zoneSpecHasTask || parentHasTask) {
+                    // If we need to report hasTask, than this ZS needs to do ref counting on tasks. In such
+                    // a case all task related interceptors must go through this ZD. We can't short circuit it.
+                    this._hasTaskZS = zoneSpecHasTask ? zoneSpec : DELEGATE_ZS;
+                    this._hasTaskDlgt = parentDelegate;
+                    this._hasTaskDlgtOwner = this;
+                    this._hasTaskCurrZone = zone;
+                    if (!zoneSpec.onScheduleTask) {
+                        this._scheduleTaskZS = DELEGATE_ZS;
+                        this._scheduleTaskDlgt = parentDelegate;
+                        this._scheduleTaskCurrZone = this.zone;
+                    }
+                    if (!zoneSpec.onInvokeTask) {
+                        this._invokeTaskZS = DELEGATE_ZS;
+                        this._invokeTaskDlgt = parentDelegate;
+                        this._invokeTaskCurrZone = this.zone;
+                    }
+                    if (!zoneSpec.onCancelTask) {
+                        this._cancelTaskZS = DELEGATE_ZS;
+                        this._cancelTaskDlgt = parentDelegate;
+                        this._cancelTaskCurrZone = this.zone;
+                    }
+                }
+            }
+            fork(targetZone, zoneSpec) {
+                return this._forkZS ?
+                    this._forkZS.onFork(this._forkDlgt, this.zone, targetZone, zoneSpec) :
+                    new Zone(targetZone, zoneSpec);
+            }
+            intercept(targetZone, callback, source) {
+                return this._interceptZS ?
+                    this._interceptZS.onIntercept(this._interceptDlgt, this._interceptCurrZone, targetZone, callback, source) :
+                    callback;
+            }
+            invoke(targetZone, callback, applyThis, applyArgs, source) {
+                return this._invokeZS ?
+                    this._invokeZS.onInvoke(this._invokeDlgt, this._invokeCurrZone, targetZone, callback, applyThis, applyArgs, source) :
+                    callback.apply(applyThis, applyArgs);
+            }
+            handleError(targetZone, error) {
+                return this._handleErrorZS ?
+                    this._handleErrorZS.onHandleError(this._handleErrorDlgt, this._handleErrorCurrZone, targetZone, error) :
+                    true;
+            }
+            scheduleTask(targetZone, task) {
+                let returnTask = task;
+                if (this._scheduleTaskZS) {
+                    if (this._hasTaskZS) {
+                        returnTask._zoneDelegates.push(this._hasTaskDlgtOwner);
+                    }
+                    // clang-format off
+                    returnTask = this._scheduleTaskZS.onScheduleTask(this._scheduleTaskDlgt, this._scheduleTaskCurrZone, targetZone, task);
+                    // clang-format on
+                    if (!returnTask)
+                        returnTask = task;
+                }
+                else {
+                    if (task.scheduleFn) {
+                        task.scheduleFn(task);
+                    }
+                    else if (task.type == microTask) {
+                        scheduleMicroTask(task);
+                    }
+                    else {
+                        throw new Error('Task is missing scheduleFn.');
+                    }
+                }
+                return returnTask;
+            }
+            invokeTask(targetZone, task, applyThis, applyArgs) {
+                return this._invokeTaskZS ?
+                    this._invokeTaskZS.onInvokeTask(this._invokeTaskDlgt, this._invokeTaskCurrZone, targetZone, task, applyThis, applyArgs) :
+                    task.callback.apply(applyThis, applyArgs);
+            }
+            cancelTask(targetZone, task) {
+                let value;
+                if (this._cancelTaskZS) {
+                    value = this._cancelTaskZS.onCancelTask(this._cancelTaskDlgt, this._cancelTaskCurrZone, targetZone, task);
+                }
+                else {
+                    if (!task.cancelFn) {
+                        throw Error('Task is not cancelable');
+                    }
+                    value = task.cancelFn(task);
+                }
+                return value;
+            }
+            hasTask(targetZone, isEmpty) {
+                // hasTask should not throw error so other ZoneDelegate
+                // can still trigger hasTask callback
+                try {
+                    this._hasTaskZS &&
+                        this._hasTaskZS.onHasTask(this._hasTaskDlgt, this._hasTaskCurrZone, targetZone, isEmpty);
+                }
+                catch (err) {
+                    this.handleError(targetZone, err);
+                }
+            }
+            // tslint:disable-next-line:require-internal-with-underscore
+            _updateTaskCount(type, count) {
+                const counts = this._taskCounts;
+                const prev = counts[type];
+                const next = counts[type] = prev + count;
+                if (next < 0) {
+                    throw new Error('More tasks executed then were scheduled.');
+                }
+                if (prev == 0 || next == 0) {
+                    const isEmpty = {
+                        microTask: counts['microTask'] > 0,
+                        macroTask: counts['macroTask'] > 0,
+                        eventTask: counts['eventTask'] > 0,
+                        change: type
+                    };
+                    this.hasTask(this.zone, isEmpty);
+                }
+            }
+        }
+        class ZoneTask {
+            constructor(type, source, callback, options, scheduleFn, cancelFn) {
+                // tslint:disable-next-line:require-internal-with-underscore
+                this._zone = null;
+                this.runCount = 0;
+                // tslint:disable-next-line:require-internal-with-underscore
+                this._zoneDelegates = null;
+                // tslint:disable-next-line:require-internal-with-underscore
+                this._state = 'notScheduled';
+                this.type = type;
+                this.source = source;
+                this.data = options;
+                this.scheduleFn = scheduleFn;
+                this.cancelFn = cancelFn;
+                if (!callback) {
+                    throw new Error('callback is not defined');
+                }
+                this.callback = callback;
+                const self = this;
+                // TODO: @JiaLiPassion options should have interface
+                if (type === eventTask && options && options.useG) {
+                    this.invoke = ZoneTask.invokeTask;
+                }
+                else {
+                    this.invoke = function () {
+                        return ZoneTask.invokeTask.call(global, self, this, arguments);
+                    };
+                }
+            }
+            static invokeTask(task, target, args) {
+                if (!task) {
+                    task = this;
+                }
+                _numberOfNestedTaskFrames++;
+                try {
+                    task.runCount++;
+                    return task.zone.runTask(task, target, args);
+                }
+                finally {
+                    if (_numberOfNestedTaskFrames == 1) {
+                        drainMicroTaskQueue();
+                    }
+                    _numberOfNestedTaskFrames--;
+                }
+            }
+            get zone() { return this._zone; }
+            get state() { return this._state; }
+            cancelScheduleRequest() { this._transitionTo(notScheduled, scheduling); }
+            // tslint:disable-next-line:require-internal-with-underscore
+            _transitionTo(toState, fromState1, fromState2) {
+                if (this._state === fromState1 || this._state === fromState2) {
+                    this._state = toState;
+                    if (toState == notScheduled) {
+                        this._zoneDelegates = null;
+                    }
+                }
+                else {
+                    throw new Error(`${this.type} '${this.source}': can not transition to '${toState}', expecting state '${fromState1}'${fromState2 ? ' or \'' + fromState2 + '\'' : ''}, was '${this._state}'.`);
+                }
+            }
+            toString() {
+                if (this.data && typeof this.data.handleId !== 'undefined') {
+                    return this.data.handleId.toString();
+                }
+                else {
+                    return Object.prototype.toString.call(this);
+                }
+            }
+            // add toJSON method to prevent cyclic error when
+            // call JSON.stringify(zoneTask)
+            toJSON() {
+                return {
+                    type: this.type,
+                    state: this.state,
+                    source: this.source,
+                    zone: this.zone.name,
+                    runCount: this.runCount
+                };
+            }
+        }
+        //////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////
+        ///  MICROTASK QUEUE
+        //////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////
+        const symbolSetTimeout = __symbol__('setTimeout');
+        const symbolPromise = __symbol__('Promise');
+        const symbolThen = __symbol__('then');
+        let _microTaskQueue = [];
+        let _isDrainingMicrotaskQueue = false;
+        let nativeMicroTaskQueuePromise;
+        function scheduleMicroTask(task) {
+            // if we are not running in any task, and there has not been anything scheduled
+            // we must bootstrap the initial task creation by manually scheduling the drain
+            if (_numberOfNestedTaskFrames === 0 && _microTaskQueue.length === 0) {
+                // We are not running in Task, so we need to kickstart the microtask queue.
+                if (!nativeMicroTaskQueuePromise) {
+                    if (global[symbolPromise]) {
+                        nativeMicroTaskQueuePromise = global[symbolPromise].resolve(0);
+                    }
+                }
+                if (nativeMicroTaskQueuePromise) {
+                    let nativeThen = nativeMicroTaskQueuePromise[symbolThen];
+                    if (!nativeThen) {
+                        // native Promise is not patchable, we need to use `then` directly
+                        // issue 1078
+                        nativeThen = nativeMicroTaskQueuePromise['then'];
+                    }
+                    nativeThen.call(nativeMicroTaskQueuePromise, drainMicroTaskQueue);
+                }
+                else {
+                    global[symbolSetTimeout](drainMicroTaskQueue, 0);
+                }
+            }
+            task && _microTaskQueue.push(task);
+        }
+        function drainMicroTaskQueue() {
+            if (!_isDrainingMicrotaskQueue) {
+                _isDrainingMicrotaskQueue = true;
+                while (_microTaskQueue.length) {
+                    const queue = _microTaskQueue;
+                    _microTaskQueue = [];
+                    for (let i = 0; i < queue.length; i++) {
+                        const task = queue[i];
+                        try {
+                            task.zone.runTask(task, null, null);
+                        }
+                        catch (error) {
+                            _api.onUnhandledError(error);
+                        }
+                    }
+                }
+                _api.microtaskDrainDone();
+                _isDrainingMicrotaskQueue = false;
+            }
+        }
+        //////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////
+        ///  BOOTSTRAP
+        //////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////
+        const NO_ZONE = { name: 'NO ZONE' };
+        const notScheduled = 'notScheduled', scheduling = 'scheduling', scheduled = 'scheduled', running = 'running', canceling = 'canceling', unknown = 'unknown';
+        const microTask = 'microTask', macroTask = 'macroTask', eventTask = 'eventTask';
+        const patches = {};
+        const _api = {
+            symbol: __symbol__,
+            currentZoneFrame: () => _currentZoneFrame,
+            onUnhandledError: noop,
+            microtaskDrainDone: noop,
+            scheduleMicroTask: scheduleMicroTask,
+            showUncaughtError: () => !Zone[__symbol__('ignoreConsoleErrorUncaughtError')],
+            patchEventTarget: () => [],
+            patchOnProperties: noop,
+            patchMethod: () => noop,
+            bindArguments: () => [],
+            patchThen: () => noop,
+            patchMacroTask: () => noop,
+            setNativePromise: (NativePromise) => {
+                // sometimes NativePromise.resolve static function
+                // is not ready yet, (such as core-js/es6.promise)
+                // so we need to check here.
+                if (NativePromise && typeof NativePromise.resolve === 'function') {
+                    nativeMicroTaskQueuePromise = NativePromise.resolve(0);
+                }
+            },
+            patchEventPrototype: () => noop,
+            isIEOrEdge: () => false,
+            getGlobalObjects: () => undefined,
+            ObjectDefineProperty: () => noop,
+            ObjectGetOwnPropertyDescriptor: () => undefined,
+            ObjectCreate: () => undefined,
+            ArraySlice: () => [],
+            patchClass: () => noop,
+            wrapWithCurrentZone: () => noop,
+            filterProperties: () => [],
+            attachOriginToPatched: () => noop,
+            _redefineProperty: () => noop,
+            patchCallbacks: () => noop
+        };
+        let _currentZoneFrame = { parent: null, zone: new Zone(null, null) };
+        let _currentTask = null;
+        let _numberOfNestedTaskFrames = 0;
+        function noop() { }
+        performanceMeasure('Zone', 'Zone');
+        return global['Zone'] = Zone;
+    })(typeof window !== 'undefined' && window || typeof self !== 'undefined' && self || global);
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    Zone.__load_patch('ZoneAwarePromise', (global, Zone, api) => {
+        const ObjectGetOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+        const ObjectDefineProperty = Object.defineProperty;
+        function readableObjectToString(obj) {
+            if (obj && obj.toString === Object.prototype.toString) {
+                const className = obj.constructor && obj.constructor.name;
+                return (className ? className : '') + ': ' + JSON.stringify(obj);
+            }
+            return obj ? obj.toString() : Object.prototype.toString.call(obj);
+        }
+        const __symbol__ = api.symbol;
+        const _uncaughtPromiseErrors = [];
+        const isDisableWrappingUncaughtPromiseRejection = global[__symbol__('DISABLE_WRAPPING_UNCAUGHT_PROMISE_REJECTION')] === true;
+        const symbolPromise = __symbol__('Promise');
+        const symbolThen = __symbol__('then');
+        const creationTrace = '__creationTrace__';
+        api.onUnhandledError = (e) => {
+            if (api.showUncaughtError()) {
+                const rejection = e && e.rejection;
+                if (rejection) {
+                    console.error('Unhandled Promise rejection:', rejection instanceof Error ? rejection.message : rejection, '; Zone:', e.zone.name, '; Task:', e.task && e.task.source, '; Value:', rejection, rejection instanceof Error ? rejection.stack : undefined);
+                }
+                else {
+                    console.error(e);
+                }
+            }
+        };
+        api.microtaskDrainDone = () => {
+            while (_uncaughtPromiseErrors.length) {
+                const uncaughtPromiseError = _uncaughtPromiseErrors.shift();
+                try {
+                    uncaughtPromiseError.zone.runGuarded(() => { throw uncaughtPromiseError; });
+                }
+                catch (error) {
+                    handleUnhandledRejection(error);
+                }
+            }
+        };
+        const UNHANDLED_PROMISE_REJECTION_HANDLER_SYMBOL = __symbol__('unhandledPromiseRejectionHandler');
+        function handleUnhandledRejection(e) {
+            api.onUnhandledError(e);
+            try {
+                const handler = Zone[UNHANDLED_PROMISE_REJECTION_HANDLER_SYMBOL];
+                if (typeof handler === 'function') {
+                    handler.call(this, e);
+                }
+            }
+            catch (err) {
+            }
+        }
+        function isThenable(value) { return value && value.then; }
+        function forwardResolution(value) { return value; }
+        function forwardRejection(rejection) { return ZoneAwarePromise.reject(rejection); }
+        const symbolState = __symbol__('state');
+        const symbolValue = __symbol__('value');
+        const symbolFinally = __symbol__('finally');
+        const symbolParentPromiseValue = __symbol__('parentPromiseValue');
+        const symbolParentPromiseState = __symbol__('parentPromiseState');
+        const source = 'Promise.then';
+        const UNRESOLVED = null;
+        const RESOLVED = true;
+        const REJECTED = false;
+        const REJECTED_NO_CATCH = 0;
+        function makeResolver(promise, state) {
+            return (v) => {
+                try {
+                    resolvePromise(promise, state, v);
+                }
+                catch (err) {
+                    resolvePromise(promise, false, err);
+                }
+                // Do not return value or you will break the Promise spec.
+            };
+        }
+        const once = function () {
+            let wasCalled = false;
+            return function wrapper(wrappedFunction) {
+                return function () {
+                    if (wasCalled) {
+                        return;
+                    }
+                    wasCalled = true;
+                    wrappedFunction.apply(null, arguments);
+                };
+            };
+        };
+        const TYPE_ERROR = 'Promise resolved with itself';
+        const CURRENT_TASK_TRACE_SYMBOL = __symbol__('currentTaskTrace');
+        // Promise Resolution
+        function resolvePromise(promise, state, value) {
+            const onceWrapper = once();
+            if (promise === value) {
+                throw new TypeError(TYPE_ERROR);
+            }
+            if (promise[symbolState] === UNRESOLVED) {
+                // should only get value.then once based on promise spec.
+                let then = null;
+                try {
+                    if (typeof value === 'object' || typeof value === 'function') {
+                        then = value && value.then;
+                    }
+                }
+                catch (err) {
+                    onceWrapper(() => { resolvePromise(promise, false, err); })();
+                    return promise;
+                }
+                // if (value instanceof ZoneAwarePromise) {
+                if (state !== REJECTED && value instanceof ZoneAwarePromise &&
+                    value.hasOwnProperty(symbolState) && value.hasOwnProperty(symbolValue) &&
+                    value[symbolState] !== UNRESOLVED) {
+                    clearRejectedNoCatch(value);
+                    resolvePromise(promise, value[symbolState], value[symbolValue]);
+                }
+                else if (state !== REJECTED && typeof then === 'function') {
+                    try {
+                        then.call(value, onceWrapper(makeResolver(promise, state)), onceWrapper(makeResolver(promise, false)));
+                    }
+                    catch (err) {
+                        onceWrapper(() => { resolvePromise(promise, false, err); })();
+                    }
+                }
+                else {
+                    promise[symbolState] = state;
+                    const queue = promise[symbolValue];
+                    promise[symbolValue] = value;
+                    if (promise[symbolFinally] === symbolFinally) {
+                        // the promise is generated by Promise.prototype.finally
+                        if (state === RESOLVED) {
+                            // the state is resolved, should ignore the value
+                            // and use parent promise value
+                            promise[symbolState] = promise[symbolParentPromiseState];
+                            promise[symbolValue] = promise[symbolParentPromiseValue];
+                        }
+                    }
+                    // record task information in value when error occurs, so we can
+                    // do some additional work such as render longStackTrace
+                    if (state === REJECTED && value instanceof Error) {
+                        // check if longStackTraceZone is here
+                        const trace = Zone.currentTask && Zone.currentTask.data &&
+                            Zone.currentTask.data[creationTrace];
+                        if (trace) {
+                            // only keep the long stack trace into error when in longStackTraceZone
+                            ObjectDefineProperty(value, CURRENT_TASK_TRACE_SYMBOL, { configurable: true, enumerable: false, writable: true, value: trace });
+                        }
+                    }
+                    for (let i = 0; i < queue.length;) {
+                        scheduleResolveOrReject(promise, queue[i++], queue[i++], queue[i++], queue[i++]);
+                    }
+                    if (queue.length == 0 && state == REJECTED) {
+                        promise[symbolState] = REJECTED_NO_CATCH;
+                        let uncaughtPromiseError = value;
+                        if (!isDisableWrappingUncaughtPromiseRejection) {
+                            // If disable wrapping uncaught promise reject
+                            // and the rejected value is an Error object,
+                            // use the value instead of wrapping it.
+                            try {
+                                // Here we throws a new Error to print more readable error log
+                                // and if the value is not an error, zone.js builds an `Error`
+                                // Object here to attach the stack information.
+                                throw new Error('Uncaught (in promise): ' + readableObjectToString(value) +
+                                    (value && value.stack ? '\n' + value.stack : ''));
+                            }
+                            catch (err) {
+                                uncaughtPromiseError = err;
+                            }
+                        }
+                        uncaughtPromiseError.rejection = value;
+                        uncaughtPromiseError.promise = promise;
+                        uncaughtPromiseError.zone = Zone.current;
+                        uncaughtPromiseError.task = Zone.currentTask;
+                        _uncaughtPromiseErrors.push(uncaughtPromiseError);
+                        api.scheduleMicroTask(); // to make sure that it is running
+                    }
+                }
+            }
+            // Resolving an already resolved promise is a noop.
+            return promise;
+        }
+        const REJECTION_HANDLED_HANDLER = __symbol__('rejectionHandledHandler');
+        function clearRejectedNoCatch(promise) {
+            if (promise[symbolState] === REJECTED_NO_CATCH) {
+                // if the promise is rejected no catch status
+                // and queue.length > 0, means there is a error handler
+                // here to handle the rejected promise, we should trigger
+                // windows.rejectionhandled eventHandler or nodejs rejectionHandled
+                // eventHandler
+                try {
+                    const handler = Zone[REJECTION_HANDLED_HANDLER];
+                    if (handler && typeof handler === 'function') {
+                        handler.call(this, { rejection: promise[symbolValue], promise: promise });
+                    }
+                }
+                catch (err) {
+                }
+                promise[symbolState] = REJECTED;
+                for (let i = 0; i < _uncaughtPromiseErrors.length; i++) {
+                    if (promise === _uncaughtPromiseErrors[i].promise) {
+                        _uncaughtPromiseErrors.splice(i, 1);
+                    }
+                }
+            }
+        }
+        function scheduleResolveOrReject(promise, zone, chainPromise, onFulfilled, onRejected) {
+            clearRejectedNoCatch(promise);
+            const promiseState = promise[symbolState];
+            const delegate = promiseState ?
+                (typeof onFulfilled === 'function') ? onFulfilled : forwardResolution :
+                (typeof onRejected === 'function') ? onRejected : forwardRejection;
+            zone.scheduleMicroTask(source, () => {
+                try {
+                    const parentPromiseValue = promise[symbolValue];
+                    const isFinallyPromise = !!chainPromise && symbolFinally === chainPromise[symbolFinally];
+                    if (isFinallyPromise) {
+                        // if the promise is generated from finally call, keep parent promise's state and value
+                        chainPromise[symbolParentPromiseValue] = parentPromiseValue;
+                        chainPromise[symbolParentPromiseState] = promiseState;
+                    }
+                    // should not pass value to finally callback
+                    const value = zone.run(delegate, undefined, isFinallyPromise && delegate !== forwardRejection && delegate !== forwardResolution ?
+                        [] :
+                        [parentPromiseValue]);
+                    resolvePromise(chainPromise, true, value);
+                }
+                catch (error) {
+                    // if error occurs, should always return this error
+                    resolvePromise(chainPromise, false, error);
+                }
+            }, chainPromise);
+        }
+        const ZONE_AWARE_PROMISE_TO_STRING = 'function ZoneAwarePromise() { [native code] }';
+        const noop = function () { };
+        class ZoneAwarePromise {
+            static toString() { return ZONE_AWARE_PROMISE_TO_STRING; }
+            static resolve(value) {
+                return resolvePromise(new this(null), RESOLVED, value);
+            }
+            static reject(error) {
+                return resolvePromise(new this(null), REJECTED, error);
+            }
+            static race(values) {
+                let resolve;
+                let reject;
+                let promise = new this((res, rej) => {
+                    resolve = res;
+                    reject = rej;
+                });
+                function onResolve(value) { resolve(value); }
+                function onReject(error) { reject(error); }
+                for (let value of values) {
+                    if (!isThenable(value)) {
+                        value = this.resolve(value);
+                    }
+                    value.then(onResolve, onReject);
+                }
+                return promise;
+            }
+            static all(values) { return ZoneAwarePromise.allWithCallback(values); }
+            static allSettled(values) {
+                const P = this && this.prototype instanceof ZoneAwarePromise ? this : ZoneAwarePromise;
+                return P.allWithCallback(values, {
+                    thenCallback: (value) => ({ status: 'fulfilled', value }),
+                    errorCallback: (err) => ({ status: 'rejected', reason: err })
+                });
+            }
+            static allWithCallback(values, callback) {
+                let resolve;
+                let reject;
+                let promise = new this((res, rej) => {
+                    resolve = res;
+                    reject = rej;
+                });
+                // Start at 2 to prevent prematurely resolving if .then is called immediately.
+                let unresolvedCount = 2;
+                let valueIndex = 0;
+                const resolvedValues = [];
+                for (let value of values) {
+                    if (!isThenable(value)) {
+                        value = this.resolve(value);
+                    }
+                    const curValueIndex = valueIndex;
+                    try {
+                        value.then((value) => {
+                            resolvedValues[curValueIndex] = callback ? callback.thenCallback(value) : value;
+                            unresolvedCount--;
+                            if (unresolvedCount === 0) {
+                                resolve(resolvedValues);
+                            }
+                        }, (err) => {
+                            if (!callback) {
+                                reject(err);
+                            }
+                            else {
+                                resolvedValues[curValueIndex] = callback.errorCallback(err);
+                                unresolvedCount--;
+                                if (unresolvedCount === 0) {
+                                    resolve(resolvedValues);
+                                }
+                            }
+                        });
+                    }
+                    catch (thenErr) {
+                        reject(thenErr);
+                    }
+                    unresolvedCount++;
+                    valueIndex++;
+                }
+                // Make the unresolvedCount zero-based again.
+                unresolvedCount -= 2;
+                if (unresolvedCount === 0) {
+                    resolve(resolvedValues);
+                }
+                return promise;
+            }
+            constructor(executor) {
+                const promise = this;
+                if (!(promise instanceof ZoneAwarePromise)) {
+                    throw new Error('Must be an instanceof Promise.');
+                }
+                promise[symbolState] = UNRESOLVED;
+                promise[symbolValue] = []; // queue;
+                try {
+                    executor && executor(makeResolver(promise, RESOLVED), makeResolver(promise, REJECTED));
+                }
+                catch (error) {
+                    resolvePromise(promise, false, error);
+                }
+            }
+            get [Symbol.toStringTag]() { return 'Promise'; }
+            get [Symbol.species]() { return ZoneAwarePromise; }
+            then(onFulfilled, onRejected) {
+                let C = this.constructor[Symbol.species];
+                if (!C || typeof C !== 'function') {
+                    C = this.constructor || ZoneAwarePromise;
+                }
+                const chainPromise = new C(noop);
+                const zone = Zone.current;
+                if (this[symbolState] == UNRESOLVED) {
+                    this[symbolValue].push(zone, chainPromise, onFulfilled, onRejected);
+                }
+                else {
+                    scheduleResolveOrReject(this, zone, chainPromise, onFulfilled, onRejected);
+                }
+                return chainPromise;
+            }
+            catch(onRejected) {
+                return this.then(null, onRejected);
+            }
+            finally(onFinally) {
+                let C = this.constructor[Symbol.species];
+                if (!C || typeof C !== 'function') {
+                    C = ZoneAwarePromise;
+                }
+                const chainPromise = new C(noop);
+                chainPromise[symbolFinally] = symbolFinally;
+                const zone = Zone.current;
+                if (this[symbolState] == UNRESOLVED) {
+                    this[symbolValue].push(zone, chainPromise, onFinally, onFinally);
+                }
+                else {
+                    scheduleResolveOrReject(this, zone, chainPromise, onFinally, onFinally);
+                }
+                return chainPromise;
+            }
+        }
+        // Protect against aggressive optimizers dropping seemingly unused properties.
+        // E.g. Closure Compiler in advanced mode.
+        ZoneAwarePromise['resolve'] = ZoneAwarePromise.resolve;
+        ZoneAwarePromise['reject'] = ZoneAwarePromise.reject;
+        ZoneAwarePromise['race'] = ZoneAwarePromise.race;
+        ZoneAwarePromise['all'] = ZoneAwarePromise.all;
+        const NativePromise = global[symbolPromise] = global['Promise'];
+        const ZONE_AWARE_PROMISE = Zone.__symbol__('ZoneAwarePromise');
+        let desc = ObjectGetOwnPropertyDescriptor(global, 'Promise');
+        if (!desc || desc.configurable) {
+            desc && delete desc.writable;
+            desc && delete desc.value;
+            if (!desc) {
+                desc = { configurable: true, enumerable: true };
+            }
+            desc.get = function () {
+                // if we already set ZoneAwarePromise, use patched one
+                // otherwise return native one.
+                return global[ZONE_AWARE_PROMISE] ? global[ZONE_AWARE_PROMISE] : global[symbolPromise];
+            };
+            desc.set = function (NewNativePromise) {
+                if (NewNativePromise === ZoneAwarePromise) {
+                    // if the NewNativePromise is ZoneAwarePromise
+                    // save to global
+                    global[ZONE_AWARE_PROMISE] = NewNativePromise;
+                }
+                else {
+                    // if the NewNativePromise is not ZoneAwarePromise
+                    // for example: after load zone.js, some library just
+                    // set es6-promise to global, if we set it to global
+                    // directly, assertZonePatched will fail and angular
+                    // will not loaded, so we just set the NewNativePromise
+                    // to global[symbolPromise], so the result is just like
+                    // we load ES6 Promise before zone.js
+                    global[symbolPromise] = NewNativePromise;
+                    if (!NewNativePromise.prototype[symbolThen]) {
+                        patchThen(NewNativePromise);
+                    }
+                    api.setNativePromise(NewNativePromise);
+                }
+            };
+            ObjectDefineProperty(global, 'Promise', desc);
+        }
+        global['Promise'] = ZoneAwarePromise;
+        const symbolThenPatched = __symbol__('thenPatched');
+        function patchThen(Ctor) {
+            const proto = Ctor.prototype;
+            const prop = ObjectGetOwnPropertyDescriptor(proto, 'then');
+            if (prop && (prop.writable === false || !prop.configurable)) {
+                // check Ctor.prototype.then propertyDescriptor is writable or not
+                // in meteor env, writable is false, we should ignore such case
+                return;
+            }
+            const originalThen = proto.then;
+            // Keep a reference to the original method.
+            proto[symbolThen] = originalThen;
+            Ctor.prototype.then = function (onResolve, onReject) {
+                const wrapped = new ZoneAwarePromise((resolve, reject) => { originalThen.call(this, resolve, reject); });
+                return wrapped.then(onResolve, onReject);
+            };
+            Ctor[symbolThenPatched] = true;
+        }
+        api.patchThen = patchThen;
+        function zoneify(fn) {
+            return function () {
+                let resultPromise = fn.apply(this, arguments);
+                if (resultPromise instanceof ZoneAwarePromise) {
+                    return resultPromise;
+                }
+                let ctor = resultPromise.constructor;
+                if (!ctor[symbolThenPatched]) {
+                    patchThen(ctor);
+                }
+                return resultPromise;
+            };
+        }
+        if (NativePromise) {
+            patchThen(NativePromise);
+            const fetch = global['fetch'];
+            if (typeof fetch == 'function') {
+                global[api.symbol('fetch')] = fetch;
+                global['fetch'] = zoneify(fetch);
+            }
+        }
+        // This is not part of public API, but it is useful for tests, so we expose it.
+        Promise[Zone.__symbol__('uncaughtPromiseErrors')] = _uncaughtPromiseErrors;
+        return ZoneAwarePromise;
+    });
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Suppress closure compiler errors about unknown 'Zone' variable
+     * @fileoverview
+     * @suppress {undefinedVars,globalThis,missingRequire}
+     */
+    /// <reference types="node"/>
+    // issue #989, to reduce bundle size, use short name
+    /** Object.getOwnPropertyDescriptor */
+    const ObjectGetOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+    /** Object.defineProperty */
+    const ObjectDefineProperty = Object.defineProperty;
+    /** Object.getPrototypeOf */
+    const ObjectGetPrototypeOf = Object.getPrototypeOf;
+    /** Object.create */
+    const ObjectCreate = Object.create;
+    /** Array.prototype.slice */
+    const ArraySlice = Array.prototype.slice;
+    /** addEventListener string const */
+    const ADD_EVENT_LISTENER_STR = 'addEventListener';
+    /** removeEventListener string const */
+    const REMOVE_EVENT_LISTENER_STR = 'removeEventListener';
+    /** zoneSymbol addEventListener */
+    const ZONE_SYMBOL_ADD_EVENT_LISTENER = Zone.__symbol__(ADD_EVENT_LISTENER_STR);
+    /** zoneSymbol removeEventListener */
+    const ZONE_SYMBOL_REMOVE_EVENT_LISTENER = Zone.__symbol__(REMOVE_EVENT_LISTENER_STR);
+    /** true string const */
+    const TRUE_STR = 'true';
+    /** false string const */
+    const FALSE_STR = 'false';
+    /** Zone symbol prefix string const. */
+    const ZONE_SYMBOL_PREFIX = Zone.__symbol__('');
+    function wrapWithCurrentZone(callback, source) {
+        return Zone.current.wrap(callback, source);
+    }
+    function scheduleMacroTaskWithCurrentZone(source, callback, data, customSchedule, customCancel) {
+        return Zone.current.scheduleMacroTask(source, callback, data, customSchedule, customCancel);
+    }
+    const zoneSymbol = Zone.__symbol__;
+    const isWindowExists = typeof window !== 'undefined';
+    const internalWindow = isWindowExists ? window : undefined;
+    const _global = isWindowExists && internalWindow || typeof self === 'object' && self || global;
+    const REMOVE_ATTRIBUTE = 'removeAttribute';
+    const NULL_ON_PROP_VALUE = [null];
+    function bindArguments(args, source) {
+        for (let i = args.length - 1; i >= 0; i--) {
+            if (typeof args[i] === 'function') {
+                args[i] = wrapWithCurrentZone(args[i], source + '_' + i);
+            }
+        }
+        return args;
+    }
+    function patchPrototype(prototype, fnNames) {
+        const source = prototype.constructor['name'];
+        for (let i = 0; i < fnNames.length; i++) {
+            const name = fnNames[i];
+            const delegate = prototype[name];
+            if (delegate) {
+                const prototypeDesc = ObjectGetOwnPropertyDescriptor(prototype, name);
+                if (!isPropertyWritable(prototypeDesc)) {
+                    continue;
+                }
+                prototype[name] = ((delegate) => {
+                    const patched = function () {
+                        return delegate.apply(this, bindArguments(arguments, source + '.' + name));
+                    };
+                    attachOriginToPatched(patched, delegate);
+                    return patched;
+                })(delegate);
+            }
+        }
+    }
+    function isPropertyWritable(propertyDesc) {
+        if (!propertyDesc) {
+            return true;
+        }
+        if (propertyDesc.writable === false) {
+            return false;
+        }
+        return !(typeof propertyDesc.get === 'function' && typeof propertyDesc.set === 'undefined');
+    }
+    const isWebWorker = (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope);
+    // Make sure to access `process` through `_global` so that WebPack does not accidentally browserify
+    // this code.
+    const isNode = (!('nw' in _global) && typeof _global.process !== 'undefined' &&
+        {}.toString.call(_global.process) === '[object process]');
+    const isBrowser = !isNode && !isWebWorker && !!(isWindowExists && internalWindow['HTMLElement']);
+    // we are in electron of nw, so we are both browser and nodejs
+    // Make sure to access `process` through `_global` so that WebPack does not accidentally browserify
+    // this code.
+    const isMix = typeof _global.process !== 'undefined' &&
+        {}.toString.call(_global.process) === '[object process]' && !isWebWorker &&
+        !!(isWindowExists && internalWindow['HTMLElement']);
+    const zoneSymbolEventNames = {};
+    const wrapFn = function (event) {
+        // https://github.com/angular/zone.js/issues/911, in IE, sometimes
+        // event will be undefined, so we need to use window.event
+        event = event || _global.event;
+        if (!event) {
+            return;
+        }
+        let eventNameSymbol = zoneSymbolEventNames[event.type];
+        if (!eventNameSymbol) {
+            eventNameSymbol = zoneSymbolEventNames[event.type] = zoneSymbol('ON_PROPERTY' + event.type);
+        }
+        const target = this || event.target || _global;
+        const listener = target[eventNameSymbol];
+        let result;
+        if (isBrowser && target === internalWindow && event.type === 'error') {
+            // window.onerror have different signiture
+            // https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror#window.onerror
+            // and onerror callback will prevent default when callback return true
+            const errorEvent = event;
+            result = listener &&
+                listener.call(this, errorEvent.message, errorEvent.filename, errorEvent.lineno, errorEvent.colno, errorEvent.error);
+            if (result === true) {
+                event.preventDefault();
+            }
+        }
+        else {
+            result = listener && listener.apply(this, arguments);
+            if (result != undefined && !result) {
+                event.preventDefault();
+            }
+        }
+        return result;
+    };
+    function patchProperty(obj, prop, prototype) {
+        let desc = ObjectGetOwnPropertyDescriptor(obj, prop);
+        if (!desc && prototype) {
+            // when patch window object, use prototype to check prop exist or not
+            const prototypeDesc = ObjectGetOwnPropertyDescriptor(prototype, prop);
+            if (prototypeDesc) {
+                desc = { enumerable: true, configurable: true };
+            }
+        }
+        // if the descriptor not exists or is not configurable
+        // just return
+        if (!desc || !desc.configurable) {
+            return;
+        }
+        const onPropPatchedSymbol = zoneSymbol('on' + prop + 'patched');
+        if (obj.hasOwnProperty(onPropPatchedSymbol) && obj[onPropPatchedSymbol]) {
+            return;
+        }
+        // A property descriptor cannot have getter/setter and be writable
+        // deleting the writable and value properties avoids this error:
+        //
+        // TypeError: property descriptors must not specify a value or be writable when a
+        // getter or setter has been specified
+        delete desc.writable;
+        delete desc.value;
+        const originalDescGet = desc.get;
+        const originalDescSet = desc.set;
+        // substr(2) cuz 'onclick' -> 'click', etc
+        const eventName = prop.substr(2);
+        let eventNameSymbol = zoneSymbolEventNames[eventName];
+        if (!eventNameSymbol) {
+            eventNameSymbol = zoneSymbolEventNames[eventName] = zoneSymbol('ON_PROPERTY' + eventName);
+        }
+        desc.set = function (newValue) {
+            // in some of windows's onproperty callback, this is undefined
+            // so we need to check it
+            let target = this;
+            if (!target && obj === _global) {
+                target = _global;
+            }
+            if (!target) {
+                return;
+            }
+            let previousValue = target[eventNameSymbol];
+            if (previousValue) {
+                target.removeEventListener(eventName, wrapFn);
+            }
+            // issue #978, when onload handler was added before loading zone.js
+            // we should remove it with originalDescSet
+            if (originalDescSet) {
+                originalDescSet.apply(target, NULL_ON_PROP_VALUE);
+            }
+            if (typeof newValue === 'function') {
+                target[eventNameSymbol] = newValue;
+                target.addEventListener(eventName, wrapFn, false);
+            }
+            else {
+                target[eventNameSymbol] = null;
+            }
+        };
+        // The getter would return undefined for unassigned properties but the default value of an
+        // unassigned property is null
+        desc.get = function () {
+            // in some of windows's onproperty callback, this is undefined
+            // so we need to check it
+            let target = this;
+            if (!target && obj === _global) {
+                target = _global;
+            }
+            if (!target) {
+                return null;
+            }
+            const listener = target[eventNameSymbol];
+            if (listener) {
+                return listener;
+            }
+            else if (originalDescGet) {
+                // result will be null when use inline event attribute,
+                // such as <button onclick="func();">OK</button>
+                // because the onclick function is internal raw uncompiled handler
+                // the onclick will be evaluated when first time event was triggered or
+                // the property is accessed, https://github.com/angular/zone.js/issues/525
+                // so we should use original native get to retrieve the handler
+                let value = originalDescGet && originalDescGet.call(this);
+                if (value) {
+                    desc.set.call(this, value);
+                    if (typeof target[REMOVE_ATTRIBUTE] === 'function') {
+                        target.removeAttribute(prop);
+                    }
+                    return value;
+                }
+            }
+            return null;
+        };
+        ObjectDefineProperty(obj, prop, desc);
+        obj[onPropPatchedSymbol] = true;
+    }
+    function patchOnProperties(obj, properties, prototype) {
+        if (properties) {
+            for (let i = 0; i < properties.length; i++) {
+                patchProperty(obj, 'on' + properties[i], prototype);
+            }
+        }
+        else {
+            const onProperties = [];
+            for (const prop in obj) {
+                if (prop.substr(0, 2) == 'on') {
+                    onProperties.push(prop);
+                }
+            }
+            for (let j = 0; j < onProperties.length; j++) {
+                patchProperty(obj, onProperties[j], prototype);
+            }
+        }
+    }
+    const originalInstanceKey = zoneSymbol('originalInstance');
+    // wrap some native API on `window`
+    function patchClass(className) {
+        const OriginalClass = _global[className];
+        if (!OriginalClass)
+            return;
+        // keep original class in global
+        _global[zoneSymbol(className)] = OriginalClass;
+        _global[className] = function () {
+            const a = bindArguments(arguments, className);
+            switch (a.length) {
+                case 0:
+                    this[originalInstanceKey] = new OriginalClass();
+                    break;
+                case 1:
+                    this[originalInstanceKey] = new OriginalClass(a[0]);
+                    break;
+                case 2:
+                    this[originalInstanceKey] = new OriginalClass(a[0], a[1]);
+                    break;
+                case 3:
+                    this[originalInstanceKey] = new OriginalClass(a[0], a[1], a[2]);
+                    break;
+                case 4:
+                    this[originalInstanceKey] = new OriginalClass(a[0], a[1], a[2], a[3]);
+                    break;
+                default:
+                    throw new Error('Arg list too long.');
+            }
+        };
+        // attach original delegate to patched function
+        attachOriginToPatched(_global[className], OriginalClass);
+        const instance = new OriginalClass(function () { });
+        let prop;
+        for (prop in instance) {
+            // https://bugs.webkit.org/show_bug.cgi?id=44721
+            if (className === 'XMLHttpRequest' && prop === 'responseBlob')
+                continue;
+            (function (prop) {
+                if (typeof instance[prop] === 'function') {
+                    _global[className].prototype[prop] = function () {
+                        return this[originalInstanceKey][prop].apply(this[originalInstanceKey], arguments);
+                    };
+                }
+                else {
+                    ObjectDefineProperty(_global[className].prototype, prop, {
+                        set: function (fn) {
+                            if (typeof fn === 'function') {
+                                this[originalInstanceKey][prop] = wrapWithCurrentZone(fn, className + '.' + prop);
+                                // keep callback in wrapped function so we can
+                                // use it in Function.prototype.toString to return
+                                // the native one.
+                                attachOriginToPatched(this[originalInstanceKey][prop], fn);
+                            }
+                            else {
+                                this[originalInstanceKey][prop] = fn;
+                            }
+                        },
+                        get: function () { return this[originalInstanceKey][prop]; }
+                    });
+                }
+            }(prop));
+        }
+        for (prop in OriginalClass) {
+            if (prop !== 'prototype' && OriginalClass.hasOwnProperty(prop)) {
+                _global[className][prop] = OriginalClass[prop];
+            }
+        }
+    }
+    function copySymbolProperties(src, dest) {
+        if (typeof Object.getOwnPropertySymbols !== 'function') {
+            return;
+        }
+        const symbols = Object.getOwnPropertySymbols(src);
+        symbols.forEach((symbol) => {
+            const desc = Object.getOwnPropertyDescriptor(src, symbol);
+            Object.defineProperty(dest, symbol, {
+                get: function () { return src[symbol]; },
+                set: function (value) {
+                    if (desc && (!desc.writable || typeof desc.set !== 'function')) {
+                        // if src[symbol] is not writable or not have a setter, just return
+                        return;
+                    }
+                    src[symbol] = value;
+                },
+                enumerable: desc ? desc.enumerable : true,
+                configurable: desc ? desc.configurable : true
+            });
+        });
+    }
+    let shouldCopySymbolProperties = false;
+    function patchMethod(target, name, patchFn) {
+        let proto = target;
+        while (proto && !proto.hasOwnProperty(name)) {
+            proto = ObjectGetPrototypeOf(proto);
+        }
+        if (!proto && target[name]) {
+            // somehow we did not find it, but we can see it. This happens on IE for Window properties.
+            proto = target;
+        }
+        const delegateName = zoneSymbol(name);
+        let delegate = null;
+        if (proto && !(delegate = proto[delegateName])) {
+            delegate = proto[delegateName] = proto[name];
+            // check whether proto[name] is writable
+            // some property is readonly in safari, such as HtmlCanvasElement.prototype.toBlob
+            const desc = proto && ObjectGetOwnPropertyDescriptor(proto, name);
+            if (isPropertyWritable(desc)) {
+                const patchDelegate = patchFn(delegate, delegateName, name);
+                proto[name] = function () { return patchDelegate(this, arguments); };
+                attachOriginToPatched(proto[name], delegate);
+                if (shouldCopySymbolProperties) {
+                    copySymbolProperties(delegate, proto[name]);
+                }
+            }
+        }
+        return delegate;
+    }
+    // TODO: @JiaLiPassion, support cancel task later if necessary
+    function patchMacroTask(obj, funcName, metaCreator) {
+        let setNative = null;
+        function scheduleTask(task) {
+            const data = task.data;
+            data.args[data.cbIdx] = function () { task.invoke.apply(this, arguments); };
+            setNative.apply(data.target, data.args);
+            return task;
+        }
+        setNative = patchMethod(obj, funcName, (delegate) => function (self, args) {
+            const meta = metaCreator(self, args);
+            if (meta.cbIdx >= 0 && typeof args[meta.cbIdx] === 'function') {
+                return scheduleMacroTaskWithCurrentZone(meta.name, args[meta.cbIdx], meta, scheduleTask);
+            }
+            else {
+                // cause an error by calling it directly.
+                return delegate.apply(self, args);
+            }
+        });
+    }
+    function attachOriginToPatched(patched, original) {
+        patched[zoneSymbol('OriginalDelegate')] = original;
+    }
+    let isDetectedIEOrEdge = false;
+    let ieOrEdge = false;
+    function isIE() {
+        try {
+            const ua = internalWindow.navigator.userAgent;
+            if (ua.indexOf('MSIE ') !== -1 || ua.indexOf('Trident/') !== -1) {
+                return true;
+            }
+        }
+        catch (error) {
+        }
+        return false;
+    }
+    function isIEOrEdge() {
+        if (isDetectedIEOrEdge) {
+            return ieOrEdge;
+        }
+        isDetectedIEOrEdge = true;
+        try {
+            const ua = internalWindow.navigator.userAgent;
+            if (ua.indexOf('MSIE ') !== -1 || ua.indexOf('Trident/') !== -1 || ua.indexOf('Edge/') !== -1) {
+                ieOrEdge = true;
+            }
+        }
+        catch (error) {
+        }
+        return ieOrEdge;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    // override Function.prototype.toString to make zone.js patched function
+    // look like native function
+    Zone.__load_patch('toString', (global) => {
+        // patch Func.prototype.toString to let them look like native
+        const originalFunctionToString = Function.prototype.toString;
+        const ORIGINAL_DELEGATE_SYMBOL = zoneSymbol('OriginalDelegate');
+        const PROMISE_SYMBOL = zoneSymbol('Promise');
+        const ERROR_SYMBOL = zoneSymbol('Error');
+        const newFunctionToString = function toString() {
+            if (typeof this === 'function') {
+                const originalDelegate = this[ORIGINAL_DELEGATE_SYMBOL];
+                if (originalDelegate) {
+                    if (typeof originalDelegate === 'function') {
+                        return originalFunctionToString.call(originalDelegate);
+                    }
+                    else {
+                        return Object.prototype.toString.call(originalDelegate);
+                    }
+                }
+                if (this === Promise) {
+                    const nativePromise = global[PROMISE_SYMBOL];
+                    if (nativePromise) {
+                        return originalFunctionToString.call(nativePromise);
+                    }
+                }
+                if (this === Error) {
+                    const nativeError = global[ERROR_SYMBOL];
+                    if (nativeError) {
+                        return originalFunctionToString.call(nativeError);
+                    }
+                }
+            }
+            return originalFunctionToString.call(this);
+        };
+        newFunctionToString[ORIGINAL_DELEGATE_SYMBOL] = originalFunctionToString;
+        Function.prototype.toString = newFunctionToString;
+        // patch Object.prototype.toString to let them look like native
+        const originalObjectToString = Object.prototype.toString;
+        const PROMISE_OBJECT_TO_STRING = '[object Promise]';
+        Object.prototype.toString = function () {
+            if (this instanceof Promise) {
+                return PROMISE_OBJECT_TO_STRING;
+            }
+            return originalObjectToString.call(this);
+        };
+    });
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    let passiveSupported = false;
+    if (typeof window !== 'undefined') {
+        try {
+            const options = Object.defineProperty({}, 'passive', { get: function () { passiveSupported = true; } });
+            window.addEventListener('test', options, options);
+            window.removeEventListener('test', options, options);
+        }
+        catch (err) {
+            passiveSupported = false;
+        }
+    }
+    // an identifier to tell ZoneTask do not create a new invoke closure
+    const OPTIMIZED_ZONE_EVENT_TASK_DATA = {
+        useG: true
+    };
+    const zoneSymbolEventNames$1 = {};
+    const globalSources = {};
+    const EVENT_NAME_SYMBOL_REGX = new RegExp('^' + ZONE_SYMBOL_PREFIX + '(\\w+)(true|false)$');
+    const IMMEDIATE_PROPAGATION_SYMBOL = zoneSymbol('propagationStopped');
+    function prepareEventNames(eventName, eventNameToString) {
+        const falseEventName = (eventNameToString ? eventNameToString(eventName) : eventName) + FALSE_STR;
+        const trueEventName = (eventNameToString ? eventNameToString(eventName) : eventName) + TRUE_STR;
+        const symbol = ZONE_SYMBOL_PREFIX + falseEventName;
+        const symbolCapture = ZONE_SYMBOL_PREFIX + trueEventName;
+        zoneSymbolEventNames$1[eventName] = {};
+        zoneSymbolEventNames$1[eventName][FALSE_STR] = symbol;
+        zoneSymbolEventNames$1[eventName][TRUE_STR] = symbolCapture;
+    }
+    function patchEventTarget(_global, apis, patchOptions) {
+        const ADD_EVENT_LISTENER = (patchOptions && patchOptions.add) || ADD_EVENT_LISTENER_STR;
+        const REMOVE_EVENT_LISTENER = (patchOptions && patchOptions.rm) || REMOVE_EVENT_LISTENER_STR;
+        const LISTENERS_EVENT_LISTENER = (patchOptions && patchOptions.listeners) || 'eventListeners';
+        const REMOVE_ALL_LISTENERS_EVENT_LISTENER = (patchOptions && patchOptions.rmAll) || 'removeAllListeners';
+        const zoneSymbolAddEventListener = zoneSymbol(ADD_EVENT_LISTENER);
+        const ADD_EVENT_LISTENER_SOURCE = '.' + ADD_EVENT_LISTENER + ':';
+        const PREPEND_EVENT_LISTENER = 'prependListener';
+        const PREPEND_EVENT_LISTENER_SOURCE = '.' + PREPEND_EVENT_LISTENER + ':';
+        const invokeTask = function (task, target, event) {
+            // for better performance, check isRemoved which is set
+            // by removeEventListener
+            if (task.isRemoved) {
+                return;
+            }
+            const delegate = task.callback;
+            if (typeof delegate === 'object' && delegate.handleEvent) {
+                // create the bind version of handleEvent when invoke
+                task.callback = (event) => delegate.handleEvent(event);
+                task.originalDelegate = delegate;
+            }
+            // invoke static task.invoke
+            task.invoke(task, target, [event]);
+            const options = task.options;
+            if (options && typeof options === 'object' && options.once) {
+                // if options.once is true, after invoke once remove listener here
+                // only browser need to do this, nodejs eventEmitter will cal removeListener
+                // inside EventEmitter.once
+                const delegate = task.originalDelegate ? task.originalDelegate : task.callback;
+                target[REMOVE_EVENT_LISTENER].call(target, event.type, delegate, options);
+            }
+        };
+        // global shared zoneAwareCallback to handle all event callback with capture = false
+        const globalZoneAwareCallback = function (event) {
+            // https://github.com/angular/zone.js/issues/911, in IE, sometimes
+            // event will be undefined, so we need to use window.event
+            event = event || _global.event;
+            if (!event) {
+                return;
+            }
+            // event.target is needed for Samsung TV and SourceBuffer
+            // || global is needed https://github.com/angular/zone.js/issues/190
+            const target = this || event.target || _global;
+            const tasks = target[zoneSymbolEventNames$1[event.type][FALSE_STR]];
+            if (tasks) {
+                // invoke all tasks which attached to current target with given event.type and capture = false
+                // for performance concern, if task.length === 1, just invoke
+                if (tasks.length === 1) {
+                    invokeTask(tasks[0], target, event);
+                }
+                else {
+                    // https://github.com/angular/zone.js/issues/836
+                    // copy the tasks array before invoke, to avoid
+                    // the callback will remove itself or other listener
+                    const copyTasks = tasks.slice();
+                    for (let i = 0; i < copyTasks.length; i++) {
+                        if (event && event[IMMEDIATE_PROPAGATION_SYMBOL] === true) {
+                            break;
+                        }
+                        invokeTask(copyTasks[i], target, event);
+                    }
+                }
+            }
+        };
+        // global shared zoneAwareCallback to handle all event callback with capture = true
+        const globalZoneAwareCaptureCallback = function (event) {
+            // https://github.com/angular/zone.js/issues/911, in IE, sometimes
+            // event will be undefined, so we need to use window.event
+            event = event || _global.event;
+            if (!event) {
+                return;
+            }
+            // event.target is needed for Samsung TV and SourceBuffer
+            // || global is needed https://github.com/angular/zone.js/issues/190
+            const target = this || event.target || _global;
+            const tasks = target[zoneSymbolEventNames$1[event.type][TRUE_STR]];
+            if (tasks) {
+                // invoke all tasks which attached to current target with given event.type and capture = false
+                // for performance concern, if task.length === 1, just invoke
+                if (tasks.length === 1) {
+                    invokeTask(tasks[0], target, event);
+                }
+                else {
+                    // https://github.com/angular/zone.js/issues/836
+                    // copy the tasks array before invoke, to avoid
+                    // the callback will remove itself or other listener
+                    const copyTasks = tasks.slice();
+                    for (let i = 0; i < copyTasks.length; i++) {
+                        if (event && event[IMMEDIATE_PROPAGATION_SYMBOL] === true) {
+                            break;
+                        }
+                        invokeTask(copyTasks[i], target, event);
+                    }
+                }
+            }
+        };
+        function patchEventTargetMethods(obj, patchOptions) {
+            if (!obj) {
+                return false;
+            }
+            let useGlobalCallback = true;
+            if (patchOptions && patchOptions.useG !== undefined) {
+                useGlobalCallback = patchOptions.useG;
+            }
+            const validateHandler = patchOptions && patchOptions.vh;
+            let checkDuplicate = true;
+            if (patchOptions && patchOptions.chkDup !== undefined) {
+                checkDuplicate = patchOptions.chkDup;
+            }
+            let returnTarget = false;
+            if (patchOptions && patchOptions.rt !== undefined) {
+                returnTarget = patchOptions.rt;
+            }
+            let proto = obj;
+            while (proto && !proto.hasOwnProperty(ADD_EVENT_LISTENER)) {
+                proto = ObjectGetPrototypeOf(proto);
+            }
+            if (!proto && obj[ADD_EVENT_LISTENER]) {
+                // somehow we did not find it, but we can see it. This happens on IE for Window properties.
+                proto = obj;
+            }
+            if (!proto) {
+                return false;
+            }
+            if (proto[zoneSymbolAddEventListener]) {
+                return false;
+            }
+            const eventNameToString = patchOptions && patchOptions.eventNameToString;
+            // a shared global taskData to pass data for scheduleEventTask
+            // so we do not need to create a new object just for pass some data
+            const taskData = {};
+            const nativeAddEventListener = proto[zoneSymbolAddEventListener] = proto[ADD_EVENT_LISTENER];
+            const nativeRemoveEventListener = proto[zoneSymbol(REMOVE_EVENT_LISTENER)] =
+                proto[REMOVE_EVENT_LISTENER];
+            const nativeListeners = proto[zoneSymbol(LISTENERS_EVENT_LISTENER)] =
+                proto[LISTENERS_EVENT_LISTENER];
+            const nativeRemoveAllListeners = proto[zoneSymbol(REMOVE_ALL_LISTENERS_EVENT_LISTENER)] =
+                proto[REMOVE_ALL_LISTENERS_EVENT_LISTENER];
+            let nativePrependEventListener;
+            if (patchOptions && patchOptions.prepend) {
+                nativePrependEventListener = proto[zoneSymbol(patchOptions.prepend)] =
+                    proto[patchOptions.prepend];
+            }
+            /**
+             * This util function will build an option object with passive option
+             * to handle all possible input from the user.
+             */
+            function buildEventListenerOptions(options, passive) {
+                if (!passiveSupported && typeof options === 'object' && options) {
+                    // doesn't support passive but user want to pass an object as options.
+                    // this will not work on some old browser, so we just pass a boolean
+                    // as useCapture parameter
+                    return !!options.capture;
+                }
+                if (!passiveSupported || !passive) {
+                    return options;
+                }
+                if (typeof options === 'boolean') {
+                    return { capture: options, passive: true };
+                }
+                if (!options) {
+                    return { passive: true };
+                }
+                if (typeof options === 'object' && options.passive !== false) {
+                    return Object.assign(Object.assign({}, options), { passive: true });
+                }
+                return options;
+            }
+            const customScheduleGlobal = function (task) {
+                // if there is already a task for the eventName + capture,
+                // just return, because we use the shared globalZoneAwareCallback here.
+                if (taskData.isExisting) {
+                    return;
+                }
+                return nativeAddEventListener.call(taskData.target, taskData.eventName, taskData.capture ? globalZoneAwareCaptureCallback : globalZoneAwareCallback, taskData.options);
+            };
+            const customCancelGlobal = function (task) {
+                // if task is not marked as isRemoved, this call is directly
+                // from Zone.prototype.cancelTask, we should remove the task
+                // from tasksList of target first
+                if (!task.isRemoved) {
+                    const symbolEventNames = zoneSymbolEventNames$1[task.eventName];
+                    let symbolEventName;
+                    if (symbolEventNames) {
+                        symbolEventName = symbolEventNames[task.capture ? TRUE_STR : FALSE_STR];
+                    }
+                    const existingTasks = symbolEventName && task.target[symbolEventName];
+                    if (existingTasks) {
+                        for (let i = 0; i < existingTasks.length; i++) {
+                            const existingTask = existingTasks[i];
+                            if (existingTask === task) {
+                                existingTasks.splice(i, 1);
+                                // set isRemoved to data for faster invokeTask check
+                                task.isRemoved = true;
+                                if (existingTasks.length === 0) {
+                                    // all tasks for the eventName + capture have gone,
+                                    // remove globalZoneAwareCallback and remove the task cache from target
+                                    task.allRemoved = true;
+                                    task.target[symbolEventName] = null;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                // if all tasks for the eventName + capture have gone,
+                // we will really remove the global event callback,
+                // if not, return
+                if (!task.allRemoved) {
+                    return;
+                }
+                return nativeRemoveEventListener.call(task.target, task.eventName, task.capture ? globalZoneAwareCaptureCallback : globalZoneAwareCallback, task.options);
+            };
+            const customScheduleNonGlobal = function (task) {
+                return nativeAddEventListener.call(taskData.target, taskData.eventName, task.invoke, taskData.options);
+            };
+            const customSchedulePrepend = function (task) {
+                return nativePrependEventListener.call(taskData.target, taskData.eventName, task.invoke, taskData.options);
+            };
+            const customCancelNonGlobal = function (task) {
+                return nativeRemoveEventListener.call(task.target, task.eventName, task.invoke, task.options);
+            };
+            const customSchedule = useGlobalCallback ? customScheduleGlobal : customScheduleNonGlobal;
+            const customCancel = useGlobalCallback ? customCancelGlobal : customCancelNonGlobal;
+            const compareTaskCallbackVsDelegate = function (task, delegate) {
+                const typeOfDelegate = typeof delegate;
+                return (typeOfDelegate === 'function' && task.callback === delegate) ||
+                    (typeOfDelegate === 'object' && task.originalDelegate === delegate);
+            };
+            const compare = (patchOptions && patchOptions.diff) ? patchOptions.diff : compareTaskCallbackVsDelegate;
+            const blackListedEvents = Zone[zoneSymbol('BLACK_LISTED_EVENTS')];
+            const passiveEvents = _global[zoneSymbol('PASSIVE_EVENTS')];
+            const makeAddListener = function (nativeListener, addSource, customScheduleFn, customCancelFn, returnTarget = false, prepend = false) {
+                return function () {
+                    const target = this || _global;
+                    let eventName = arguments[0];
+                    if (patchOptions && patchOptions.transferEventName) {
+                        eventName = patchOptions.transferEventName(eventName);
+                    }
+                    let delegate = arguments[1];
+                    if (!delegate) {
+                        return nativeListener.apply(this, arguments);
+                    }
+                    if (isNode && eventName === 'uncaughtException') {
+                        // don't patch uncaughtException of nodejs to prevent endless loop
+                        return nativeListener.apply(this, arguments);
+                    }
+                    // don't create the bind delegate function for handleEvent
+                    // case here to improve addEventListener performance
+                    // we will create the bind delegate when invoke
+                    let isHandleEvent = false;
+                    if (typeof delegate !== 'function') {
+                        if (!delegate.handleEvent) {
+                            return nativeListener.apply(this, arguments);
+                        }
+                        isHandleEvent = true;
+                    }
+                    if (validateHandler && !validateHandler(nativeListener, delegate, target, arguments)) {
+                        return;
+                    }
+                    const passive = passiveSupported && !!passiveEvents && passiveEvents.indexOf(eventName) !== -1;
+                    const options = buildEventListenerOptions(arguments[2], passive);
+                    if (blackListedEvents) {
+                        // check black list
+                        for (let i = 0; i < blackListedEvents.length; i++) {
+                            if (eventName === blackListedEvents[i]) {
+                                if (passive) {
+                                    return nativeListener.call(target, eventName, delegate, options);
+                                }
+                                else {
+                                    return nativeListener.apply(this, arguments);
+                                }
+                            }
+                        }
+                    }
+                    const capture = !options ? false : typeof options === 'boolean' ? true : options.capture;
+                    const once = options && typeof options === 'object' ? options.once : false;
+                    const zone = Zone.current;
+                    let symbolEventNames = zoneSymbolEventNames$1[eventName];
+                    if (!symbolEventNames) {
+                        prepareEventNames(eventName, eventNameToString);
+                        symbolEventNames = zoneSymbolEventNames$1[eventName];
+                    }
+                    const symbolEventName = symbolEventNames[capture ? TRUE_STR : FALSE_STR];
+                    let existingTasks = target[symbolEventName];
+                    let isExisting = false;
+                    if (existingTasks) {
+                        // already have task registered
+                        isExisting = true;
+                        if (checkDuplicate) {
+                            for (let i = 0; i < existingTasks.length; i++) {
+                                if (compare(existingTasks[i], delegate)) {
+                                    // same callback, same capture, same event name, just return
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        existingTasks = target[symbolEventName] = [];
+                    }
+                    let source;
+                    const constructorName = target.constructor['name'];
+                    const targetSource = globalSources[constructorName];
+                    if (targetSource) {
+                        source = targetSource[eventName];
+                    }
+                    if (!source) {
+                        source = constructorName + addSource +
+                            (eventNameToString ? eventNameToString(eventName) : eventName);
+                    }
+                    // do not create a new object as task.data to pass those things
+                    // just use the global shared one
+                    taskData.options = options;
+                    if (once) {
+                        // if addEventListener with once options, we don't pass it to
+                        // native addEventListener, instead we keep the once setting
+                        // and handle ourselves.
+                        taskData.options.once = false;
+                    }
+                    taskData.target = target;
+                    taskData.capture = capture;
+                    taskData.eventName = eventName;
+                    taskData.isExisting = isExisting;
+                    const data = useGlobalCallback ? OPTIMIZED_ZONE_EVENT_TASK_DATA : undefined;
+                    // keep taskData into data to allow onScheduleEventTask to access the task information
+                    if (data) {
+                        data.taskData = taskData;
+                    }
+                    const task = zone.scheduleEventTask(source, delegate, data, customScheduleFn, customCancelFn);
+                    // should clear taskData.target to avoid memory leak
+                    // issue, https://github.com/angular/angular/issues/20442
+                    taskData.target = null;
+                    // need to clear up taskData because it is a global object
+                    if (data) {
+                        data.taskData = null;
+                    }
+                    // have to save those information to task in case
+                    // application may call task.zone.cancelTask() directly
+                    if (once) {
+                        options.once = true;
+                    }
+                    if (!(!passiveSupported && typeof task.options === 'boolean')) {
+                        // if not support passive, and we pass an option object
+                        // to addEventListener, we should save the options to task
+                        task.options = options;
+                    }
+                    task.target = target;
+                    task.capture = capture;
+                    task.eventName = eventName;
+                    if (isHandleEvent) {
+                        // save original delegate for compare to check duplicate
+                        task.originalDelegate = delegate;
+                    }
+                    if (!prepend) {
+                        existingTasks.push(task);
+                    }
+                    else {
+                        existingTasks.unshift(task);
+                    }
+                    if (returnTarget) {
+                        return target;
+                    }
+                };
+            };
+            proto[ADD_EVENT_LISTENER] = makeAddListener(nativeAddEventListener, ADD_EVENT_LISTENER_SOURCE, customSchedule, customCancel, returnTarget);
+            if (nativePrependEventListener) {
+                proto[PREPEND_EVENT_LISTENER] = makeAddListener(nativePrependEventListener, PREPEND_EVENT_LISTENER_SOURCE, customSchedulePrepend, customCancel, returnTarget, true);
+            }
+            proto[REMOVE_EVENT_LISTENER] = function () {
+                const target = this || _global;
+                let eventName = arguments[0];
+                if (patchOptions && patchOptions.transferEventName) {
+                    eventName = patchOptions.transferEventName(eventName);
+                }
+                const options = arguments[2];
+                const capture = !options ? false : typeof options === 'boolean' ? true : options.capture;
+                const delegate = arguments[1];
+                if (!delegate) {
+                    return nativeRemoveEventListener.apply(this, arguments);
+                }
+                if (validateHandler &&
+                    !validateHandler(nativeRemoveEventListener, delegate, target, arguments)) {
+                    return;
+                }
+                const symbolEventNames = zoneSymbolEventNames$1[eventName];
+                let symbolEventName;
+                if (symbolEventNames) {
+                    symbolEventName = symbolEventNames[capture ? TRUE_STR : FALSE_STR];
+                }
+                const existingTasks = symbolEventName && target[symbolEventName];
+                if (existingTasks) {
+                    for (let i = 0; i < existingTasks.length; i++) {
+                        const existingTask = existingTasks[i];
+                        if (compare(existingTask, delegate)) {
+                            existingTasks.splice(i, 1);
+                            // set isRemoved to data for faster invokeTask check
+                            existingTask.isRemoved = true;
+                            if (existingTasks.length === 0) {
+                                // all tasks for the eventName + capture have gone,
+                                // remove globalZoneAwareCallback and remove the task cache from target
+                                existingTask.allRemoved = true;
+                                target[symbolEventName] = null;
+                                // in the target, we have an event listener which is added by on_property
+                                // such as target.onclick = function() {}, so we need to clear this internal
+                                // property too if all delegates all removed
+                                if (typeof eventName === 'string') {
+                                    const onPropertySymbol = ZONE_SYMBOL_PREFIX + 'ON_PROPERTY' + eventName;
+                                    target[onPropertySymbol] = null;
+                                }
+                            }
+                            existingTask.zone.cancelTask(existingTask);
+                            if (returnTarget) {
+                                return target;
+                            }
+                            return;
+                        }
+                    }
+                }
+                // issue 930, didn't find the event name or callback
+                // from zone kept existingTasks, the callback maybe
+                // added outside of zone, we need to call native removeEventListener
+                // to try to remove it.
+                return nativeRemoveEventListener.apply(this, arguments);
+            };
+            proto[LISTENERS_EVENT_LISTENER] = function () {
+                const target = this || _global;
+                let eventName = arguments[0];
+                if (patchOptions && patchOptions.transferEventName) {
+                    eventName = patchOptions.transferEventName(eventName);
+                }
+                const listeners = [];
+                const tasks = findEventTasks(target, eventNameToString ? eventNameToString(eventName) : eventName);
+                for (let i = 0; i < tasks.length; i++) {
+                    const task = tasks[i];
+                    let delegate = task.originalDelegate ? task.originalDelegate : task.callback;
+                    listeners.push(delegate);
+                }
+                return listeners;
+            };
+            proto[REMOVE_ALL_LISTENERS_EVENT_LISTENER] = function () {
+                const target = this || _global;
+                let eventName = arguments[0];
+                if (!eventName) {
+                    const keys = Object.keys(target);
+                    for (let i = 0; i < keys.length; i++) {
+                        const prop = keys[i];
+                        const match = EVENT_NAME_SYMBOL_REGX.exec(prop);
+                        let evtName = match && match[1];
+                        // in nodejs EventEmitter, removeListener event is
+                        // used for monitoring the removeListener call,
+                        // so just keep removeListener eventListener until
+                        // all other eventListeners are removed
+                        if (evtName && evtName !== 'removeListener') {
+                            this[REMOVE_ALL_LISTENERS_EVENT_LISTENER].call(this, evtName);
+                        }
+                    }
+                    // remove removeListener listener finally
+                    this[REMOVE_ALL_LISTENERS_EVENT_LISTENER].call(this, 'removeListener');
+                }
+                else {
+                    if (patchOptions && patchOptions.transferEventName) {
+                        eventName = patchOptions.transferEventName(eventName);
+                    }
+                    const symbolEventNames = zoneSymbolEventNames$1[eventName];
+                    if (symbolEventNames) {
+                        const symbolEventName = symbolEventNames[FALSE_STR];
+                        const symbolCaptureEventName = symbolEventNames[TRUE_STR];
+                        const tasks = target[symbolEventName];
+                        const captureTasks = target[symbolCaptureEventName];
+                        if (tasks) {
+                            const removeTasks = tasks.slice();
+                            for (let i = 0; i < removeTasks.length; i++) {
+                                const task = removeTasks[i];
+                                let delegate = task.originalDelegate ? task.originalDelegate : task.callback;
+                                this[REMOVE_EVENT_LISTENER].call(this, eventName, delegate, task.options);
+                            }
+                        }
+                        if (captureTasks) {
+                            const removeTasks = captureTasks.slice();
+                            for (let i = 0; i < removeTasks.length; i++) {
+                                const task = removeTasks[i];
+                                let delegate = task.originalDelegate ? task.originalDelegate : task.callback;
+                                this[REMOVE_EVENT_LISTENER].call(this, eventName, delegate, task.options);
+                            }
+                        }
+                    }
+                }
+                if (returnTarget) {
+                    return this;
+                }
+            };
+            // for native toString patch
+            attachOriginToPatched(proto[ADD_EVENT_LISTENER], nativeAddEventListener);
+            attachOriginToPatched(proto[REMOVE_EVENT_LISTENER], nativeRemoveEventListener);
+            if (nativeRemoveAllListeners) {
+                attachOriginToPatched(proto[REMOVE_ALL_LISTENERS_EVENT_LISTENER], nativeRemoveAllListeners);
+            }
+            if (nativeListeners) {
+                attachOriginToPatched(proto[LISTENERS_EVENT_LISTENER], nativeListeners);
+            }
+            return true;
+        }
+        let results = [];
+        for (let i = 0; i < apis.length; i++) {
+            results[i] = patchEventTargetMethods(apis[i], patchOptions);
+        }
+        return results;
+    }
+    function findEventTasks(target, eventName) {
+        if (!eventName) {
+            const foundTasks = [];
+            for (let prop in target) {
+                const match = EVENT_NAME_SYMBOL_REGX.exec(prop);
+                let evtName = match && match[1];
+                if (evtName && (!eventName || evtName === eventName)) {
+                    const tasks = target[prop];
+                    if (tasks) {
+                        for (let i = 0; i < tasks.length; i++) {
+                            foundTasks.push(tasks[i]);
+                        }
+                    }
+                }
+            }
+            return foundTasks;
+        }
+        let symbolEventName = zoneSymbolEventNames$1[eventName];
+        if (!symbolEventName) {
+            prepareEventNames(eventName);
+            symbolEventName = zoneSymbolEventNames$1[eventName];
+        }
+        const captureFalseTasks = target[symbolEventName[FALSE_STR]];
+        const captureTrueTasks = target[symbolEventName[TRUE_STR]];
+        if (!captureFalseTasks) {
+            return captureTrueTasks ? captureTrueTasks.slice() : [];
+        }
+        else {
+            return captureTrueTasks ? captureFalseTasks.concat(captureTrueTasks) :
+                captureFalseTasks.slice();
+        }
+    }
+    function patchEventPrototype(global, api) {
+        const Event = global['Event'];
+        if (Event && Event.prototype) {
+            api.patchMethod(Event.prototype, 'stopImmediatePropagation', (delegate) => function (self, args) {
+                self[IMMEDIATE_PROPAGATION_SYMBOL] = true;
+                // we need to call the native stopImmediatePropagation
+                // in case in some hybrid application, some part of
+                // application will be controlled by zone, some are not
+                delegate && delegate.apply(self, args);
+            });
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function patchCallbacks(api, target, targetName, method, callbacks) {
+        const symbol = Zone.__symbol__(method);
+        if (target[symbol]) {
+            return;
+        }
+        const nativeDelegate = target[symbol] = target[method];
+        target[method] = function (name, opts, options) {
+            if (opts && opts.prototype) {
+                callbacks.forEach(function (callback) {
+                    const source = `${targetName}.${method}::` + callback;
+                    const prototype = opts.prototype;
+                    if (prototype.hasOwnProperty(callback)) {
+                        const descriptor = api.ObjectGetOwnPropertyDescriptor(prototype, callback);
+                        if (descriptor && descriptor.value) {
+                            descriptor.value = api.wrapWithCurrentZone(descriptor.value, source);
+                            api._redefineProperty(opts.prototype, callback, descriptor);
+                        }
+                        else if (prototype[callback]) {
+                            prototype[callback] = api.wrapWithCurrentZone(prototype[callback], source);
+                        }
+                    }
+                    else if (prototype[callback]) {
+                        prototype[callback] = api.wrapWithCurrentZone(prototype[callback], source);
+                    }
+                });
+            }
+            return nativeDelegate.call(target, name, opts, options);
+        };
+        api.attachOriginToPatched(target[method], nativeDelegate);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const globalEventHandlersEventNames = [
+        'abort',
+        'animationcancel',
+        'animationend',
+        'animationiteration',
+        'auxclick',
+        'beforeinput',
+        'blur',
+        'cancel',
+        'canplay',
+        'canplaythrough',
+        'change',
+        'compositionstart',
+        'compositionupdate',
+        'compositionend',
+        'cuechange',
+        'click',
+        'close',
+        'contextmenu',
+        'curechange',
+        'dblclick',
+        'drag',
+        'dragend',
+        'dragenter',
+        'dragexit',
+        'dragleave',
+        'dragover',
+        'drop',
+        'durationchange',
+        'emptied',
+        'ended',
+        'error',
+        'focus',
+        'focusin',
+        'focusout',
+        'gotpointercapture',
+        'input',
+        'invalid',
+        'keydown',
+        'keypress',
+        'keyup',
+        'load',
+        'loadstart',
+        'loadeddata',
+        'loadedmetadata',
+        'lostpointercapture',
+        'mousedown',
+        'mouseenter',
+        'mouseleave',
+        'mousemove',
+        'mouseout',
+        'mouseover',
+        'mouseup',
+        'mousewheel',
+        'orientationchange',
+        'pause',
+        'play',
+        'playing',
+        'pointercancel',
+        'pointerdown',
+        'pointerenter',
+        'pointerleave',
+        'pointerlockchange',
+        'mozpointerlockchange',
+        'webkitpointerlockerchange',
+        'pointerlockerror',
+        'mozpointerlockerror',
+        'webkitpointerlockerror',
+        'pointermove',
+        'pointout',
+        'pointerover',
+        'pointerup',
+        'progress',
+        'ratechange',
+        'reset',
+        'resize',
+        'scroll',
+        'seeked',
+        'seeking',
+        'select',
+        'selectionchange',
+        'selectstart',
+        'show',
+        'sort',
+        'stalled',
+        'submit',
+        'suspend',
+        'timeupdate',
+        'volumechange',
+        'touchcancel',
+        'touchmove',
+        'touchstart',
+        'touchend',
+        'transitioncancel',
+        'transitionend',
+        'waiting',
+        'wheel'
+    ];
+    const documentEventNames = [
+        'afterscriptexecute', 'beforescriptexecute', 'DOMContentLoaded', 'freeze', 'fullscreenchange',
+        'mozfullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange', 'fullscreenerror',
+        'mozfullscreenerror', 'webkitfullscreenerror', 'msfullscreenerror', 'readystatechange',
+        'visibilitychange', 'resume'
+    ];
+    const windowEventNames = [
+        'absolutedeviceorientation',
+        'afterinput',
+        'afterprint',
+        'appinstalled',
+        'beforeinstallprompt',
+        'beforeprint',
+        'beforeunload',
+        'devicelight',
+        'devicemotion',
+        'deviceorientation',
+        'deviceorientationabsolute',
+        'deviceproximity',
+        'hashchange',
+        'languagechange',
+        'message',
+        'mozbeforepaint',
+        'offline',
+        'online',
+        'paint',
+        'pageshow',
+        'pagehide',
+        'popstate',
+        'rejectionhandled',
+        'storage',
+        'unhandledrejection',
+        'unload',
+        'userproximity',
+        'vrdisplayconnected',
+        'vrdisplaydisconnected',
+        'vrdisplaypresentchange'
+    ];
+    const htmlElementEventNames = [
+        'beforecopy', 'beforecut', 'beforepaste', 'copy', 'cut', 'paste', 'dragstart', 'loadend',
+        'animationstart', 'search', 'transitionrun', 'transitionstart', 'webkitanimationend',
+        'webkitanimationiteration', 'webkitanimationstart', 'webkittransitionend'
+    ];
+    const mediaElementEventNames = ['encrypted', 'waitingforkey', 'msneedkey', 'mozinterruptbegin', 'mozinterruptend'];
+    const ieElementEventNames = [
+        'activate',
+        'afterupdate',
+        'ariarequest',
+        'beforeactivate',
+        'beforedeactivate',
+        'beforeeditfocus',
+        'beforeupdate',
+        'cellchange',
+        'controlselect',
+        'dataavailable',
+        'datasetchanged',
+        'datasetcomplete',
+        'errorupdate',
+        'filterchange',
+        'layoutcomplete',
+        'losecapture',
+        'move',
+        'moveend',
+        'movestart',
+        'propertychange',
+        'resizeend',
+        'resizestart',
+        'rowenter',
+        'rowexit',
+        'rowsdelete',
+        'rowsinserted',
+        'command',
+        'compassneedscalibration',
+        'deactivate',
+        'help',
+        'mscontentzoom',
+        'msmanipulationstatechanged',
+        'msgesturechange',
+        'msgesturedoubletap',
+        'msgestureend',
+        'msgesturehold',
+        'msgesturestart',
+        'msgesturetap',
+        'msgotpointercapture',
+        'msinertiastart',
+        'mslostpointercapture',
+        'mspointercancel',
+        'mspointerdown',
+        'mspointerenter',
+        'mspointerhover',
+        'mspointerleave',
+        'mspointermove',
+        'mspointerout',
+        'mspointerover',
+        'mspointerup',
+        'pointerout',
+        'mssitemodejumplistitemremoved',
+        'msthumbnailclick',
+        'stop',
+        'storagecommit'
+    ];
+    const webglEventNames = ['webglcontextrestored', 'webglcontextlost', 'webglcontextcreationerror'];
+    const formEventNames = ['autocomplete', 'autocompleteerror'];
+    const detailEventNames = ['toggle'];
+    const frameEventNames = ['load'];
+    const frameSetEventNames = ['blur', 'error', 'focus', 'load', 'resize', 'scroll', 'messageerror'];
+    const marqueeEventNames = ['bounce', 'finish', 'start'];
+    const XMLHttpRequestEventNames = [
+        'loadstart', 'progress', 'abort', 'error', 'load', 'progress', 'timeout', 'loadend',
+        'readystatechange'
+    ];
+    const IDBIndexEventNames = ['upgradeneeded', 'complete', 'abort', 'success', 'error', 'blocked', 'versionchange', 'close'];
+    const websocketEventNames = ['close', 'error', 'open', 'message'];
+    const workerEventNames = ['error', 'message'];
+    const eventNames = globalEventHandlersEventNames.concat(webglEventNames, formEventNames, detailEventNames, documentEventNames, windowEventNames, htmlElementEventNames, ieElementEventNames);
+    function filterProperties(target, onProperties, ignoreProperties) {
+        if (!ignoreProperties || ignoreProperties.length === 0) {
+            return onProperties;
+        }
+        const tip = ignoreProperties.filter(ip => ip.target === target);
+        if (!tip || tip.length === 0) {
+            return onProperties;
+        }
+        const targetIgnoreProperties = tip[0].ignoreProperties;
+        return onProperties.filter(op => targetIgnoreProperties.indexOf(op) === -1);
+    }
+    function patchFilteredProperties(target, onProperties, ignoreProperties, prototype) {
+        // check whether target is available, sometimes target will be undefined
+        // because different browser or some 3rd party plugin.
+        if (!target) {
+            return;
+        }
+        const filteredProperties = filterProperties(target, onProperties, ignoreProperties);
+        patchOnProperties(target, filteredProperties, prototype);
+    }
+    function propertyDescriptorPatch(api, _global) {
+        if (isNode && !isMix) {
+            return;
+        }
+        if (Zone[api.symbol('patchEvents')]) {
+            // events are already been patched by legacy patch.
+            return;
+        }
+        const supportsWebSocket = typeof WebSocket !== 'undefined';
+        const ignoreProperties = _global['__Zone_ignore_on_properties'];
+        // for browsers that we can patch the descriptor:  Chrome & Firefox
+        if (isBrowser) {
+            const internalWindow = window;
+            const ignoreErrorProperties = isIE ? [{ target: internalWindow, ignoreProperties: ['error'] }] : [];
+            // in IE/Edge, onProp not exist in window object, but in WindowPrototype
+            // so we need to pass WindowPrototype to check onProp exist or not
+            patchFilteredProperties(internalWindow, eventNames.concat(['messageerror']), ignoreProperties ? ignoreProperties.concat(ignoreErrorProperties) : ignoreProperties, ObjectGetPrototypeOf(internalWindow));
+            patchFilteredProperties(Document.prototype, eventNames, ignoreProperties);
+            if (typeof internalWindow['SVGElement'] !== 'undefined') {
+                patchFilteredProperties(internalWindow['SVGElement'].prototype, eventNames, ignoreProperties);
+            }
+            patchFilteredProperties(Element.prototype, eventNames, ignoreProperties);
+            patchFilteredProperties(HTMLElement.prototype, eventNames, ignoreProperties);
+            patchFilteredProperties(HTMLMediaElement.prototype, mediaElementEventNames, ignoreProperties);
+            patchFilteredProperties(HTMLFrameSetElement.prototype, windowEventNames.concat(frameSetEventNames), ignoreProperties);
+            patchFilteredProperties(HTMLBodyElement.prototype, windowEventNames.concat(frameSetEventNames), ignoreProperties);
+            patchFilteredProperties(HTMLFrameElement.prototype, frameEventNames, ignoreProperties);
+            patchFilteredProperties(HTMLIFrameElement.prototype, frameEventNames, ignoreProperties);
+            const HTMLMarqueeElement = internalWindow['HTMLMarqueeElement'];
+            if (HTMLMarqueeElement) {
+                patchFilteredProperties(HTMLMarqueeElement.prototype, marqueeEventNames, ignoreProperties);
+            }
+            const Worker = internalWindow['Worker'];
+            if (Worker) {
+                patchFilteredProperties(Worker.prototype, workerEventNames, ignoreProperties);
+            }
+        }
+        const XMLHttpRequest = _global['XMLHttpRequest'];
+        if (XMLHttpRequest) {
+            // XMLHttpRequest is not available in ServiceWorker, so we need to check here
+            patchFilteredProperties(XMLHttpRequest.prototype, XMLHttpRequestEventNames, ignoreProperties);
+        }
+        const XMLHttpRequestEventTarget = _global['XMLHttpRequestEventTarget'];
+        if (XMLHttpRequestEventTarget) {
+            patchFilteredProperties(XMLHttpRequestEventTarget && XMLHttpRequestEventTarget.prototype, XMLHttpRequestEventNames, ignoreProperties);
+        }
+        if (typeof IDBIndex !== 'undefined') {
+            patchFilteredProperties(IDBIndex.prototype, IDBIndexEventNames, ignoreProperties);
+            patchFilteredProperties(IDBRequest.prototype, IDBIndexEventNames, ignoreProperties);
+            patchFilteredProperties(IDBOpenDBRequest.prototype, IDBIndexEventNames, ignoreProperties);
+            patchFilteredProperties(IDBDatabase.prototype, IDBIndexEventNames, ignoreProperties);
+            patchFilteredProperties(IDBTransaction.prototype, IDBIndexEventNames, ignoreProperties);
+            patchFilteredProperties(IDBCursor.prototype, IDBIndexEventNames, ignoreProperties);
+        }
+        if (supportsWebSocket) {
+            patchFilteredProperties(WebSocket.prototype, websocketEventNames, ignoreProperties);
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    Zone.__load_patch('util', (global, Zone, api) => {
+        api.patchOnProperties = patchOnProperties;
+        api.patchMethod = patchMethod;
+        api.bindArguments = bindArguments;
+        api.patchMacroTask = patchMacroTask;
+        // In earlier version of zone.js (<0.9.0), we use env name `__zone_symbol__BLACK_LISTED_EVENTS` to
+        // define which events will not be patched by `Zone.js`.
+        // In newer version (>=0.9.0), we change the env name to `__zone_symbol__UNPATCHED_EVENTS` to keep
+        // the name consistent with angular repo.
+        // The  `__zone_symbol__BLACK_LISTED_EVENTS` is deprecated, but it is still be supported for
+        // backwards compatibility.
+        const SYMBOL_BLACK_LISTED_EVENTS = Zone.__symbol__('BLACK_LISTED_EVENTS');
+        const SYMBOL_UNPATCHED_EVENTS = Zone.__symbol__('UNPATCHED_EVENTS');
+        if (global[SYMBOL_UNPATCHED_EVENTS]) {
+            global[SYMBOL_BLACK_LISTED_EVENTS] = global[SYMBOL_UNPATCHED_EVENTS];
+        }
+        if (global[SYMBOL_BLACK_LISTED_EVENTS]) {
+            Zone[SYMBOL_BLACK_LISTED_EVENTS] = Zone[SYMBOL_UNPATCHED_EVENTS] =
+                global[SYMBOL_BLACK_LISTED_EVENTS];
+        }
+        api.patchEventPrototype = patchEventPrototype;
+        api.patchEventTarget = patchEventTarget;
+        api.isIEOrEdge = isIEOrEdge;
+        api.ObjectDefineProperty = ObjectDefineProperty;
+        api.ObjectGetOwnPropertyDescriptor = ObjectGetOwnPropertyDescriptor;
+        api.ObjectCreate = ObjectCreate;
+        api.ArraySlice = ArraySlice;
+        api.patchClass = patchClass;
+        api.wrapWithCurrentZone = wrapWithCurrentZone;
+        api.filterProperties = filterProperties;
+        api.attachOriginToPatched = attachOriginToPatched;
+        api._redefineProperty = Object.defineProperty;
+        api.patchCallbacks = patchCallbacks;
+        api.getGlobalObjects = () => ({ globalSources, zoneSymbolEventNames: zoneSymbolEventNames$1, eventNames, isBrowser, isMix, isNode, TRUE_STR,
+            FALSE_STR, ZONE_SYMBOL_PREFIX, ADD_EVENT_LISTENER_STR, REMOVE_EVENT_LISTENER_STR });
+    });
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const taskSymbol = zoneSymbol('zoneTask');
+    function patchTimer(window, setName, cancelName, nameSuffix) {
+        let setNative = null;
+        let clearNative = null;
+        setName += nameSuffix;
+        cancelName += nameSuffix;
+        const tasksByHandleId = {};
+        function scheduleTask(task) {
+            const data = task.data;
+            function timer() {
+                try {
+                    task.invoke.apply(this, arguments);
+                }
+                finally {
+                    // issue-934, task will be cancelled
+                    // even it is a periodic task such as
+                    // setInterval
+                    if (!(task.data && task.data.isPeriodic)) {
+                        if (typeof data.handleId === 'number') {
+                            // in non-nodejs env, we remove timerId
+                            // from local cache
+                            delete tasksByHandleId[data.handleId];
+                        }
+                        else if (data.handleId) {
+                            // Node returns complex objects as handleIds
+                            // we remove task reference from timer object
+                            data.handleId[taskSymbol] = null;
+                        }
+                    }
+                }
+            }
+            data.args[0] = timer;
+            data.handleId = setNative.apply(window, data.args);
+            return task;
+        }
+        function clearTask(task) { return clearNative(task.data.handleId); }
+        setNative =
+            patchMethod(window, setName, (delegate) => function (self, args) {
+                if (typeof args[0] === 'function') {
+                    const options = {
+                        isPeriodic: nameSuffix === 'Interval',
+                        delay: (nameSuffix === 'Timeout' || nameSuffix === 'Interval') ? args[1] || 0 :
+                            undefined,
+                        args: args
+                    };
+                    const task = scheduleMacroTaskWithCurrentZone(setName, args[0], options, scheduleTask, clearTask);
+                    if (!task) {
+                        return task;
+                    }
+                    // Node.js must additionally support the ref and unref functions.
+                    const handle = task.data.handleId;
+                    if (typeof handle === 'number') {
+                        // for non nodejs env, we save handleId: task
+                        // mapping in local cache for clearTimeout
+                        tasksByHandleId[handle] = task;
+                    }
+                    else if (handle) {
+                        // for nodejs env, we save task
+                        // reference in timerId Object for clearTimeout
+                        handle[taskSymbol] = task;
+                    }
+                    // check whether handle is null, because some polyfill or browser
+                    // may return undefined from setTimeout/setInterval/setImmediate/requestAnimationFrame
+                    if (handle && handle.ref && handle.unref && typeof handle.ref === 'function' &&
+                        typeof handle.unref === 'function') {
+                        task.ref = handle.ref.bind(handle);
+                        task.unref = handle.unref.bind(handle);
+                    }
+                    if (typeof handle === 'number' || handle) {
+                        return handle;
+                    }
+                    return task;
+                }
+                else {
+                    // cause an error by calling it directly.
+                    return delegate.apply(window, args);
+                }
+            });
+        clearNative =
+            patchMethod(window, cancelName, (delegate) => function (self, args) {
+                const id = args[0];
+                let task;
+                if (typeof id === 'number') {
+                    // non nodejs env.
+                    task = tasksByHandleId[id];
+                }
+                else {
+                    // nodejs env.
+                    task = id && id[taskSymbol];
+                    // other environments.
+                    if (!task) {
+                        task = id;
+                    }
+                }
+                if (task && typeof task.type === 'string') {
+                    if (task.state !== 'notScheduled' &&
+                        (task.cancelFn && task.data.isPeriodic || task.runCount === 0)) {
+                        if (typeof id === 'number') {
+                            delete tasksByHandleId[id];
+                        }
+                        else if (id) {
+                            id[taskSymbol] = null;
+                        }
+                        // Do not cancel already canceled functions
+                        task.zone.cancelTask(task);
+                    }
+                }
+                else {
+                    // cause an error by calling it directly.
+                    delegate.apply(window, args);
+                }
+            });
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function patchCustomElements(_global, api) {
+        const { isBrowser, isMix } = api.getGlobalObjects();
+        if ((!isBrowser && !isMix) || !_global['customElements'] || !('customElements' in _global)) {
+            return;
+        }
+        const callbacks = ['connectedCallback', 'disconnectedCallback', 'adoptedCallback', 'attributeChangedCallback'];
+        api.patchCallbacks(api, _global.customElements, 'customElements', 'define', callbacks);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function eventTargetPatch(_global, api) {
+        if (Zone[api.symbol('patchEventTarget')]) {
+            // EventTarget is already patched.
+            return;
+        }
+        const { eventNames, zoneSymbolEventNames, TRUE_STR, FALSE_STR, ZONE_SYMBOL_PREFIX } = api.getGlobalObjects();
+        //  predefine all __zone_symbol__ + eventName + true/false string
+        for (let i = 0; i < eventNames.length; i++) {
+            const eventName = eventNames[i];
+            const falseEventName = eventName + FALSE_STR;
+            const trueEventName = eventName + TRUE_STR;
+            const symbol = ZONE_SYMBOL_PREFIX + falseEventName;
+            const symbolCapture = ZONE_SYMBOL_PREFIX + trueEventName;
+            zoneSymbolEventNames[eventName] = {};
+            zoneSymbolEventNames[eventName][FALSE_STR] = symbol;
+            zoneSymbolEventNames[eventName][TRUE_STR] = symbolCapture;
+        }
+        const EVENT_TARGET = _global['EventTarget'];
+        if (!EVENT_TARGET || !EVENT_TARGET.prototype) {
+            return;
+        }
+        api.patchEventTarget(_global, [EVENT_TARGET && EVENT_TARGET.prototype]);
+        return true;
+    }
+    function patchEvent(global, api) {
+        api.patchEventPrototype(global, api);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    Zone.__load_patch('legacy', (global) => {
+        const legacyPatch = global[Zone.__symbol__('legacyPatch')];
+        if (legacyPatch) {
+            legacyPatch();
+        }
+    });
+    Zone.__load_patch('timers', (global) => {
+        const set = 'set';
+        const clear = 'clear';
+        patchTimer(global, set, clear, 'Timeout');
+        patchTimer(global, set, clear, 'Interval');
+        patchTimer(global, set, clear, 'Immediate');
+    });
+    Zone.__load_patch('requestAnimationFrame', (global) => {
+        patchTimer(global, 'request', 'cancel', 'AnimationFrame');
+        patchTimer(global, 'mozRequest', 'mozCancel', 'AnimationFrame');
+        patchTimer(global, 'webkitRequest', 'webkitCancel', 'AnimationFrame');
+    });
+    Zone.__load_patch('blocking', (global, Zone) => {
+        const blockingMethods = ['alert', 'prompt', 'confirm'];
+        for (let i = 0; i < blockingMethods.length; i++) {
+            const name = blockingMethods[i];
+            patchMethod(global, name, (delegate, symbol, name) => {
+                return function (s, args) {
+                    return Zone.current.run(delegate, global, args, name);
+                };
+            });
+        }
+    });
+    Zone.__load_patch('EventTarget', (global, Zone, api) => {
+        patchEvent(global, api);
+        eventTargetPatch(global, api);
+        // patch XMLHttpRequestEventTarget's addEventListener/removeEventListener
+        const XMLHttpRequestEventTarget = global['XMLHttpRequestEventTarget'];
+        if (XMLHttpRequestEventTarget && XMLHttpRequestEventTarget.prototype) {
+            api.patchEventTarget(global, [XMLHttpRequestEventTarget.prototype]);
+        }
+        patchClass('MutationObserver');
+        patchClass('WebKitMutationObserver');
+        patchClass('IntersectionObserver');
+        patchClass('FileReader');
+    });
+    Zone.__load_patch('on_property', (global, Zone, api) => {
+        propertyDescriptorPatch(api, global);
+    });
+    Zone.__load_patch('customElements', (global, Zone, api) => {
+        patchCustomElements(global, api);
+    });
+    Zone.__load_patch('XHR', (global, Zone) => {
+        // Treat XMLHttpRequest as a macrotask.
+        patchXHR(global);
+        const XHR_TASK = zoneSymbol('xhrTask');
+        const XHR_SYNC = zoneSymbol('xhrSync');
+        const XHR_LISTENER = zoneSymbol('xhrListener');
+        const XHR_SCHEDULED = zoneSymbol('xhrScheduled');
+        const XHR_URL = zoneSymbol('xhrURL');
+        const XHR_ERROR_BEFORE_SCHEDULED = zoneSymbol('xhrErrorBeforeScheduled');
+        function patchXHR(window) {
+            const XMLHttpRequest = window['XMLHttpRequest'];
+            if (!XMLHttpRequest) {
+                // XMLHttpRequest is not available in service worker
+                return;
+            }
+            const XMLHttpRequestPrototype = XMLHttpRequest.prototype;
+            function findPendingTask(target) { return target[XHR_TASK]; }
+            let oriAddListener = XMLHttpRequestPrototype[ZONE_SYMBOL_ADD_EVENT_LISTENER];
+            let oriRemoveListener = XMLHttpRequestPrototype[ZONE_SYMBOL_REMOVE_EVENT_LISTENER];
+            if (!oriAddListener) {
+                const XMLHttpRequestEventTarget = window['XMLHttpRequestEventTarget'];
+                if (XMLHttpRequestEventTarget) {
+                    const XMLHttpRequestEventTargetPrototype = XMLHttpRequestEventTarget.prototype;
+                    oriAddListener = XMLHttpRequestEventTargetPrototype[ZONE_SYMBOL_ADD_EVENT_LISTENER];
+                    oriRemoveListener = XMLHttpRequestEventTargetPrototype[ZONE_SYMBOL_REMOVE_EVENT_LISTENER];
+                }
+            }
+            const READY_STATE_CHANGE = 'readystatechange';
+            const SCHEDULED = 'scheduled';
+            function scheduleTask(task) {
+                const data = task.data;
+                const target = data.target;
+                target[XHR_SCHEDULED] = false;
+                target[XHR_ERROR_BEFORE_SCHEDULED] = false;
+                // remove existing event listener
+                const listener = target[XHR_LISTENER];
+                if (!oriAddListener) {
+                    oriAddListener = target[ZONE_SYMBOL_ADD_EVENT_LISTENER];
+                    oriRemoveListener = target[ZONE_SYMBOL_REMOVE_EVENT_LISTENER];
+                }
+                if (listener) {
+                    oriRemoveListener.call(target, READY_STATE_CHANGE, listener);
+                }
+                const newListener = target[XHR_LISTENER] = () => {
+                    if (target.readyState === target.DONE) {
+                        // sometimes on some browsers XMLHttpRequest will fire onreadystatechange with
+                        // readyState=4 multiple times, so we need to check task state here
+                        if (!data.aborted && target[XHR_SCHEDULED] && task.state === SCHEDULED) {
+                            // check whether the xhr has registered onload listener
+                            // if that is the case, the task should invoke after all
+                            // onload listeners finish.
+                            const loadTasks = target[Zone.__symbol__('loadfalse')];
+                            if (loadTasks && loadTasks.length > 0) {
+                                const oriInvoke = task.invoke;
+                                task.invoke = function () {
+                                    // need to load the tasks again, because in other
+                                    // load listener, they may remove themselves
+                                    const loadTasks = target[Zone.__symbol__('loadfalse')];
+                                    for (let i = 0; i < loadTasks.length; i++) {
+                                        if (loadTasks[i] === task) {
+                                            loadTasks.splice(i, 1);
+                                        }
+                                    }
+                                    if (!data.aborted && task.state === SCHEDULED) {
+                                        oriInvoke.call(task);
+                                    }
+                                };
+                                loadTasks.push(task);
+                            }
+                            else {
+                                task.invoke();
+                            }
+                        }
+                        else if (!data.aborted && target[XHR_SCHEDULED] === false) {
+                            // error occurs when xhr.send()
+                            target[XHR_ERROR_BEFORE_SCHEDULED] = true;
+                        }
+                    }
+                };
+                oriAddListener.call(target, READY_STATE_CHANGE, newListener);
+                const storedTask = target[XHR_TASK];
+                if (!storedTask) {
+                    target[XHR_TASK] = task;
+                }
+                sendNative.apply(target, data.args);
+                target[XHR_SCHEDULED] = true;
+                return task;
+            }
+            function placeholderCallback() { }
+            function clearTask(task) {
+                const data = task.data;
+                // Note - ideally, we would call data.target.removeEventListener here, but it's too late
+                // to prevent it from firing. So instead, we store info for the event listener.
+                data.aborted = true;
+                return abortNative.apply(data.target, data.args);
+            }
+            const openNative = patchMethod(XMLHttpRequestPrototype, 'open', () => function (self, args) {
+                self[XHR_SYNC] = args[2] == false;
+                self[XHR_URL] = args[1];
+                return openNative.apply(self, args);
+            });
+            const XMLHTTPREQUEST_SOURCE = 'XMLHttpRequest.send';
+            const fetchTaskAborting = zoneSymbol('fetchTaskAborting');
+            const fetchTaskScheduling = zoneSymbol('fetchTaskScheduling');
+            const sendNative = patchMethod(XMLHttpRequestPrototype, 'send', () => function (self, args) {
+                if (Zone.current[fetchTaskScheduling] === true) {
+                    // a fetch is scheduling, so we are using xhr to polyfill fetch
+                    // and because we already schedule macroTask for fetch, we should
+                    // not schedule a macroTask for xhr again
+                    return sendNative.apply(self, args);
+                }
+                if (self[XHR_SYNC]) {
+                    // if the XHR is sync there is no task to schedule, just execute the code.
+                    return sendNative.apply(self, args);
+                }
+                else {
+                    const options = { target: self, url: self[XHR_URL], isPeriodic: false, args: args, aborted: false };
+                    const task = scheduleMacroTaskWithCurrentZone(XMLHTTPREQUEST_SOURCE, placeholderCallback, options, scheduleTask, clearTask);
+                    if (self && self[XHR_ERROR_BEFORE_SCHEDULED] === true && !options.aborted &&
+                        task.state === SCHEDULED) {
+                        // xhr request throw error when send
+                        // we should invoke task instead of leaving a scheduled
+                        // pending macroTask
+                        task.invoke();
+                    }
+                }
+            });
+            const abortNative = patchMethod(XMLHttpRequestPrototype, 'abort', () => function (self, args) {
+                const task = findPendingTask(self);
+                if (task && typeof task.type == 'string') {
+                    // If the XHR has already completed, do nothing.
+                    // If the XHR has already been aborted, do nothing.
+                    // Fix #569, call abort multiple times before done will cause
+                    // macroTask task count be negative number
+                    if (task.cancelFn == null || (task.data && task.data.aborted)) {
+                        return;
+                    }
+                    task.zone.cancelTask(task);
+                }
+                else if (Zone.current[fetchTaskAborting] === true) {
+                    // the abort is called from fetch polyfill, we need to call native abort of XHR.
+                    return abortNative.apply(self, args);
+                }
+                // Otherwise, we are trying to abort an XHR which has not yet been sent, so there is no
+                // task
+                // to cancel. Do nothing.
+            });
+        }
+    });
+    Zone.__load_patch('geolocation', (global) => {
+        /// GEO_LOCATION
+        if (global['navigator'] && global['navigator'].geolocation) {
+            patchPrototype(global['navigator'].geolocation, ['getCurrentPosition', 'watchPosition']);
+        }
+    });
+    Zone.__load_patch('PromiseRejectionEvent', (global, Zone) => {
+        // handle unhandled promise rejection
+        function findPromiseRejectionHandler(evtName) {
+            return function (e) {
+                const eventTasks = findEventTasks(global, evtName);
+                eventTasks.forEach(eventTask => {
+                    // windows has added unhandledrejection event listener
+                    // trigger the event listener
+                    const PromiseRejectionEvent = global['PromiseRejectionEvent'];
+                    if (PromiseRejectionEvent) {
+                        const evt = new PromiseRejectionEvent(evtName, { promise: e.promise, reason: e.rejection });
+                        eventTask.invoke(evt);
+                    }
+                });
+            };
+        }
+        if (global['PromiseRejectionEvent']) {
+            Zone[zoneSymbol('unhandledPromiseRejectionHandler')] =
+                findPromiseRejectionHandler('unhandledrejection');
+            Zone[zoneSymbol('rejectionHandledHandler')] =
+                findPromiseRejectionHandler('rejectionhandled');
+        }
+    });
+
+})));
+
+
+/***/ }),
+
 /***/ "./src/$$_lazy_route_resource lazy recursive":
 /*!**********************************************************!*\
   !*** ./src/$$_lazy_route_resource lazy namespace object ***!
@@ -4852,8 +11369,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "AppRoutingModule", function() { return AppRoutingModule; });
 /* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
-/* harmony import */ var _nebular_auth__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @nebular/auth */ "./node_modules/@nebular/auth/__ivy_ngcc__/fesm2015/index.js");
-/* harmony import */ var _login_login_component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./login/login.component */ "./src/app/login/login.component.ts");
+/* harmony import */ var _login_login_component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./login/login.component */ "./src/app/login/login.component.ts");
+/* harmony import */ var _core_auth_auth_auth_guard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./core_auth/auth/auth.guard */ "./src/app/core_auth/auth/auth.guard.ts");
+/* harmony import */ var _privacy_policy_privacy_policy_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./privacy-policy/privacy-policy.component */ "./src/app/privacy-policy/privacy-policy.component.ts");
+/* harmony import */ var _faq_faq_component__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./faq/faq.component */ "./src/app/faq/faq.component.ts");
+
+
 
 
 
@@ -4862,48 +11383,23 @@ __webpack_require__.r(__webpack_exports__);
 
 const routes = [
     {
-        path: '',
-        component: _login_login_component__WEBPACK_IMPORTED_MODULE_3__["LoginComponent"],
+        path: '', redirectTo: 'login', pathMatch: 'full'
     },
     {
         path: 'pages',
         loadChildren: () => Promise.resolve(/*! import() */).then(__webpack_require__.bind(null, /*! ./pages/pages.module */ "./src/app/pages/pages.module.ts"))
             .then(m => m.PagesModule),
-    },
-    { path: 'login', component: _login_login_component__WEBPACK_IMPORTED_MODULE_3__["LoginComponent"],
+        canActivate: [_core_auth_auth_auth_guard__WEBPACK_IMPORTED_MODULE_3__["AuthGuard"]]
     },
     {
-        path: 'auth',
-        component: _nebular_auth__WEBPACK_IMPORTED_MODULE_2__["NbAuthComponent"],
-        children: [
-            {
-                path: '',
-                component: _nebular_auth__WEBPACK_IMPORTED_MODULE_2__["NbLoginComponent"],
-            },
-            {
-                path: 'login',
-                component: _nebular_auth__WEBPACK_IMPORTED_MODULE_2__["NbLoginComponent"],
-            },
-            {
-                path: 'register',
-                component: _nebular_auth__WEBPACK_IMPORTED_MODULE_2__["NbRegisterComponent"],
-            },
-            {
-                path: 'logout',
-                component: _nebular_auth__WEBPACK_IMPORTED_MODULE_2__["NbLogoutComponent"],
-            },
-            {
-                path: 'request-password',
-                component: _nebular_auth__WEBPACK_IMPORTED_MODULE_2__["NbRequestPasswordComponent"],
-            },
-            {
-                path: 'reset-password',
-                component: _nebular_auth__WEBPACK_IMPORTED_MODULE_2__["NbResetPasswordComponent"],
-            },
-        ],
+        path: 'login', component: _login_login_component__WEBPACK_IMPORTED_MODULE_2__["LoginComponent"],
     },
-    { path: '', redirectTo: 'pages', pathMatch: 'full' },
-    { path: '**', redirectTo: 'pages' },
+    {
+        path: 'privacy-policy', component: _privacy_policy_privacy_policy_component__WEBPACK_IMPORTED_MODULE_4__["PrivacyPolicyComponent"],
+    },
+    {
+        path: 'faq', component: _faq_faq_component__WEBPACK_IMPORTED_MODULE_5__["FAQComponent"],
+    },
 ];
 const config = {
     useHash: false,
@@ -5000,6 +11496,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pages_pages_module__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./pages/pages.module */ "./src/app/pages/pages.module.ts");
 /* harmony import */ var _app_pages_tours_tours_module__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../app/pages/tours/tours.module */ "./src/app/pages/tours/tours.module.ts");
 /* harmony import */ var _directives_file_type_validator_directive__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./directives/file-type-validator.directive */ "./src/app/directives/file-type-validator.directive.ts");
+/* harmony import */ var _pages_badge_badge_module__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./pages/badge/badge.module */ "./src/app/pages/badge/badge.module.ts");
+/* harmony import */ var _privacy_policy_privacy_policy_component__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./privacy-policy/privacy-policy.component */ "./src/app/privacy-policy/privacy-policy.component.ts");
+/* harmony import */ var _faq_faq_component__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./faq/faq.component */ "./src/app/faq/faq.component.ts");
+/* harmony import */ var _angular_material_expansion__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! @angular/material/expansion */ "./node_modules/@angular/material/__ivy_ngcc__/fesm2015/expansion.js");
+/* harmony import */ var _angular_material_button__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! @angular/material/button */ "./node_modules/@angular/material/__ivy_ngcc__/fesm2015/button.js");
+/* harmony import */ var _angular_material_form_field__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! @angular/material/form-field */ "./node_modules/@angular/material/__ivy_ngcc__/fesm2015/form-field.js");
+/* harmony import */ var _angular_material_input__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! @angular/material/input */ "./node_modules/@angular/material/__ivy_ngcc__/fesm2015/input.js");
 /**
  * @license
  * Copyright Akveo. All Rights Reserved.
@@ -5024,10 +11527,21 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
+
+
+
+
+
 class AppModule {
 }
 AppModule.ɵmod = _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵdefineNgModule"]({ type: AppModule, bootstrap: [_app_component__WEBPACK_IMPORTED_MODULE_6__["AppComponent"]] });
 AppModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵdefineInjector"]({ factory: function AppModule_Factory(t) { return new (t || AppModule)(); }, providers: [{ provide: _angular_common_http__WEBPACK_IMPORTED_MODULE_3__["HTTP_INTERCEPTORS"], useClass: _core_auth_interceptor_rest_api_Interceptor__WEBPACK_IMPORTED_MODULE_11__["RestAPIInterceptor"], multi: true }], imports: [[
+            _angular_material_expansion__WEBPACK_IMPORTED_MODULE_18__["MatExpansionModule"],
+            _angular_material_form_field__WEBPACK_IMPORTED_MODULE_20__["MatFormFieldModule"],
+            _angular_material_input__WEBPACK_IMPORTED_MODULE_21__["MatInputModule"],
+            _angular_material_button__WEBPACK_IMPORTED_MODULE_19__["MatButtonModule"],
             _angular_forms__WEBPACK_IMPORTED_MODULE_8__["FormsModule"],
             _angular_forms__WEBPACK_IMPORTED_MODULE_8__["ReactiveFormsModule"],
             _angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
@@ -5044,19 +11558,29 @@ AppModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵdefineInjector
             _theme_theme_module__WEBPACK_IMPORTED_MODULE_5__["ThemeModule"].forRoot(),
             _pages_pages_module__WEBPACK_IMPORTED_MODULE_12__["PagesModule"],
             _app_pages_tours_tours_module__WEBPACK_IMPORTED_MODULE_13__["ToursModule"],
+            _pages_badge_badge_module__WEBPACK_IMPORTED_MODULE_15__["BadgeModule"],
         ]] });
-(function () { (typeof ngJitMode === "undefined" || ngJitMode) && _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵsetNgModuleScope"](AppModule, { declarations: [_app_component__WEBPACK_IMPORTED_MODULE_6__["AppComponent"], _login_login_component__WEBPACK_IMPORTED_MODULE_10__["LoginComponent"], _directives_file_type_validator_directive__WEBPACK_IMPORTED_MODULE_14__["FileTypeValidatorDirective"]], imports: [_angular_forms__WEBPACK_IMPORTED_MODULE_8__["FormsModule"],
+(function () { (typeof ngJitMode === "undefined" || ngJitMode) && _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵsetNgModuleScope"](AppModule, { declarations: [_app_component__WEBPACK_IMPORTED_MODULE_6__["AppComponent"], _login_login_component__WEBPACK_IMPORTED_MODULE_10__["LoginComponent"], _directives_file_type_validator_directive__WEBPACK_IMPORTED_MODULE_14__["FileTypeValidatorDirective"], _privacy_policy_privacy_policy_component__WEBPACK_IMPORTED_MODULE_16__["PrivacyPolicyComponent"], _faq_faq_component__WEBPACK_IMPORTED_MODULE_17__["FAQComponent"]], imports: [_angular_material_expansion__WEBPACK_IMPORTED_MODULE_18__["MatExpansionModule"],
+        _angular_material_form_field__WEBPACK_IMPORTED_MODULE_20__["MatFormFieldModule"],
+        _angular_material_input__WEBPACK_IMPORTED_MODULE_21__["MatInputModule"],
+        _angular_material_button__WEBPACK_IMPORTED_MODULE_19__["MatButtonModule"],
+        _angular_forms__WEBPACK_IMPORTED_MODULE_8__["FormsModule"],
         _angular_forms__WEBPACK_IMPORTED_MODULE_8__["ReactiveFormsModule"],
         _angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
         _angular_platform_browser_animations__WEBPACK_IMPORTED_MODULE_1__["BrowserAnimationsModule"],
         _angular_common_http__WEBPACK_IMPORTED_MODULE_3__["HttpClientModule"],
         _app_routing_module__WEBPACK_IMPORTED_MODULE_7__["AppRoutingModule"], _nebular_theme__WEBPACK_IMPORTED_MODULE_9__["NbSidebarModule"], _nebular_theme__WEBPACK_IMPORTED_MODULE_9__["NbMenuModule"], _nebular_theme__WEBPACK_IMPORTED_MODULE_9__["NbDatepickerModule"], _nebular_theme__WEBPACK_IMPORTED_MODULE_9__["NbDialogModule"], _nebular_theme__WEBPACK_IMPORTED_MODULE_9__["NbWindowModule"], _nebular_theme__WEBPACK_IMPORTED_MODULE_9__["NbToastrModule"], _core_core_module__WEBPACK_IMPORTED_MODULE_4__["CoreModule"], _theme_theme_module__WEBPACK_IMPORTED_MODULE_5__["ThemeModule"], _pages_pages_module__WEBPACK_IMPORTED_MODULE_12__["PagesModule"],
-        _app_pages_tours_tours_module__WEBPACK_IMPORTED_MODULE_13__["ToursModule"]] }); })();
+        _app_pages_tours_tours_module__WEBPACK_IMPORTED_MODULE_13__["ToursModule"],
+        _pages_badge_badge_module__WEBPACK_IMPORTED_MODULE_15__["BadgeModule"]] }); })();
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵsetClassMetadata"](AppModule, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_2__["NgModule"],
         args: [{
-                declarations: [_app_component__WEBPACK_IMPORTED_MODULE_6__["AppComponent"], _login_login_component__WEBPACK_IMPORTED_MODULE_10__["LoginComponent"], _directives_file_type_validator_directive__WEBPACK_IMPORTED_MODULE_14__["FileTypeValidatorDirective"]],
+                declarations: [_app_component__WEBPACK_IMPORTED_MODULE_6__["AppComponent"], _login_login_component__WEBPACK_IMPORTED_MODULE_10__["LoginComponent"], _directives_file_type_validator_directive__WEBPACK_IMPORTED_MODULE_14__["FileTypeValidatorDirective"], _privacy_policy_privacy_policy_component__WEBPACK_IMPORTED_MODULE_16__["PrivacyPolicyComponent"], _faq_faq_component__WEBPACK_IMPORTED_MODULE_17__["FAQComponent"]],
                 imports: [
+                    _angular_material_expansion__WEBPACK_IMPORTED_MODULE_18__["MatExpansionModule"],
+                    _angular_material_form_field__WEBPACK_IMPORTED_MODULE_20__["MatFormFieldModule"],
+                    _angular_material_input__WEBPACK_IMPORTED_MODULE_21__["MatInputModule"],
+                    _angular_material_button__WEBPACK_IMPORTED_MODULE_19__["MatButtonModule"],
                     _angular_forms__WEBPACK_IMPORTED_MODULE_8__["FormsModule"],
                     _angular_forms__WEBPACK_IMPORTED_MODULE_8__["ReactiveFormsModule"],
                     _angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
@@ -5073,11 +11597,58 @@ AppModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵdefineInjector
                     _theme_theme_module__WEBPACK_IMPORTED_MODULE_5__["ThemeModule"].forRoot(),
                     _pages_pages_module__WEBPACK_IMPORTED_MODULE_12__["PagesModule"],
                     _app_pages_tours_tours_module__WEBPACK_IMPORTED_MODULE_13__["ToursModule"],
+                    _pages_badge_badge_module__WEBPACK_IMPORTED_MODULE_15__["BadgeModule"],
                 ],
                 providers: [{ provide: _angular_common_http__WEBPACK_IMPORTED_MODULE_3__["HTTP_INTERCEPTORS"], useClass: _core_auth_interceptor_rest_api_Interceptor__WEBPACK_IMPORTED_MODULE_11__["RestAPIInterceptor"], multi: true }],
                 bootstrap: [_app_component__WEBPACK_IMPORTED_MODULE_6__["AppComponent"]],
             }]
     }], null, null); })();
+
+
+/***/ }),
+
+/***/ "./src/app/core_auth/auth/auth.guard.ts":
+/*!**********************************************!*\
+  !*** ./src/app/core_auth/auth/auth.guard.ts ***!
+  \**********************************************/
+/*! exports provided: AuthGuard */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "AuthGuard", function() { return AuthGuard; });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
+/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
+/* harmony import */ var _auth_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./auth.service */ "./src/app/core_auth/auth/auth.service.ts");
+
+
+
+
+
+
+class AuthGuard {
+    constructor(authService, router) {
+        this.authService = authService;
+        this.router = router;
+    }
+    canActivate(next, state) {
+        if (this.authService.isUserLoggedIn()) {
+            return true;
+        }
+        else {
+            this.router.navigate(['/login']);
+            return false;
+        }
+    }
+}
+AuthGuard.ɵfac = function AuthGuard_Factory(t) { return new (t || AuthGuard)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵinject"](_auth_service__WEBPACK_IMPORTED_MODULE_2__["AuthService"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵinject"](_angular_router__WEBPACK_IMPORTED_MODULE_1__["Router"])); };
+AuthGuard.ɵprov = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineInjectable"]({ token: AuthGuard, factory: AuthGuard.ɵfac, providedIn: 'root' });
+/*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](AuthGuard, [{
+        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Injectable"],
+        args: [{
+                providedIn: 'root'
+            }]
+    }], function () { return [{ type: _auth_service__WEBPACK_IMPORTED_MODULE_2__["AuthService"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_1__["Router"] }]; }, null); })();
 
 
 /***/ }),
@@ -5185,6 +11756,71 @@ RestAPIInterceptor.ɵprov = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefi
 
 /***/ }),
 
+/***/ "./src/app/core_auth/services/formdata.service.ts":
+/*!********************************************************!*\
+  !*** ./src/app/core_auth/services/formdata.service.ts ***!
+  \********************************************************/
+/*! exports provided: FormDataService */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FormDataService", function() { return FormDataService; });
+/* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/common/http */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/http.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
+/* harmony import */ var environments_environment__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! environments/environment */ "./src/environments/environment.ts");
+/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! rxjs */ "./node_modules/rxjs/_esm2015/index.js");
+/* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! rxjs/operators */ "./node_modules/rxjs/_esm2015/operators/index.js");
+
+
+
+
+
+
+
+const endpoint = environments_environment__WEBPACK_IMPORTED_MODULE_2__["environment"].appUrl;
+const baseUrl = 'http://18.217.48.28:2000/admin/search';
+const baseUrl2 = `${environments_environment__WEBPACK_IMPORTED_MODULE_2__["environment"].appUrl}`;
+class FormDataService {
+    constructor(http) {
+        this.http = http;
+    }
+    get(url) {
+        return this.http.get(endpoint + url, { headers: this.getHeader() }).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["tap"])((response) => console.log()), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["catchError"])(this.handleError('get')));
+    }
+    post(url, data) {
+        return this.http.post(endpoint + url, data, { headers: this.getHeader() }).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["tap"])((response) => console.log()), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["catchError"])(this.handleError('post')));
+    }
+    put(url, data) {
+        return this.http.put(endpoint + url, data, { headers: this.getHeader() }).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["tap"])((response) => console.log()), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["catchError"])(this.handleError('put')));
+    }
+    delete(url) {
+        return this.http.delete(endpoint + url, { headers: this.getHeader() }).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["tap"])(_ => console.log()), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["catchError"])(this.handleError('delete')));
+    }
+    getHeader() {
+        let headers = new _angular_common_http__WEBPACK_IMPORTED_MODULE_0__["HttpHeaders"]();
+        headers = headers.append('Authorization', localStorage.getItem('access_token'));
+        return headers;
+    }
+    handleError(operation = 'operation', result) {
+        return (error) => {
+            // Let the app keep running by returning an error.
+            return Object(rxjs__WEBPACK_IMPORTED_MODULE_3__["of"])(error.error);
+        };
+    }
+}
+FormDataService.ɵfac = function FormDataService_Factory(t) { return new (t || FormDataService)(_angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵinject"](_angular_common_http__WEBPACK_IMPORTED_MODULE_0__["HttpClient"])); };
+FormDataService.ɵprov = _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineInjectable"]({ token: FormDataService, factory: FormDataService.ɵfac, providedIn: 'root' });
+/*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵsetClassMetadata"](FormDataService, [{
+        type: _angular_core__WEBPACK_IMPORTED_MODULE_1__["Injectable"],
+        args: [{
+                providedIn: 'root'
+            }]
+    }], function () { return [{ type: _angular_common_http__WEBPACK_IMPORTED_MODULE_0__["HttpClient"] }]; }, null); })();
+
+
+/***/ }),
+
 /***/ "./src/app/core_auth/services/rest.service.ts":
 /*!****************************************************!*\
   !*** ./src/app/core_auth/services/rest.service.ts ***!
@@ -5213,24 +11849,12 @@ const baseUrl2 = `${environments_environment__WEBPACK_IMPORTED_MODULE_2__["envir
 class RestService {
     constructor(http) {
         this.http = http;
-        this.category = {
-            name: '',
-            icon: '',
-            available: false
-        };
-    }
-    find(_id, url, formData) {
-        return this.http.get(endpoint + url + _id, { headers: this.getHeader(formData) }).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["tap"])((response) => console.log()), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["catchError"])(this.handleError('get')));
     }
     get(url) {
         return this.http.get(endpoint + url, { headers: this.getHeader() }).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["tap"])((response) => console.log()), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["catchError"])(this.handleError('get')));
     }
-    post(url, data, isFormData) {
-        let formData;
-        if (data && isFormData) {
-            // Object.keys(data).forEach((key) => { formData.append(key, data[key]) });
-        }
-        return this.http.post(endpoint + url, (formData && isFormData) ? formData : JSON.stringify(data), { headers: this.getHeader(isFormData) }).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["tap"])((response) => console.log()), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["catchError"])(this.handleError('post')));
+    post(url, data) {
+        return this.http.post(endpoint + url, JSON.stringify(data), { headers: this.getHeader() }).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["tap"])((response) => console.log()), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["catchError"])(this.handleError('post')));
     }
     put(url, data) {
         return this.http.put(endpoint + url, JSON.stringify(data), { headers: this.getHeader() }).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["tap"])((response) => console.log()), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["catchError"])(this.handleError('put')));
@@ -5238,11 +11862,9 @@ class RestService {
     delete(url) {
         return this.http.delete(endpoint + url, { headers: this.getHeader() }).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["tap"])(_ => console.log()), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__["catchError"])(this.handleError('delete')));
     }
-    getHeader(isFormData) {
+    getHeader() {
         let headers = new _angular_common_http__WEBPACK_IMPORTED_MODULE_0__["HttpHeaders"]();
-        if (!isFormData) {
-            headers = headers.append('Content-Type', 'json');
-        }
+        headers = headers.append('Content-Type', 'application/json');
         headers = headers.append('Authorization', localStorage.getItem('access_token'));
         return headers;
     }
@@ -5320,6 +11942,123 @@ FileTypeValidatorDirective.ɵdir = _angular_core__WEBPACK_IMPORTED_MODULE_0__["�
 
 /***/ }),
 
+/***/ "./src/app/faq/faq.component.ts":
+/*!**************************************!*\
+  !*** ./src/app/faq/faq.component.ts ***!
+  \**************************************/
+/*! exports provided: FAQComponent */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FAQComponent", function() { return FAQComponent; });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
+/* harmony import */ var _angular_material_expansion__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/material/expansion */ "./node_modules/@angular/material/__ivy_ngcc__/fesm2015/expansion.js");
+
+
+
+class FAQComponent {
+    constructor() { }
+    ngOnInit() {
+    }
+}
+FAQComponent.ɵfac = function FAQComponent_Factory(t) { return new (t || FAQComponent)(); };
+FAQComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: FAQComponent, selectors: [["ngx-faq"]], decls: 49, vars: 0, consts: [[1, "faq"], [1, "title"], [1, "maindiv"], ["href", "mailto:info@explord.com.au"]], template: function FAQComponent_Template(rf, ctx) { if (rf & 1) {
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "div", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "h1");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](3, "FAQ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "div", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "mat-expansion-panel");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "mat-expansion-panel-header");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "mat-panel-title");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](8, " Why do I need an account? ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](10, "So you can track which tours you have completed, work your way towards badges, and enjoy the full Explor\u2019d experience.");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "mat-expansion-panel");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "mat-expansion-panel-header");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "mat-panel-title");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](14, " Why does Explor\u2019d need access to my location? ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](16, "We use your location to determine which tours are closest to you, and to provide access to audio tours when you are close enough.");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](17, "mat-expansion-panel");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](18, "mat-expansion-panel-header");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](19, "mat-panel-title");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](20, " Why can\u2019t I access tour audio without visiting the location? ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](21, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](22, "Because in order to have the full experience, we reckon you should visit a place to experience it! Once you are within 200 metres of the nominated location, you will be able to listen to the tour");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](23, "mat-expansion-panel");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](24, "mat-expansion-panel-header");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](25, "mat-panel-title");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](26, " What are badges? ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](27, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](28, "Badges are a reward for completing tours. Complete a nominated set of tours (usually based around a theme) and you will receive a badge! Sometimes these badges will come with a reward for completion. See if you can get them all! Note: badges may be added, removed or modified at any time without notice.");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](29, "mat-expansion-panel");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](30, "mat-expansion-panel-header");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](31, "mat-panel-title");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](32, " Why aren\u2019t there any tours near me? ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](33, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](34, "Because Explor\u2019d is only just starting out! We\u2019re trying to get as many high quality tours out there as we can, but this will take time. Keep an eye out \u2013 we are releasing more audio tours every month! If you know a place that absolutely MUST have an Explor\u2019d site, get in contact!");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](35, "mat-expansion-panel");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](36, "mat-expansion-panel-header");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](37, "mat-panel-title");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](38, " Is Explor\u2019d available anywhere other than Australia? ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](39, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](40, "At this point, Explor\u2019d tours are only available in Australia \u2013 we hope to change this in the future!");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](41, "mat-expansion-panel");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](42, "mat-expansion-panel-header");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](43, "mat-panel-title");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](44, " I have suggestions for improving the app, or want to partner for an Explor\u2019d site. How can I get in contact? ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](45, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](46, "We would love to hear from you! Use the contact us button within the app, or email us: ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](47, "a", 3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](48, "info@explord.com.au");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+    } }, directives: [_angular_material_expansion__WEBPACK_IMPORTED_MODULE_1__["MatExpansionPanel"], _angular_material_expansion__WEBPACK_IMPORTED_MODULE_1__["MatExpansionPanelHeader"], _angular_material_expansion__WEBPACK_IMPORTED_MODULE_1__["MatExpansionPanelTitle"]], styles: [".title[_ngcontent-%COMP%] {\n  text-align: center;\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n  padding: 10px;\n  color: #fff;\n  margin: 0 0 20px 0;\n}\n\n.title[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n  padding: 0;\n  margin: 0;\n}\n\n.mat-expansion-panel[_ngcontent-%COMP%] {\n  padding: 7px;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvZmFxL2ZhcS5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNRLGtCQUFrQjtFQUNsQixvQ0FBb0M7RUFDcEMsZ0NBQWdDO0VBQ2hDLGFBQWE7RUFDYixXQUFXO0VBQ1gsa0JBQWtCO0FBQzFCOztBQUNBO0VBQVUsVUFBVTtFQUFDLFNBQVM7QUFJOUI7O0FBSEE7RUFBc0IsWUFBWTtBQU9sQyIsImZpbGUiOiJzcmMvYXBwL2ZhcS9mYXEuY29tcG9uZW50LnNjc3MiLCJzb3VyY2VzQ29udGVudCI6WyIudGl0bGV7XHJcbiAgICAgICAgdGV4dC1hbGlnbjogY2VudGVyO1xyXG4gICAgICAgIGJhY2tncm91bmQtY29sb3I6ICMxN2EyYjggIWltcG9ydGFudDtcclxuICAgICAgICBib3JkZXItY29sb3I6ICMxN2EyYjggIWltcG9ydGFudDtcclxuICAgICAgICBwYWRkaW5nOiAxMHB4O1xyXG4gICAgICAgIGNvbG9yOiAjZmZmO1xyXG4gICAgICAgIG1hcmdpbjogMCAwIDIwcHggMDtcclxufVxyXG4udGl0bGUgaDF7cGFkZGluZzogMDttYXJnaW46IDA7fVxyXG4ubWF0LWV4cGFuc2lvbi1wYW5lbCB7cGFkZGluZzogN3B4O30iXX0= */"] });
+/*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](FAQComponent, [{
+        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
+        args: [{
+                selector: 'ngx-faq',
+                templateUrl: './faq.component.html',
+                styleUrls: ['./faq.component.scss']
+            }]
+    }], function () { return []; }, null); })();
+
+
+/***/ }),
+
 /***/ "./src/app/login/login.component.ts":
 /*!******************************************!*\
   !*** ./src/app/login/login.component.ts ***!
@@ -5344,6 +12083,34 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+function LoginComponent_div_9_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Name is required");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} }
+function LoginComponent_div_9_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 11);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, LoginComponent_div_9_div_1_Template, 2, 0, "div", 12);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} if (rf & 2) {
+    const ctx_r0 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r0.f.email.errors.required);
+} }
+function LoginComponent_div_12_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Password is required");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} }
+function LoginComponent_div_12_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 11);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, LoginComponent_div_12_div_1_Template, 2, 0, "div", 12);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} if (rf & 2) {
+    const ctx_r1 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r1.f.password.errors.required);
+} }
 const _c0 = function (a0) { return { "is-invalid": a0 }; };
 class LoginComponent {
     constructor(formBuilder, authService, router) {
@@ -5358,7 +12125,7 @@ class LoginComponent {
             password: ['', [_angular_forms__WEBPACK_IMPORTED_MODULE_2__["Validators"].required, _angular_forms__WEBPACK_IMPORTED_MODULE_2__["Validators"].minLength(4)]]
         });
     }
-    get formControls() { return this.loginForm.controls; }
+    get f() { return this.loginForm.controls; }
     login() {
         this.submitted = true;
         // stop here if form is invalid
@@ -5369,14 +12136,15 @@ class LoginComponent {
         this.authService.login(this.loginForm.value.email, this.loginForm.value.password).subscribe((data) => {
             if (data) {
                 this.router.navigateByUrl('/pages');
+                // alert('Login form submited successfully!');
             }
         }, (error) => {
-            console.log(error);
+            alert('Email OR Password incorrect!');
         });
     }
 }
 LoginComponent.ɵfac = function LoginComponent_Factory(t) { return new (t || LoginComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_forms__WEBPACK_IMPORTED_MODULE_2__["FormBuilder"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_auth_auth_service__WEBPACK_IMPORTED_MODULE_3__["AuthService"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_1__["Router"])); };
-LoginComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: LoginComponent, selectors: [["ng-component"]], decls: 14, vars: 7, consts: [[1, "card", "loginform"], [1, "card-header", "text-center", 2, "background-color", "#fff"], ["src", "assets/images/logo-light-grey.png", "alt", "Explor'd"], [1, "card-header", "text-center"], [1, "card-body"], [1, "text-center", 3, "formGroup", "ngSubmit"], [1, "form-group"], ["type", "email", "formControlName", "email", "id", "exampleInputEmail", "aria-describedby", "emailHelp", "placeholder", "Email Or Username*", 1, "form-control", "form-control-user", 3, "ngClass"], ["type", "password", "formControlName", "password", "id", "exampleInputPassword", "placeholder", "Password*", 1, "form-control", "form-control-user", 3, "ngClass"], ["type", "submit", 1, "btn", "btn-info", "text-center"]], template: function LoginComponent_Template(rf, ctx) { if (rf & 1) {
+LoginComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: LoginComponent, selectors: [["ng-component"]], decls: 16, vars: 9, consts: [[1, "card", "loginform"], [1, "card-header", "text-center", 2, "background-color", "#fff"], ["src", "assets/images/logo-light-grey.png", "alt", "Explor'd"], [1, "card-header", "text-center"], [1, "card-body"], [1, "text-center", 3, "formGroup", "ngSubmit"], [1, "form-group"], ["type", "email", "formControlName", "email", "placeholder", "Email Or Username*", 1, "form-control", 3, "ngClass"], ["class", "invalid-feedback", 4, "ngIf"], ["type", "password", "formControlName", "password", "placeholder", "Password", 1, "form-control", 3, "ngClass"], ["type", "submit", 1, "btn", "btn-info", "text-center"], [1, "invalid-feedback"], [4, "ngIf"]], template: function LoginComponent_Template(rf, ctx) { if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "h4", 1);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](2, "img", 2);
@@ -5389,13 +12157,15 @@ LoginComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineCom
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngSubmit", function LoginComponent_Template_form_ngSubmit_6_listener() { return ctx.login(); });
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "div", 6);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](8, "input", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](9, LoginComponent_div_9_Template, 2, 1, "div", 8);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](10, "input", 8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "div", 6);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](11, "input", 9);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](12, LoginComponent_div_12_Template, 2, 1, "div", 8);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "button", 9);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](13, " Login ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "div", 6);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "button", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](15, " Login ");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
@@ -5405,10 +12175,14 @@ LoginComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineCom
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](6);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("formGroup", ctx.loginForm);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](3, _c0, ctx.submitted && ctx.formControls.email.errors));
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](5, _c0, ctx.submitted && ctx.f.email.errors));
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.email.errors);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](5, _c0, ctx.submitted && ctx.formControls.password.errors));
-    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_2__["ɵangular_packages_forms_forms_y"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["NgControlStatusGroup"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["FormGroupDirective"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["FormControlName"], _angular_common__WEBPACK_IMPORTED_MODULE_4__["NgClass"]], styles: [".loginform[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 600px;\n  height: 350px;\n  margin: auto;\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n}\n\nh4.card-header.text-center[_ngcontent-%COMP%] {\n  background: #117a8b;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvbG9naW4vbG9naW4uY29tcG9uZW50LnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7RUFBWSxXQUFXO0VBQUUsZ0JBQWdCO0VBQUMsYUFBYTtFQUFFLFlBQVk7RUFBQyxrQkFBa0I7RUFDcEYsTUFBTTtFQUFFLE9BQU87RUFBRSxTQUFTO0VBQUUsUUFBUTtBQVN4Qzs7QUFSSTtFQUNJLG1CQUFtQjtBQVczQiIsImZpbGUiOiJzcmMvYXBwL2xvZ2luL2xvZ2luLmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiLmxvZ2luZm9ybSB7d2lkdGg6IDEwMCU7IG1heC13aWR0aDogNjAwcHg7aGVpZ2h0OiAzNTBweDsgbWFyZ2luOiBhdXRvO3Bvc2l0aW9uOiBhYnNvbHV0ZTtcclxuICAgIHRvcDogMDsgbGVmdDogMDsgYm90dG9tOiAwOyByaWdodDogMDt9XHJcbiAgICBoNC5jYXJkLWhlYWRlci50ZXh0LWNlbnRlciB7XHJcbiAgICAgICAgYmFja2dyb3VuZDogIzExN2E4YjtcclxuICAgIH0iXX0= */"] });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](7, _c0, ctx.submitted && ctx.f.password.errors));
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.password.errors);
+    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_2__["ɵangular_packages_forms_forms_y"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["NgControlStatusGroup"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["FormGroupDirective"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["FormControlName"], _angular_common__WEBPACK_IMPORTED_MODULE_4__["NgClass"], _angular_common__WEBPACK_IMPORTED_MODULE_4__["NgIf"]], styles: [".loginform[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 600px;\n  height: 350px;\n  margin: auto;\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n}\n\nh4.card-header.text-center[_ngcontent-%COMP%] {\n  background: #117a8b;\n  color: #fff;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvbG9naW4vbG9naW4uY29tcG9uZW50LnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7RUFBWSxXQUFXO0VBQUUsZ0JBQWdCO0VBQUMsYUFBYTtFQUFFLFlBQVk7RUFBQyxrQkFBa0I7RUFDcEYsTUFBTTtFQUFFLE9BQU87RUFBRSxTQUFTO0VBQUUsUUFBUTtBQVN4Qzs7QUFSSTtFQUNJLG1CQUFtQjtFQUNuQixXQUFXO0FBV25CIiwiZmlsZSI6InNyYy9hcHAvbG9naW4vbG9naW4uY29tcG9uZW50LnNjc3MiLCJzb3VyY2VzQ29udGVudCI6WyIubG9naW5mb3JtIHt3aWR0aDogMTAwJTsgbWF4LXdpZHRoOiA2MDBweDtoZWlnaHQ6IDM1MHB4OyBtYXJnaW46IGF1dG87cG9zaXRpb246IGFic29sdXRlO1xyXG4gICAgdG9wOiAwOyBsZWZ0OiAwOyBib3R0b206IDA7IHJpZ2h0OiAwO31cclxuICAgIGg0LmNhcmQtaGVhZGVyLnRleHQtY2VudGVyIHtcclxuICAgICAgICBiYWNrZ3JvdW5kOiAjMTE3YThiO1xyXG4gICAgICAgIGNvbG9yOiAjZmZmO1xyXG4gICAgfSJdfQ== */"] });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](LoginComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
         args: [{ templateUrl: 'login.component.html',
@@ -5435,7 +12209,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _agm_core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @agm/core */ "./node_modules/@agm/core/__ivy_ngcc__/fesm2015/agm-core.js");
 /* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
 /* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
-/* harmony import */ var _nebular_theme__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @nebular/theme */ "./node_modules/@nebular/theme/__ivy_ngcc__/fesm2015/index.js");
+/* harmony import */ var ng_multiselect_dropdown__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ng-multiselect-dropdown */ "./node_modules/ng-multiselect-dropdown/__ivy_ngcc__/fesm2015/ng-multiselect-dropdown.js");
+/* harmony import */ var _nebular_theme__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @nebular/theme */ "./node_modules/@nebular/theme/__ivy_ngcc__/fesm2015/index.js");
+
 
 
 
@@ -5451,76 +12227,49 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const _c0 = ["search"];
-function BadgeCreateComponent_option_13_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "option", 17);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1);
+function BadgeCreateComponent_div_14_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Name is required");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} }
+function BadgeCreateComponent_div_14_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 24);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, BadgeCreateComponent_div_14_div_1_Template, 2, 0, "div", 25);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } if (rf & 2) {
-    const tour_r4 = ctx.$implicit;
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("value", tour_r4._id);
+    const ctx_r0 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](tour_r4.name);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r0.f.name.errors.required);
 } }
-function BadgeCreateComponent_span_14_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 18);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " tours name is required ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-} }
-function BadgeCreateComponent_span_19_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 18);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Picture is required ");
+function BadgeCreateComponent_div_23_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Badge Icon is required");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } }
-function BadgeCreateComponent_div_25_Template(rf, ctx) { if (rf & 1) {
-    const _r7 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 19);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "label", 20);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](2, "Location");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "div", 0);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "div", 11);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "label");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](6, "Enter address");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "input", 21, 22);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("keydown.enter", function BadgeCreateComponent_div_25_Template_input_keydown_enter_7_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r7); return $event.preventDefault(); });
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "agm-map", 23);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "agm-marker", 24);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("dragEnd", function BadgeCreateComponent_div_25_Template_agm_marker_dragEnd_10_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r7); const ctx_r8 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](); return ctx_r8.markerDragEnd($event); });
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "h5");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](12);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "div", 2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "label", 25);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](15, "Latitude");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](16, "input", 26);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](17, "div", 2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](18, "label", 27);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](19, "Longitude");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](20, "input", 28);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+function BadgeCreateComponent_div_23_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 24);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, BadgeCreateComponent_div_23_div_1_Template, 2, 0, "div", 25);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } if (rf & 2) {
-    const ctx_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](9);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("latitude", ctx_r3.latitude)("longitude", ctx_r3.longitude)("zoom", ctx_r3.zoom);
+    const ctx_r1 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("latitude", ctx_r3.latitude)("longitude", ctx_r3.longitude)("markerDraggable", true);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate1"]("Address: ", ctx_r3.address, "");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("value", ctx_r3.latitude);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("value", ctx_r3.longitude);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r1.f.badgeIcon.errors.required);
 } }
+function BadgeCreateComponent_div_28_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Benefits is required");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} }
+function BadgeCreateComponent_div_28_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 24);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, BadgeCreateComponent_div_28_div_1_Template, 2, 0, "div", 25);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} if (rf & 2) {
+    const ctx_r2 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r2.f.benefits.errors.required);
+} }
+const _c1 = function (a0) { return { "is-invalid": a0 }; };
 class BadgeCreateComponent {
     constructor(http, router, fb, mapsAPILoader, ngZone, restService) {
         this.http = http;
@@ -5529,18 +12278,25 @@ class BadgeCreateComponent {
         this.mapsAPILoader = mapsAPILoader;
         this.ngZone = ngZone;
         this.restService = restService;
-        this.selectControl = new _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormControl"](['1']);
-        this.showMyContainer = false;
+        this.dropdownList = [];
+        this.selectedItems = [];
+        this.dropdownSettings = {};
+        this.isNotShowDiv = true;
         this.tours = [];
         this.submitted = false;
         this.form = this.fb.group({
             badgeIcon: [null],
             latitude: [''],
             longitude: [''],
-            name: [''],
-            tours: [''],
-            toggle: [Boolean],
+            name: ['', _angular_forms__WEBPACK_IMPORTED_MODULE_1__["Validators"].required],
+            tours: ['', _angular_forms__WEBPACK_IMPORTED_MODULE_1__["Validators"].required],
+            toggle: [false],
+            benefits: [''],
         });
+    }
+    get f() { return this.form.controls; }
+    toggleDisplayDiv() {
+        this.isNotShowDiv = !this.isNotShowDiv;
     }
     reloadData() {
         this.restService.get("/tours/list").subscribe((data) => {
@@ -5549,64 +12305,93 @@ class BadgeCreateComponent {
             console.log(error);
         });
     }
-    ngOnInit() {
-        this.selectControl.valueChanges.subscribe((value) => {
-            console.log('Selected value:', value);
+    initAutocomplete() {
+        const map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: -33.8688, lng: 151.2195 },
+            zoom: 13,
+            mapTypeId: "roadmap",
         });
-        this.reloadData();
-        //load Places Autocomplete
-        this.mapsAPILoader.load().then(() => {
-            this.setCurrentLocation();
-            this.geoCoder = new google.maps.Geocoder;
-            let autocomplete = new google.maps.places.Autocomplete(this.searchElementRef.nativeElement);
-            autocomplete.addListener("place_changed", () => {
-                this.ngZone.run(() => {
-                    //get the place result
-                    let place = autocomplete.getPlace();
-                    //verify result
-                    if (place.geometry === undefined || place.geometry === null) {
-                        return;
-                    }
-                    //set latitude, longitude and zoom
-                    this.latitude = place.geometry.location.lat();
-                    this.longitude = place.geometry.location.lng();
-                    this.zoom = 12;
-                });
+        this.marker =
+            new google.maps.Marker({
+                map,
+                title: "place.name",
+                position: { lat: -33.8688, lng: 151.2195 },
+                draggable: true
             });
+        google.maps.event.addListener(this.marker, 'dragend', function () {
+            console.log(this.marker.getPosition().lat());
+            console.log(this.marker.getPosition().lng());
         });
-    }
-    markerDragEnd($event) {
-        console.log($event);
-        this.latitude = $event.latLng.lat();
-        this.longitude = $event.latLng.lng();
-        this.getAddress(this.latitude, this.longitude);
-    }
-    getAddress(latitude, longitude) {
-        this.geoCoder.geocode({ 'location': { lat: latitude, lng: longitude } }, (results, status) => {
-            console.log(results);
-            console.log(status);
-            if (status === 'OK') {
-                if (results[0]) {
-                    this.zoom = 12;
-                    this.address = results[0].formatted_address;
+        map.addListener('dragend', () => {
+            console.log("place gytgyty");
+            console.log(this.marker.getPosition().lng());
+        });
+        // Create the search box and link it to the UI element.
+        const input = document.getElementById("pac-input");
+        const searchBox = new google.maps.places.SearchBox(input);
+        //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+        // Bias the SearchBox results towards current map's viewport.
+        map.addListener("bounds_changed", () => {
+            searchBox.setBounds(map.getBounds());
+        });
+        searchBox.addListener("places_changed", () => {
+            const places = searchBox.getPlaces();
+            if (places.length == 0) {
+                return;
+            }
+            const bounds = new google.maps.LatLngBounds();
+            places.forEach((place) => {
+                if (!place.geometry) {
+                    console.log("Returned place contains no geometry");
+                    return;
+                }
+                const icon = {
+                    url: place.icon,
+                    size: new google.maps.Size(71, 71),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(17, 34),
+                    scaledSize: new google.maps.Size(25, 25),
+                };
+                this.marker.setPosition(place.geometry.location);
+                console.log("place");
+                console.log(place.geometry.location.lat());
+                if (place.geometry.viewport) {
+                    // Only geocodes have viewport.
+                    bounds.union(place.geometry.viewport);
                 }
                 else {
-                    window.alert('No results found');
+                    bounds.extend(place.geometry.location);
                 }
-            }
-            else {
-                window.alert('Geocoder failed due to: ' + status);
-            }
+            });
+            map.fitBounds(bounds);
         });
     }
-    setCurrentLocation() {
-        if ('geolocation' in navigator) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                this.latitude = position.coords.latitude;
-                this.longitude = position.coords.longitude;
-                this.zoom = 15;
-            });
-        }
+    ngOnInit() {
+        this.reloadData();
+        this.initAutocomplete();
+        let tmp = [];
+        this.restService.get("/tours/list").subscribe(data => {
+            //console.log(data.data[0]._id);
+            for (let i = 0; i < data.data.length; i++) {
+                tmp.push({ item_id: data.data[i]._id, item_text: data.data[i].name });
+            }
+            this.dropdownList = tmp;
+        });
+        this.dropdownSettings = {
+            singleSelection: false,
+            idField: "item_id",
+            textField: "item_text",
+            selectAllText: "Select All",
+            unSelectAllText: "UnSelect All",
+            itemsShowLimit: 6,
+            allowSearchFilter: true
+        };
+    }
+    onItemSelect(item) {
+        console.log(item);
+    }
+    onSelectAll(items) {
+        console.log(items);
     }
     get registerFormControl() {
         return this.form.controls;
@@ -5626,21 +12411,32 @@ class BadgeCreateComponent {
         this.form.get('audio').updateValueAndValidity();
     }
     submitForm() {
+        let val = [];
         var formData = new FormData();
         formData.append("badgeIcon", this.form.get('badgeIcon').value);
-        formData.append("lat", this.latitude);
-        formData.append("long", this.longitude);
+        //formData.append("lat", this.latitude);
+        //formData.append("long", this.longitude);
         formData.append("name", this.form.value.name);
-        formData.append("tours", JSON.stringify(this.form.get('tours').value));
+        for (let i = 0; i < this.form.get('tours').value.length; i++) {
+            val.push(this.form.get('tours').value[i].item_id);
+        }
+        formData.append("tours", JSON.stringify(val));
         formData.append("toggle", this.form.value.toggle ? 1 : 0);
+        //console.log(JSON.stringify(this.form.get('tours').value));
+        formData.append("benefits", this.form.value.benefits);
+        if (this.form.value.toggle == true) {
+            formData.append("lat", this.marker.getPosition().lat());
+            formData.append("long", this.marker.getPosition().lng());
+        }
         this.submitted = true;
         if (this.form.valid) {
-            this.http.post('http://18.217.48.28:2000/badge/create', formData, { headers: this.getHeader(FormData) }).subscribe((response) => console.log(response), (error) => console.log(error));
-            // alert('Form Submitted succesfully!!!');
-            this.router.navigateByUrl('../category-list');
-            console.table(this.form.value);
+            this.http.post('http://18.217.48.28:2000/badge/create', formData, { headers: this.getHeader(FormData) }).subscribe((response) => this.refresh(response), (error) => console.log(error));
         }
-        // 
+    }
+    refresh(response) {
+        if (response['meta']['status'] == 201) {
+            this.router.navigate(['/pages/badge/badge-list']);
+        }
     }
     getHeader(isFormData) {
         let headers = new _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpHeaders"]();
@@ -5657,78 +12453,104 @@ BadgeCreateComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdef
     } if (rf & 2) {
         var _t;
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵqueryRefresh"](_t = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵloadQuery"]()) && (ctx.searchElementRef = _t.first);
-    } }, decls: 29, vars: 8, consts: [[1, "container"], [3, "formGroup", "ngSubmit"], [1, "form-group", "input-group-lg"], ["for", "name"], ["placeholder", "Name", "formControlName", "name", 1, "form-control"], [1, "md-form"], ["for", "categoryName"], ["formControlName", "tours", "id", "tours", 1, "form-control", "custom-select", 3, "multiple", "formControl"], [3, "value"], ["id", "tours", 3, "value", 4, "ngFor", "ngForOf"], ["class", "text-danger", 4, "ngIf"], [1, "form-group"], ["for", "badgeIcon"], ["type", "file", "id", "badgeIcon", "name", "badgeIcon", "formControlName", "badgeIcon", 1, "form-control", 3, "change"], ["formControlName", "toggle", "labelPosition", "start", "value", "1", 1, "form-control", 3, "click"], ["class", "form-group input-group-lg mapdiv", 4, "ngIf"], ["routerLink", "../badge-list", 1, "btn", "btn-info"], ["id", "tours", 3, "value"], [1, "text-danger"], [1, "form-group", "input-group-lg", "mapdiv"], ["for", "location"], ["type", "text", "placeholder", "Search Nearest Location", "autocorrect", "off", "autocapitalize", "off", "spellcheck", "off", "type", "text", 1, "form-control", 3, "keydown.enter"], ["search", ""], [3, "latitude", "longitude", "zoom"], [3, "latitude", "longitude", "markerDraggable", "dragEnd"], ["for", "Latitude"], ["formControlName", "latitude", 1, "form-control", 3, "value"], ["for", "Longitude"], ["formControlName", "longitude", 1, "form-control", 3, "value"]], template: function BadgeCreateComponent_Template(rf, ctx) { if (rf & 1) {
+    } }, decls: 41, vars: 18, consts: [[1, "container"], [1, "navbar", "navbar-expand-sm", "bg-primary", "navbar-dark"], [1, "navbar-nav"], [1, "nav-item"], [1, "nav-item", "right-btn"], ["href", "/pages/badge/badge-list", "routerlink", "/pages/badge/badge-list", 1, "btn", "nav-link"], [3, "formGroup", "ngSubmit"], [1, "form-group", "input-group-lg"], ["for", "name"], ["placeholder", "Name", "formControlName", "name", 1, "form-control", 3, "ngClass"], ["class", "invalid-feedback", 4, "ngIf"], ["for", "tours"], ["formControlName", "tours", 3, "placeholder", "data", "ngModel", "settings", "ngModelChange", "onSelect", "onSelectAll"], [1, "form-group"], ["for", "badgeIcon"], ["type", "file", "id", "badgeIcon", "name", "badgeIcon", "formControlName", "badgeIcon", 1, "form-control", 3, "ngClass", "change"], ["for", "benefits"], ["id", "benefits", "rows", "4", "cols", "50", "placeholder", "benefits", "formControlName", "benefits", 1, "form-control", 3, "ngClass"], ["formControlName", "toggle", 3, "click"], [1, "form-group", "input-group-lg", "mapdiv", 3, "hidden"], ["for", "location"], ["id", "pac-input", "type", "text", "placeholder", "Search Box", 1, "form-control"], ["id", "map"], [1, "btn", "btn-info"], [1, "invalid-feedback"], [4, "ngIf"]], template: function BadgeCreateComponent_Template(rf, ctx) { if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "form", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngSubmit", function BadgeCreateComponent_Template_form_ngSubmit_1_listener() { return ctx.submitForm(); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "label", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](4, "Name");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](5, "input", 4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "div", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "label", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](9, "Tours Name");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "select", 7);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "option", 8);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](12, "Select Tours");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](13, BadgeCreateComponent_option_13_Template, 2, 2, "option", 9);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](14, BadgeCreateComponent_span_14_Template, 2, 0, "span", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "nav", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "ul", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "li", 3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](5, "Create Badge");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "div", 11);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](16, "label", 12);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](17, "Badge Icon");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](18, "input", 13);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function BadgeCreateComponent_Template_input_change_18_listener($event) { return ctx.uploadProfile($event); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](19, BadgeCreateComponent_span_19_Template, 2, 0, "span", 10);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](20, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](21, "label", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](22, "Location");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](23, "nb-toggle", 14);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function BadgeCreateComponent_Template_nb_toggle_click_23_listener() { return ctx.showMyContainer = !ctx.showMyContainer; });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](24, "Location");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "li", 4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "a", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](8, "Back");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](25, BadgeCreateComponent_div_25_Template, 21, 9, "div", 15);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](26, "div", 11);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](27, "button", 16);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](28, "Create");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "form", 6);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngSubmit", function BadgeCreateComponent_Template_form_ngSubmit_9_listener() { return ctx.submitForm(); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "div", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "label", 8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](12, "Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](13, "input", 9);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](14, BadgeCreateComponent_div_14_Template, 2, 1, "div", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "div", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](16, "label", 11);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](17, "Tours Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](18, "ng-multiselect-dropdown", 12);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function BadgeCreateComponent_Template_ng_multiselect_dropdown_ngModelChange_18_listener($event) { return ctx.selectedItems = $event; })("onSelect", function BadgeCreateComponent_Template_ng_multiselect_dropdown_onSelect_18_listener($event) { return ctx.onItemSelect($event); })("onSelectAll", function BadgeCreateComponent_Template_ng_multiselect_dropdown_onSelectAll_18_listener($event) { return ctx.onSelectAll($event); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](19, "div", 13);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](20, "label", 14);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](21, "Badge Icon");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](22, "input", 15);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function BadgeCreateComponent_Template_input_change_22_listener($event) { return ctx.uploadProfile($event); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](23, BadgeCreateComponent_div_23_Template, 2, 1, "div", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](24, "div", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](25, "label", 16);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](26, "benefits");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](27, "textarea", 17);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](28, BadgeCreateComponent_div_28_Template, 2, 1, "div", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](29, "div", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](30, "nb-toggle", 18);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function BadgeCreateComponent_Template_nb_toggle_click_30_listener() { return ctx.toggleDisplayDiv(); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](31, "Location");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](32, "div", 19);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](33, "label", 20);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](34, "Location");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](35, "div", 13);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](36, "input", 21);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](37, "div", 22);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](38, "div", 13);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](39, "button", 23);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](40, "Create");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     } if (rf & 2) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("formGroup", ctx.form);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](9);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("multiple", true)("formControl", ctx.selectControl);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("formGroup", ctx.form);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](12, _c1, ctx.submitted && ctx.f.name.errors));
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("value", null);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx.tours);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.name.errors);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("placeholder", "Select Tours")("data", ctx.dropdownList)("ngModel", ctx.selectedItems)("settings", ctx.dropdownSettings);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](14, _c1, ctx.submitted && ctx.f.badgeIcon.errors));
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.tours.touched || ctx.submitted) && (ctx.registerFormControl.tours.errors == null ? null : ctx.registerFormControl.tours.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.badgeIcon.touched || ctx.submitted) && (ctx.registerFormControl.badgeIcon.errors == null ? null : ctx.registerFormControl.badgeIcon.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.showMyContainer);
-    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_1__["ɵangular_packages_forms_forms_y"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatusGroup"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormGroupDirective"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormControlName"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["SelectMultipleControlValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormControlDirective"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgSelectOption"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["ɵangular_packages_forms_forms_x"], _angular_common__WEBPACK_IMPORTED_MODULE_6__["NgForOf"], _angular_common__WEBPACK_IMPORTED_MODULE_6__["NgIf"], _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbToggleComponent"], _angular_router__WEBPACK_IMPORTED_MODULE_3__["RouterLink"], _agm_core__WEBPACK_IMPORTED_MODULE_4__["AgmMap"], _agm_core__WEBPACK_IMPORTED_MODULE_4__["AgmMarker"]], styles: ["nb-checkbox[_ngcontent-%COMP%] {\n  margin-bottom: 1rem;\n}\n\n.form-inline[_ngcontent-%COMP%]   [fullWidth][_ngcontent-%COMP%] {\n  flex: 1;\n}\n\n.form-inline[_ngcontent-%COMP%]    > *[_ngcontent-%COMP%] {\n  margin: 0 1.5rem 1.5rem 0;\n}\n\nnb-card.inline-form-card[_ngcontent-%COMP%]   nb-card-body[_ngcontent-%COMP%] {\n  padding-bottom: 0;\n}\n\nnb-card-body[_ngcontent-%COMP%] {\n  overflow: visible;\n  padding-top: 0;\n}\n\nnb-card-body[_ngcontent-%COMP%]    > *[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n}\n\n.form-inline[_ngcontent-%COMP%]   .form-group[_ngcontent-%COMP%] {\n  display: block;\n  margin: 15px 0;\n}\n\nnb-select.appearance-outline.size-medium.status-basic.shape-rectangle.nb-transition[_ngcontent-%COMP%] {\n  display: inline !important;\n}\n\n.full-name-inputs[_ngcontent-%COMP%], .validation-checkboxes[_ngcontent-%COMP%] {\n  display: flex;\n  margin: 0 -0.5rem;\n}\n\n.full-name-inputs[_ngcontent-%COMP%]    > *[_ngcontent-%COMP%], .validation-checkboxes[_ngcontent-%COMP%]    > *[_ngcontent-%COMP%] {\n  margin: 0 0.5rem;\n}\n\n.checkbox-radio[_ngcontent-%COMP%] {\n  display: flex;\n}\n\n.demo-items[_ngcontent-%COMP%] {\n  flex: 1 0 33%;\n}\n\nagm-map[_ngcontent-%COMP%] {\n  height: 300px;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvYmFkZ2UvYmFkZ2UtY3JlYXRlL2JhZGdlLWNyZWF0ZS5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNJLG1CQUFtQjtBQUN2Qjs7QUFFRTtFQUNFLE9BQU87QUFDWDs7QUFFRTtFQUNFLHlCQUF5QjtBQUM3Qjs7QUFFRTtFQUNFLGlCQUFpQjtBQUNyQjs7QUFDRTtFQUNFLGlCQUFpQjtFQUNqQixjQUFjO0FBRWxCOztBQUpFO0VBS0ksZ0JBQWdCO0FBR3RCOztBQUFFO0VBQXlCLGNBQWE7RUFBRSxjQUFjO0FBS3hEOztBQUpFO0VBQXFGLDBCQUEwQjtBQVFqSDs7QUFQRTs7RUFFRSxhQUFhO0VBQ2IsaUJBQWlCO0FBVXJCOztBQWJFOztFQU1JLGdCQUFnQjtBQVl0Qjs7QUFSRTtFQUNFLGFBQWE7QUFXakI7O0FBUkU7RUFDRSxhQUFhO0FBV2pCOztBQVJFO0VBQ0UsYUFBYTtBQVdqQiIsImZpbGUiOiJzcmMvYXBwL3BhZ2VzL2JhZGdlL2JhZGdlLWNyZWF0ZS9iYWRnZS1jcmVhdGUuY29tcG9uZW50LnNjc3MiLCJzb3VyY2VzQ29udGVudCI6WyJuYi1jaGVja2JveCB7XHJcbiAgICBtYXJnaW4tYm90dG9tOiAxcmVtO1xyXG4gIH1cclxuICBcclxuICAuZm9ybS1pbmxpbmUgW2Z1bGxXaWR0aF0ge1xyXG4gICAgZmxleDogMTtcclxuICB9XHJcbiAgXHJcbiAgLmZvcm0taW5saW5lID4gKiB7XHJcbiAgICBtYXJnaW46IDAgMS41cmVtIDEuNXJlbSAwO1xyXG4gIH1cclxuICBcclxuICBuYi1jYXJkLmlubGluZS1mb3JtLWNhcmQgbmItY2FyZC1ib2R5IHtcclxuICAgIHBhZGRpbmctYm90dG9tOiAwO1xyXG4gIH1cclxuICBuYi1jYXJkLWJvZHkge1xyXG4gICAgb3ZlcmZsb3c6IHZpc2libGU7XHJcbiAgICBwYWRkaW5nLXRvcDogMDtcclxuICBcclxuICAgID4gKiB7XHJcbiAgICAgIG1hcmdpbi10b3A6IDFyZW07XHJcbiAgICB9XHJcbiAgfVxyXG4gIC5mb3JtLWlubGluZSAuZm9ybS1ncm91cHtkaXNwbGF5OmJsb2NrOyBtYXJnaW46IDE1cHggMDt9XHJcbiAgbmItc2VsZWN0LmFwcGVhcmFuY2Utb3V0bGluZS5zaXplLW1lZGl1bS5zdGF0dXMtYmFzaWMuc2hhcGUtcmVjdGFuZ2xlLm5iLXRyYW5zaXRpb24ge2Rpc3BsYXk6IGlubGluZSAhaW1wb3J0YW50O31cclxuICAuZnVsbC1uYW1lLWlucHV0cyxcclxuICAudmFsaWRhdGlvbi1jaGVja2JveGVzIHtcclxuICAgIGRpc3BsYXk6IGZsZXg7XHJcbiAgICBtYXJnaW46IDAgLTAuNXJlbTtcclxuICBcclxuICAgID4gKiB7XHJcbiAgICAgIG1hcmdpbjogMCAwLjVyZW07XHJcbiAgICB9XHJcbiAgfVxyXG4gIFxyXG4gIC5jaGVja2JveC1yYWRpbyB7XHJcbiAgICBkaXNwbGF5OiBmbGV4O1xyXG4gIH1cclxuICBcclxuICAuZGVtby1pdGVtcyB7XHJcbiAgICBmbGV4OiAxIDAgMzMlO1xyXG4gIH1cclxuICBcclxuICBhZ20tbWFwIHtcclxuICAgIGhlaWdodDogMzAwcHg7XHJcbn1cclxuIl19 */"] });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.badgeIcon.errors);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](16, _c1, ctx.submitted && ctx.f.benefits.errors));
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.benefits.errors);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("hidden", ctx.isNotShowDiv);
+    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_1__["ɵangular_packages_forms_forms_y"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatusGroup"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormGroupDirective"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormControlName"], _angular_common__WEBPACK_IMPORTED_MODULE_6__["NgClass"], _angular_common__WEBPACK_IMPORTED_MODULE_6__["NgIf"], ng_multiselect_dropdown__WEBPACK_IMPORTED_MODULE_7__["MultiSelectComponent"], _nebular_theme__WEBPACK_IMPORTED_MODULE_8__["NbToggleComponent"]], styles: ["nb-checkbox {\n  margin-bottom: 1rem;\n}\n\n.form-inline [fullWidth] {\n  flex: 1;\n}\n\n.form-inline > * {\n  margin: 0 1.5rem 1.5rem 0;\n}\n\nnb-card.inline-form-card nb-card-body {\n  padding-bottom: 0;\n}\n\nnb-card-body {\n  overflow: visible;\n  padding-top: 0;\n}\n\nnb-card-body > * {\n  margin-top: 1rem;\n}\n\n.form-inline .form-group {\n  display: block;\n  margin: 15px 0;\n}\n\nnb-select.appearance-outline.size-medium.status-basic.shape-rectangle.nb-transition {\n  display: inline !important;\n}\n\n.full-name-inputs,\n.validation-checkboxes {\n  display: flex;\n  margin: 0 -0.5rem;\n}\n\n.full-name-inputs > *,\n.validation-checkboxes > * {\n  margin: 0 0.5rem;\n}\n\n.checkbox-radio {\n  display: flex;\n}\n\n.demo-items {\n  flex: 1 0 33%;\n}\n\nagm-map {\n  height: 300px;\n}\n\nli.nav-item.right-btn {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn {\n  background: #fff;\n}\n\nli.nav-item.right-btn a.nav-link, li.nav-item.left-btn a.nav-link {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark {\n  height: 70px;\n}\n\nli h2 {\n  color: #fff;\n}\n\nbutton {\n  margin-left: 10px;\n}\n\ndiv#map {\n  width: 100% !important;\n  height: 400px !important;\n  position: relative !important;\n}\n\n/* Optional: Makes the sample page fill the window. */\n\nhtml,\nbody {\n  height: 100%;\n  margin: 0;\n  padding: 0;\n}\n\n#description {\n  font-family: Roboto;\n  font-size: 15px;\n  font-weight: 300;\n}\n\n#infowindow-content .title {\n  font-weight: bold;\n}\n\n#infowindow-content {\n  display: none;\n}\n\n#map #infowindow-content {\n  display: inline;\n}\n\n.pac-card {\n  margin: 10px 10px 0 0;\n  border-radius: 2px 0 0 2px;\n  box-sizing: border-box;\n  -moz-box-sizing: border-box;\n  outline: none;\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);\n  background-color: #fff;\n  font-family: Roboto;\n}\n\n#pac-container {\n  padding-bottom: 12px;\n  margin-right: 12px;\n}\n\n.pac-controls {\n  display: inline-block;\n  padding: 5px 11px;\n}\n\n.pac-controls label {\n  font-family: Roboto;\n  font-size: 13px;\n  font-weight: 300;\n}\n\n#pac-input {\n  background-color: #fff;\n  font-family: inherit;\n  font-size: 17px;\n  font-weight: 400;\n  margin-left: 0;\n  padding: 0 11px 0 13px;\n  text-overflow: ellipsis;\n  width: 100%;\n  color: #222b45 !important;\n}\n\n#pac-input:focus {\n  border-color: #4d90fe;\n}\n\n#title {\n  color: #fff;\n  background-color: #4d90fe;\n  font-size: 25px;\n  font-weight: 500;\n  padding: 6px 12px;\n}\n\n#target {\n  width: 345px;\n}\n\nform {\n  margin-top: 20px;\n}\n\n.form-control::-moz-placeholder {\n  height: calc(1.5em + 0.75rem + 8px) !important;\n  font-size: 17px;\n  color: #222b45 !important;\n  font-family: inherit;\n  font-weight: 400;\n  color: #000;\n}\n\n.form-control:-ms-input-placeholder {\n  height: calc(1.5em + 0.75rem + 8px) !important;\n  font-size: 17px;\n  color: #222b45 !important;\n  font-family: inherit;\n  font-weight: 400;\n  color: #000;\n}\n\n.form-control, .form-control::placeholder {\n  height: calc(1.5em + 0.75rem + 8px) !important;\n  font-size: 17px;\n  color: #222b45 !important;\n  font-family: inherit;\n  font-weight: 400;\n  color: #000;\n}\n\n.multiselect-dropdown .dropdown-btn {\n  height: 45px !important;\n  line-height: 1.9 !important;\n  border: 1px solid #ced4da !important;\n  font-size: 17px;\n}\n\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvYmFkZ2UvYmFkZ2UtY3JlYXRlL2JhZGdlLWNyZWF0ZS5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNJLG1CQUFtQjtBQUN2Qjs7QUFFRTtFQUNFLE9BQU87QUFDWDs7QUFFRTtFQUNFLHlCQUF5QjtBQUM3Qjs7QUFFRTtFQUNFLGlCQUFpQjtBQUNyQjs7QUFDRTtFQUNFLGlCQUFpQjtFQUNqQixjQUFjO0FBRWxCOztBQUpFO0VBS0ksZ0JBQWdCO0FBR3RCOztBQUFFO0VBQXlCLGNBQWE7RUFBRSxjQUFjO0FBS3hEOztBQUpFO0VBQXFGLDBCQUEwQjtBQVFqSDs7QUFQRTs7RUFFRSxhQUFhO0VBQ2IsaUJBQWlCO0FBVXJCOztBQWJFOztFQU1JLGdCQUFnQjtBQVl0Qjs7QUFSRTtFQUNFLGFBQWE7QUFXakI7O0FBUkU7RUFDRSxhQUFhO0FBV2pCOztBQVJFO0VBQ0UsYUFBYTtBQVdqQjs7QUFUQTtFQUNFLGtCQUFrQjtFQUNsQixTQUFTO0VBQ1QsV0FBVztFQUNYLGdCQUFnQjtBQVlsQjs7QUFWQTtFQUNFLGdCQUFnQjtBQWFsQjs7QUFYQTtFQUFrRSxzQkFBc0I7RUFBRSxxQkFBcUI7RUFBRSxnQkFBZ0I7QUFpQmpJOztBQWhCQTtFQUNFLG9DQUFvQztFQUNwQyxnQ0FBaUM7QUFtQm5DOztBQWpCQTtFQUNFLFlBQVk7QUFvQmQ7O0FBbEJBO0VBQU8sV0FBVztBQXNCbEI7O0FBckJBO0VBQ0UsaUJBQ0Y7QUF1QkE7O0FBckJBO0VBQ0Usc0JBQXNCO0VBQ3RCLHdCQUF3QjtFQUN4Qiw2QkFBNkI7QUF3Qi9COztBQXJCQSxxREFBQTs7QUFDQTs7RUFFRSxZQUFZO0VBQ1osU0FBUztFQUNULFVBQVU7QUF3Qlo7O0FBckJBO0VBQ0UsbUJBQW1CO0VBQ25CLGVBQWU7RUFDZixnQkFBZ0I7QUF3QmxCOztBQXJCQTtFQUNFLGlCQUFpQjtBQXdCbkI7O0FBckJBO0VBQ0UsYUFBYTtBQXdCZjs7QUFyQkE7RUFDRSxlQUFlO0FBd0JqQjs7QUFyQkE7RUFDRSxxQkFBcUI7RUFDckIsMEJBQTBCO0VBQzFCLHNCQUFzQjtFQUN0QiwyQkFBMkI7RUFDM0IsYUFBYTtFQUNiLHdDQUF3QztFQUN4QyxzQkFBc0I7RUFDdEIsbUJBQW1CO0FBd0JyQjs7QUFyQkE7RUFDRSxvQkFBb0I7RUFDcEIsa0JBQWtCO0FBd0JwQjs7QUFyQkE7RUFDRSxxQkFBcUI7RUFDckIsaUJBQWlCO0FBd0JuQjs7QUFyQkE7RUFDRSxtQkFBbUI7RUFDbkIsZUFBZTtFQUNmLGdCQUFnQjtBQXdCbEI7O0FBckJBO0VBQ0Usc0JBQXNCO0VBQ3RCLG9CQUFvQjtFQUNwQixlQUFlO0VBQ2YsZ0JBQWdCO0VBQ2hCLGNBQWM7RUFDZCxzQkFBc0I7RUFDdEIsdUJBQXVCO0VBQ3ZCLFdBQVc7RUFDWCx5QkFBeUI7QUF3QjNCOztBQXJCQTtFQUNFLHFCQUFxQjtBQXdCdkI7O0FBckJBO0VBQ0UsV0FBVztFQUNYLHlCQUF5QjtFQUN6QixlQUFlO0VBQ2YsZ0JBQWdCO0VBQ2hCLGlCQUFpQjtBQXdCbkI7O0FBckJBO0VBQ0UsWUFBWTtBQXdCZDs7QUF0QkE7RUFDRSxnQkFBZ0I7QUF5QmxCOztBQXZCQTtFQUEwQyw4Q0FBOEM7RUFBQyxlQUFlO0VBQUMseUJBQXlCO0VBQUMsb0JBQW9CO0VBQUMsZ0JBQWdCO0VBQUMsV0FBVztBQWdDcEw7O0FBaENBO0VBQTBDLDhDQUE4QztFQUFDLGVBQWU7RUFBQyx5QkFBeUI7RUFBQyxvQkFBb0I7RUFBQyxnQkFBZ0I7RUFBQyxXQUFXO0FBZ0NwTDs7QUFoQ0E7RUFBMEMsOENBQThDO0VBQUMsZUFBZTtFQUFDLHlCQUF5QjtFQUFDLG9CQUFvQjtFQUFDLGdCQUFnQjtFQUFDLFdBQVc7QUFnQ3BMOztBQTlCQTtFQUFvQyx1QkFBdUI7RUFBRSwyQkFBMkI7RUFBQyxvQ0FBb0M7RUFBQyxlQUFjO0FBcUM1SSIsImZpbGUiOiJzcmMvYXBwL3BhZ2VzL2JhZGdlL2JhZGdlLWNyZWF0ZS9iYWRnZS1jcmVhdGUuY29tcG9uZW50LnNjc3MiLCJzb3VyY2VzQ29udGVudCI6WyJuYi1jaGVja2JveCB7XHJcbiAgICBtYXJnaW4tYm90dG9tOiAxcmVtO1xyXG4gIH1cclxuICBcclxuICAuZm9ybS1pbmxpbmUgW2Z1bGxXaWR0aF0ge1xyXG4gICAgZmxleDogMTtcclxuICB9XHJcbiAgXHJcbiAgLmZvcm0taW5saW5lID4gKiB7XHJcbiAgICBtYXJnaW46IDAgMS41cmVtIDEuNXJlbSAwO1xyXG4gIH1cclxuICBcclxuICBuYi1jYXJkLmlubGluZS1mb3JtLWNhcmQgbmItY2FyZC1ib2R5IHtcclxuICAgIHBhZGRpbmctYm90dG9tOiAwO1xyXG4gIH1cclxuICBuYi1jYXJkLWJvZHkge1xyXG4gICAgb3ZlcmZsb3c6IHZpc2libGU7XHJcbiAgICBwYWRkaW5nLXRvcDogMDtcclxuICBcclxuICAgID4gKiB7XHJcbiAgICAgIG1hcmdpbi10b3A6IDFyZW07XHJcbiAgICB9XHJcbiAgfVxyXG4gIC5mb3JtLWlubGluZSAuZm9ybS1ncm91cHtkaXNwbGF5OmJsb2NrOyBtYXJnaW46IDE1cHggMDt9XHJcbiAgbmItc2VsZWN0LmFwcGVhcmFuY2Utb3V0bGluZS5zaXplLW1lZGl1bS5zdGF0dXMtYmFzaWMuc2hhcGUtcmVjdGFuZ2xlLm5iLXRyYW5zaXRpb24ge2Rpc3BsYXk6IGlubGluZSAhaW1wb3J0YW50O31cclxuICAuZnVsbC1uYW1lLWlucHV0cyxcclxuICAudmFsaWRhdGlvbi1jaGVja2JveGVzIHtcclxuICAgIGRpc3BsYXk6IGZsZXg7XHJcbiAgICBtYXJnaW46IDAgLTAuNXJlbTtcclxuICBcclxuICAgID4gKiB7XHJcbiAgICAgIG1hcmdpbjogMCAwLjVyZW07XHJcbiAgICB9XHJcbiAgfVxyXG4gIFxyXG4gIC5jaGVja2JveC1yYWRpbyB7XHJcbiAgICBkaXNwbGF5OiBmbGV4O1xyXG4gIH1cclxuICBcclxuICAuZGVtby1pdGVtcyB7XHJcbiAgICBmbGV4OiAxIDAgMzMlO1xyXG4gIH1cclxuICBcclxuICBhZ20tbWFwIHtcclxuICAgIGhlaWdodDogMzAwcHg7XHJcbn1cclxubGkubmF2LWl0ZW0ucmlnaHQtYnRuIHtcclxuICBwb3NpdGlvbjogYWJzb2x1dGU7XHJcbiAgdG9wOiAxNXB4O1xyXG4gIHJpZ2h0OiAyMHB4O1xyXG4gIGJhY2tncm91bmQ6ICNmZmY7XHJcbn1cclxubGkubmF2LWl0ZW0ubGVmdC1idG4ge1xyXG4gIGJhY2tncm91bmQ6ICNmZmY7XHJcbn1cclxubGkubmF2LWl0ZW0ucmlnaHQtYnRuIGEubmF2LWxpbmssIGxpLm5hdi1pdGVtLmxlZnQtYnRuIGEubmF2LWxpbmt7Y29sb3I6ICMwMDAgIWltcG9ydGFudDsgdGV4dC1kZWNvcmF0aW9uOiBub25lOyBmb250LXdlaWdodDogMzAwO31cclxuLmJnLXByaW1hcnkge1xyXG4gIGJhY2tncm91bmQtY29sb3I6ICMxN2EyYjggIWltcG9ydGFudDtcclxuICBib3JkZXItY29sb3I6ICAjMTdhMmI4ICFpbXBvcnRhbnQ7XHJcbn1cclxubmF2Lm5hdmJhci5uYXZiYXItZXhwYW5kLXNtLmJnLXByaW1hcnkubmF2YmFyLWRhcmsge1xyXG4gIGhlaWdodDogNzBweDtcclxufVxyXG5saSBoMiB7Y29sb3I6ICNmZmY7fVxyXG5idXR0b257XHJcbiAgbWFyZ2luLWxlZnQ6IDEwcHhcclxufVxyXG5cclxuZGl2I21hcCB7XHJcbiAgd2lkdGg6IDEwMCUgIWltcG9ydGFudDtcclxuICBoZWlnaHQ6IDQwMHB4ICFpbXBvcnRhbnQ7XHJcbiAgcG9zaXRpb246IHJlbGF0aXZlICFpbXBvcnRhbnQ7XHJcbn1cclxuXHJcbi8qIE9wdGlvbmFsOiBNYWtlcyB0aGUgc2FtcGxlIHBhZ2UgZmlsbCB0aGUgd2luZG93LiAqL1xyXG5odG1sLFxyXG5ib2R5IHtcclxuICBoZWlnaHQ6IDEwMCU7XHJcbiAgbWFyZ2luOiAwO1xyXG4gIHBhZGRpbmc6IDA7XHJcbn1cclxuXHJcbiNkZXNjcmlwdGlvbiB7XHJcbiAgZm9udC1mYW1pbHk6IFJvYm90bztcclxuICBmb250LXNpemU6IDE1cHg7XHJcbiAgZm9udC13ZWlnaHQ6IDMwMDtcclxufVxyXG5cclxuI2luZm93aW5kb3ctY29udGVudCAudGl0bGUge1xyXG4gIGZvbnQtd2VpZ2h0OiBib2xkO1xyXG59XHJcblxyXG4jaW5mb3dpbmRvdy1jb250ZW50IHtcclxuICBkaXNwbGF5OiBub25lO1xyXG59XHJcblxyXG4jbWFwICNpbmZvd2luZG93LWNvbnRlbnQge1xyXG4gIGRpc3BsYXk6IGlubGluZTtcclxufVxyXG5cclxuLnBhYy1jYXJkIHtcclxuICBtYXJnaW46IDEwcHggMTBweCAwIDA7XHJcbiAgYm9yZGVyLXJhZGl1czogMnB4IDAgMCAycHg7XHJcbiAgYm94LXNpemluZzogYm9yZGVyLWJveDtcclxuICAtbW96LWJveC1zaXppbmc6IGJvcmRlci1ib3g7XHJcbiAgb3V0bGluZTogbm9uZTtcclxuICBib3gtc2hhZG93OiAwIDJweCA2cHggcmdiYSgwLCAwLCAwLCAwLjMpO1xyXG4gIGJhY2tncm91bmQtY29sb3I6ICNmZmY7XHJcbiAgZm9udC1mYW1pbHk6IFJvYm90bztcclxufVxyXG5cclxuI3BhYy1jb250YWluZXIge1xyXG4gIHBhZGRpbmctYm90dG9tOiAxMnB4O1xyXG4gIG1hcmdpbi1yaWdodDogMTJweDtcclxufVxyXG5cclxuLnBhYy1jb250cm9scyB7XHJcbiAgZGlzcGxheTogaW5saW5lLWJsb2NrO1xyXG4gIHBhZGRpbmc6IDVweCAxMXB4O1xyXG59XHJcblxyXG4ucGFjLWNvbnRyb2xzIGxhYmVsIHtcclxuICBmb250LWZhbWlseTogUm9ib3RvO1xyXG4gIGZvbnQtc2l6ZTogMTNweDtcclxuICBmb250LXdlaWdodDogMzAwO1xyXG59XHJcblxyXG4jcGFjLWlucHV0IHtcclxuICBiYWNrZ3JvdW5kLWNvbG9yOiAjZmZmO1xyXG4gIGZvbnQtZmFtaWx5OiBpbmhlcml0O1xyXG4gIGZvbnQtc2l6ZTogMTdweDtcclxuICBmb250LXdlaWdodDogNDAwO1xyXG4gIG1hcmdpbi1sZWZ0OiAwO1xyXG4gIHBhZGRpbmc6IDAgMTFweCAwIDEzcHg7XHJcbiAgdGV4dC1vdmVyZmxvdzogZWxsaXBzaXM7XHJcbiAgd2lkdGg6IDEwMCU7XHJcbiAgY29sb3I6ICMyMjJiNDUgIWltcG9ydGFudDtcclxufVxyXG5cclxuI3BhYy1pbnB1dDpmb2N1cyB7XHJcbiAgYm9yZGVyLWNvbG9yOiAjNGQ5MGZlO1xyXG59XHJcblxyXG4jdGl0bGUge1xyXG4gIGNvbG9yOiAjZmZmO1xyXG4gIGJhY2tncm91bmQtY29sb3I6ICM0ZDkwZmU7XHJcbiAgZm9udC1zaXplOiAyNXB4O1xyXG4gIGZvbnQtd2VpZ2h0OiA1MDA7XHJcbiAgcGFkZGluZzogNnB4IDEycHg7XHJcbn1cclxuXHJcbiN0YXJnZXQge1xyXG4gIHdpZHRoOiAzNDVweDtcclxufVxyXG5mb3JtIHtcclxuICBtYXJnaW4tdG9wOiAyMHB4O1xyXG59XHJcbi5mb3JtLWNvbnRyb2wsIC5mb3JtLWNvbnRyb2w6OnBsYWNlaG9sZGVye2hlaWdodDogY2FsYygxLjVlbSArIDAuNzVyZW0gKyA4cHgpICFpbXBvcnRhbnQ7Zm9udC1zaXplOiAxN3B4O2NvbG9yOiAjMjIyYjQ1ICFpbXBvcnRhbnQ7Zm9udC1mYW1pbHk6IGluaGVyaXQ7Zm9udC13ZWlnaHQ6IDQwMDtjb2xvcjogIzAwMDtcclxufVxyXG4ubXVsdGlzZWxlY3QtZHJvcGRvd24gLmRyb3Bkb3duLWJ0bntoZWlnaHQ6IDQ1cHggIWltcG9ydGFudDsgbGluZS1oZWlnaHQ6IDEuOSAhaW1wb3J0YW50O2JvcmRlcjogMXB4IHNvbGlkICNjZWQ0ZGEgIWltcG9ydGFudDtmb250LXNpemU6MTdweDt9Il19 */"], encapsulation: 2 });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](BadgeCreateComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
         args: [{
                 selector: 'ngx-badge-create',
                 templateUrl: './badge-create.component.html',
-                styleUrls: ['./badge-create.component.scss']
+                styleUrls: ['./badge-create.component.scss'],
+                encapsulation: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ViewEncapsulation"].None // Add this line
             }]
     }], function () { return [{ type: _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"] }, { type: _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormBuilder"] }, { type: _agm_core__WEBPACK_IMPORTED_MODULE_4__["MapsAPILoader"] }, { type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"] }, { type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__["RestService"] }]; }, { searchElementRef: [{
             type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ViewChild"],
@@ -5750,16 +12572,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "BadgeListComponent", function() { return BadgeListComponent; });
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
 /* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
-/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
-/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
+/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
 
 
 
 
 
 
-function BadgeListComponent_tr_15_Template(rf, ctx) { if (rf & 1) {
-    const _r4 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
+function BadgeListComponent_tr_22_Template(rf, ctx) { if (rf & 1) {
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "tr");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "td");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](2);
@@ -5771,11 +12592,10 @@ function BadgeListComponent_tr_15_Template(rf, ctx) { if (rf & 1) {
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](6);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "td");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "button", 5);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "button", 9);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](9, "Update");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "button", 6);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function BadgeListComponent_tr_15_Template_button_click_10_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r4); const badge_r1 = ctx.$implicit; const ctx_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](); return ctx_r3.Badge(badge_r1.id); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "button", 9);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](11, "Details");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
@@ -5790,11 +12610,14 @@ function BadgeListComponent_tr_15_Template(rf, ctx) { if (rf & 1) {
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](badge_r1.noOFtoures);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate1"]("routerLink", "../update/", badge_r1._id, "");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate1"]("routerLink", "/pages/badge/update/", badge_r1._id, "");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate1"]("routerLink", "/pages/badge/details/", badge_r1._id, "");
 } }
 class BadgeListComponent {
     constructor(restService) {
         this.restService = restService;
+        this.badges = [];
     }
     ngOnInit() {
         this.reloadData();
@@ -5806,48 +12629,52 @@ class BadgeListComponent {
             console.log(error);
         });
     }
-    deleteBadge(id) {
-        const badge = this.badges.find(x => x.i === id);
-        badge.isDeleting = true;
-        this.restService.delete(id)
-            .subscribe(() => {
-            this.badges = this.badges.filter(x => x.i !== id);
-        });
-    }
 }
 BadgeListComponent.ɵfac = function BadgeListComponent_Factory(t) { return new (t || BadgeListComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__["RestService"])); };
-BadgeListComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: BadgeListComponent, selectors: [["ngx-badge-list"]], decls: 16, vars: 1, consts: [[1, "panel", "panel-primary"], [1, "panel-heading"], [1, "panel-body"], [1, "table", "table-striped"], [4, "ngFor", "ngForOf"], [1, "btn", "btn-info", 2, "margin-left", "10px", 3, "routerLink"], [1, "btn", "btn-info", 2, "margin-left", "10px", 3, "click"]], template: function BadgeListComponent_Template(rf, ctx) { if (rf & 1) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "div", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "table", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "thead");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "tr");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](7, "Id");
+BadgeListComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: BadgeListComponent, selectors: [["ngx-badge-list"]], decls: 23, vars: 1, consts: [[1, "navbar", "navbar-expand-sm", "bg-primary", "navbar-dark"], [1, "navbar-nav"], [1, "nav-item"], [1, "nav-item", "right-btn"], ["routerLink", "../add", "routerLinkActive", "active", 1, "nav-link"], [1, "panel", "panel-primary"], [1, "panel-body"], [1, "table", "table-striped"], [4, "ngFor", "ngForOf"], [1, "btn", "btn-info", 2, "margin-left", "10px", 3, "routerLink"]], template: function BadgeListComponent_Template(rf, ctx) { if (rf & 1) {
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "nav", 0);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "ul", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "li", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](4, "Badge List");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](9, "Name");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](11, "No Of Toures");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](13, "Actions");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "li", 3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "a", 4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](7, "Add Badge");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "tbody");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](15, BadgeListComponent_tr_15_Template, 12, 4, "tr", 4);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "div", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "div", 6);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "table", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "thead");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](14, "Id");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](16, "Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](17, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](18, "No Of Tours");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](19, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](20, "Actions");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](21, "tbody");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](22, BadgeListComponent_tr_22_Template, 12, 5, "tr", 8);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     } if (rf & 2) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](15);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](22);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx.badges);
-    } }, directives: [_angular_common__WEBPACK_IMPORTED_MODULE_2__["NgForOf"], _angular_router__WEBPACK_IMPORTED_MODULE_3__["RouterLink"]], styles: ["\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiJzcmMvYXBwL3BhZ2VzL2JhZGdlL2JhZGdlLWxpc3QvYmFkZ2UtbGlzdC5jb21wb25lbnQuc2NzcyJ9 */"] });
+    } }, directives: [_angular_router__WEBPACK_IMPORTED_MODULE_2__["RouterLinkWithHref"], _angular_router__WEBPACK_IMPORTED_MODULE_2__["RouterLinkActive"], _angular_common__WEBPACK_IMPORTED_MODULE_3__["NgForOf"], _angular_router__WEBPACK_IMPORTED_MODULE_2__["RouterLink"]], styles: ["li.nav-item.right-btn[_ngcontent-%COMP%] {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn[_ngcontent-%COMP%] {\n  background: #fff;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%], li.nav-item.left-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%] {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark[_ngcontent-%COMP%] {\n  height: 70px;\n}\n\nli[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  color: #fff;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvYmFkZ2UvYmFkZ2UtbGlzdC9iYWRnZS1saXN0LmNvbXBvbmVudC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUNBO0VBQ0ksa0JBQWtCO0VBQ2xCLFNBQVM7RUFDVCxXQUFXO0VBQ1gsZ0JBQWdCO0FBQXBCOztBQUVBO0VBQ0ksZ0JBQWdCO0FBQ3BCOztBQUNBO0VBQWtFLHNCQUFzQjtFQUFFLHFCQUFxQjtFQUFFLGdCQUFnQjtBQUtqSTs7QUFKQTtFQUNJLG9DQUFvQztFQUNwQyxnQ0FBaUM7QUFPckM7O0FBTEE7RUFDSSxZQUFZO0FBUWhCOztBQU5BO0VBQU8sV0FBVztBQVVsQiIsImZpbGUiOiJzcmMvYXBwL3BhZ2VzL2JhZGdlL2JhZGdlLWxpc3QvYmFkZ2UtbGlzdC5jb21wb25lbnQuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbIlxyXG5saS5uYXYtaXRlbS5yaWdodC1idG4ge1xyXG4gICAgcG9zaXRpb246IGFic29sdXRlO1xyXG4gICAgdG9wOiAxNXB4O1xyXG4gICAgcmlnaHQ6IDIwcHg7XHJcbiAgICBiYWNrZ3JvdW5kOiAjZmZmO1xyXG59XHJcbmxpLm5hdi1pdGVtLmxlZnQtYnRuIHtcclxuICAgIGJhY2tncm91bmQ6ICNmZmY7XHJcbn1cclxubGkubmF2LWl0ZW0ucmlnaHQtYnRuIGEubmF2LWxpbmssIGxpLm5hdi1pdGVtLmxlZnQtYnRuIGEubmF2LWxpbmt7Y29sb3I6ICMwMDAgIWltcG9ydGFudDsgdGV4dC1kZWNvcmF0aW9uOiBub25lOyBmb250LXdlaWdodDogMzAwO31cclxuLmJnLXByaW1hcnkge1xyXG4gICAgYmFja2dyb3VuZC1jb2xvcjogIzE3YTJiOCAhaW1wb3J0YW50O1xyXG4gICAgYm9yZGVyLWNvbG9yOiAgIzE3YTJiOCAhaW1wb3J0YW50O1xyXG59XHJcbm5hdi5uYXZiYXIubmF2YmFyLWV4cGFuZC1zbS5iZy1wcmltYXJ5Lm5hdmJhci1kYXJrIHtcclxuICAgIGhlaWdodDogNzBweDtcclxufVxyXG5saSBoMiB7Y29sb3I6ICNmZmY7fSJdfQ== */"] });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](BadgeListComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
         args: [{
@@ -5932,8 +12759,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
 /* harmony import */ var _agm_core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @agm/core */ "./node_modules/@agm/core/__ivy_ngcc__/fesm2015/agm-core.js");
 /* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
-/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
-/* harmony import */ var _nebular_theme__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @nebular/theme */ "./node_modules/@nebular/theme/__ivy_ngcc__/fesm2015/index.js");
+/* harmony import */ var app_core_auth_services_formdata_service__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! app/core_auth/services/formdata.service */ "./src/app/core_auth/services/formdata.service.ts");
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
+/* harmony import */ var ng_multiselect_dropdown__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ng-multiselect-dropdown */ "./node_modules/ng-multiselect-dropdown/__ivy_ngcc__/fesm2015/ng-multiselect-dropdown.js");
+/* harmony import */ var _nebular_theme__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @nebular/theme */ "./node_modules/@nebular/theme/__ivy_ngcc__/fesm2015/index.js");
+
+
+
 
 
 
@@ -5949,160 +12781,241 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const _c0 = ["search"];
-function BadgeUpdateComponent_option_17_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "option", 19);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1);
+function BadgeUpdateComponent_div_14_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Name is required");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} }
+function BadgeUpdateComponent_div_14_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 24);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, BadgeUpdateComponent_div_14_div_1_Template, 2, 0, "div", 25);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } if (rf & 2) {
-    const tour_r4 = ctx.$implicit;
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("value", tour_r4._id);
+    const ctx_r0 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](tour_r4.name);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r0.f.name.errors.required);
 } }
-function BadgeUpdateComponent_span_18_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 20);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " tours name is required ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-} }
-function BadgeUpdateComponent_span_23_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 20);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Picture is required ");
+function BadgeUpdateComponent_div_27_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Benefits is required");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } }
-function BadgeUpdateComponent_div_29_Template(rf, ctx) { if (rf & 1) {
-    const _r7 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 21);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "label", 22);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](2, "Location");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "div", 0);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "div", 13);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "label");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](6, "Enter address");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "input", 23, 24);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("keydown.enter", function BadgeUpdateComponent_div_29_Template_input_keydown_enter_7_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r7); return $event.preventDefault(); });
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "agm-map", 25);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "agm-marker", 26);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("dragEnd", function BadgeUpdateComponent_div_29_Template_agm_marker_dragEnd_10_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r7); const ctx_r8 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](); return ctx_r8.markerDragEnd($event); });
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "h5");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](12);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "div", 2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "label", 27);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](15, "Latitude");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](16, "input", 28);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](17, "div", 2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](18, "label", 29);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](19, "Longitude");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](20, "input", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+function BadgeUpdateComponent_div_27_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 24);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, BadgeUpdateComponent_div_27_div_1_Template, 2, 0, "div", 25);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } if (rf & 2) {
-    const ctx_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](9);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("latitude", ctx_r3.latitude)("longitude", ctx_r3.longitude)("zoom", ctx_r3.zoom);
+    const ctx_r1 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("latitude", ctx_r3.latitude)("longitude", ctx_r3.longitude)("markerDraggable", true);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate1"]("Address: ", ctx_r3.address, "");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("value", ctx_r3.latitude);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("value", ctx_r3.longitude);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r1.f.benefits.errors.required);
 } }
+const _c1 = function (a0) { return { "is-invalid": a0 }; };
+const _c2 = function (a0) { return { "show": a0 }; };
 class BadgeUpdateComponent {
-    constructor(http, router, fb, mapsAPILoader, ngZone, restService) {
+    constructor(http, router, fb, mapsAPILoader, ngZone, restService, route, formDataService) {
         this.http = http;
         this.router = router;
         this.fb = fb;
         this.mapsAPILoader = mapsAPILoader;
         this.ngZone = ngZone;
         this.restService = restService;
-        this.badge = [];
+        this.route = route;
+        this.formDataService = formDataService;
+        this.isNotShowDiv = true;
         this.showMyContainer = false;
         this.tours = [];
+        this.badges = [];
         this.submitted = false;
+        this.dropdownList = [];
+        this.selectedItems = [];
+        this.dropdownSettings = {};
         this.form = this.fb.group({
-            id: [''],
+            _id: [''],
             badgeIcon: [null],
-            latitude: [''],
-            longitude: [''],
-            name: [''],
-            tours: [''],
-            toggle: [Boolean],
+            lat: [''],
+            long: [''],
+            name: ['', _angular_forms__WEBPACK_IMPORTED_MODULE_1__["Validators"].required],
+            tours: ['', _angular_forms__WEBPACK_IMPORTED_MODULE_1__["Validators"].required],
+            toggle: [],
+            benefits: [''],
         });
     }
-    reloadData() {
-        this.restService.get("/tours/list").subscribe((data) => {
-            this.tours = data.data;
+    get f() { return this.form.controls; }
+    toggleDisplayDiv(toggle) {
+        //alert(toggle);
+        this.isNotShowDiv = !this.isNotShowDiv;
+        if (toggle == 1) {
+            let myLatlng = { lat: parseFloat(this.badges.lat), lng: parseFloat(this.badges.long) };
+            const map = new google.maps.Map(document.getElementById("map"), {
+                center: myLatlng,
+                zoom: 15,
+                mapTypeId: "roadmap",
+            });
+            this.marker =
+                new google.maps.Marker({
+                    map,
+                    title: "place.name",
+                    position: myLatlng,
+                    draggable: true
+                });
+            this.marker.setMap(map);
+            //console.log("Marker Set");
+            google.maps.event.addListener(this.marker, 'dragend', function () {
+                google.maps.event.trigger(map, "resize");
+                console.log(this.marker.getPosition().lat());
+                console.log(this.marker.getPosition().lng());
+            });
+            map.addListener('dragend', () => {
+                google.maps.event.trigger(map, "resize");
+                console.log("get position on drag");
+                console.log(this.marker.getPosition().lng());
+            });
+            // Create the search box and link it to the UI element.
+            const input = document.getElementById("pac-input");
+            const searchBox = new google.maps.places.SearchBox(input);
+            //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+            // Bias the SearchBox results towards current map's viewport.
+            map.addListener("bounds_changed", () => {
+                searchBox.setBounds(map.getBounds());
+            });
+            searchBox.addListener("places_changed", () => {
+                const places = searchBox.getPlaces();
+                if (places.length == 0) {
+                    return;
+                }
+                const bounds = new google.maps.LatLngBounds();
+                places.forEach((place) => {
+                    if (!place.geometry) {
+                        console.log("Returned place contains no geometry");
+                        return;
+                    }
+                    const icon = {
+                        url: place.icon,
+                        size: new google.maps.Size(71, 71),
+                        origin: new google.maps.Point(0, 0),
+                        anchor: new google.maps.Point(17, 34),
+                        scaledSize: new google.maps.Size(25, 25),
+                    };
+                    this.marker.setPosition(place.geometry.location);
+                    console.log("place");
+                    console.log(place.geometry.location.lat());
+                    console.log(place.geometry.location.lng());
+                    if (place.geometry.viewport) {
+                        // Only geocodes have viewport.
+                        bounds.union(place.geometry.viewport);
+                    }
+                    else {
+                        bounds.extend(place.geometry.location);
+                    }
+                });
+                map.fitBounds(bounds);
+            });
+        }
+        else if (this.isNotShowDiv == true) {
+            const map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: -33.8688, lng: 151.2195 },
+                zoom: 13,
+                mapTypeId: "roadmap",
+            });
+            this.marker =
+                new google.maps.Marker({
+                    map,
+                    title: "place.name",
+                    position: { lat: -33.8688, lng: 151.2195 },
+                    draggable: true
+                });
+            google.maps.event.addListener(this.marker, 'dragend', function () {
+                console.log(this.marker.getPosition().lat());
+                console.log(this.marker.getPosition().lng());
+            });
+            map.addListener('dragend', () => {
+                console.log("place gytgyty");
+                console.log(this.marker.getPosition().lng());
+            });
+            // Create the search box and link it to the UI element.
+            const input = document.getElementById("pac-input");
+            const searchBox = new google.maps.places.SearchBox(input);
+            //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+            // Bias the SearchBox results towards current map's viewport.
+            map.addListener("bounds_changed", () => {
+                searchBox.setBounds(map.getBounds());
+            });
+            searchBox.addListener("places_changed", () => {
+                const places = searchBox.getPlaces();
+                if (places.length == 0) {
+                    return;
+                }
+                const bounds = new google.maps.LatLngBounds();
+                places.forEach((place) => {
+                    if (!place.geometry) {
+                        console.log("Returned place contains no geometry");
+                        return;
+                    }
+                    const icon = {
+                        url: place.icon,
+                        size: new google.maps.Size(71, 71),
+                        origin: new google.maps.Point(0, 0),
+                        anchor: new google.maps.Point(17, 34),
+                        scaledSize: new google.maps.Size(25, 25),
+                    };
+                    this.marker.setPosition(place.geometry.location);
+                    console.log("place");
+                    console.log(place.geometry.location.lat());
+                    if (place.geometry.viewport) {
+                        // Only geocodes have viewport.
+                        bounds.union(place.geometry.viewport);
+                    }
+                    else {
+                        bounds.extend(place.geometry.location);
+                    }
+                });
+                map.fitBounds(bounds);
+            });
+        }
+    }
+    ngOnInit() {
+        //this.reloadData();
+        //getData(): void {
+        let tmp = [];
+        this.restService.get("/tours/list").subscribe(data => {
+            //console.log(data.data[0]._id);
+            for (let i = 0; i < data.data.length; i++) {
+                tmp.push({ item_id: data.data[i]._id, item_text: data.data[i].name });
+            }
+            this.dropdownList = tmp;
+        });
+        var id;
+        this.activeRoute = this.route.params.subscribe(params => {
+            id = { "_id": params['id'] };
+        });
+        let sel = [];
+        this.restService.post("/badge/view", id).subscribe((data) => {
+            this.badges = data.data;
+            // console.log(this.badges.lat);
+            // console.log(this.badges.name);
+            this.toggleDisplayDiv(this.badges.toggle);
+            for (let i = 0; i < this.badges.tours.length; i++) {
+                sel.push({ item_id: this.badges.tours[i].toursId, item_text: this.badges.tours[i].tourName });
+            }
+            this.selectedItems = sel;
         }, (error) => {
             console.log(error);
         });
+        this.dropdownSettings = {
+            singleSelection: false,
+            idField: "item_id",
+            textField: "item_text",
+            selectAllText: "Select All",
+            unSelectAllText: "UnSelect All",
+            itemsShowLimit: 6,
+            allowSearchFilter: true
+        };
     }
-    ngOnInit() {
-        this.reloadData();
-        //load Places Autocomplete
-        this.mapsAPILoader.load().then(() => {
-            this.setCurrentLocation();
-            this.geoCoder = new google.maps.Geocoder;
-            let autocomplete = new google.maps.places.Autocomplete(this.searchElementRef.nativeElement);
-            autocomplete.addListener("place_changed", () => {
-                this.ngZone.run(() => {
-                    //get the place result
-                    let place = autocomplete.getPlace();
-                    //verify result
-                    if (place.geometry === undefined || place.geometry === null) {
-                        return;
-                    }
-                    //set latitude, longitude and zoom
-                    this.latitude = place.geometry.location.lat();
-                    this.longitude = place.geometry.location.lng();
-                    this.zoom = 12;
-                });
-            });
-        });
+    onItemSelect(item) {
+        console.log(item);
     }
-    markerDragEnd($event) {
-        console.log($event);
-        this.latitude = $event.latLng.lat();
-        this.longitude = $event.latLng.lng();
-        this.getAddress(this.latitude, this.longitude);
-    }
-    getAddress(latitude, longitude) {
-        this.geoCoder.geocode({ 'location': { lat: latitude, lng: longitude } }, (results, status) => {
-            console.log(results);
-            console.log(status);
-            if (status === 'OK') {
-                if (results[0]) {
-                    this.zoom = 12;
-                    this.address = results[0].formatted_address;
-                }
-                else {
-                    window.alert('No results found');
-                }
-            }
-            else {
-                window.alert('Geocoder failed due to: ' + status);
-            }
-        });
-    }
-    setCurrentLocation() {
-        if ('geolocation' in navigator) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                this.latitude = position.coords.latitude;
-                this.longitude = position.coords.longitude;
-                this.zoom = 15;
-            });
-        }
+    onSelectAll(items) {
+        console.log(items);
     }
     get registerFormControl() {
         return this.form.controls;
@@ -6123,21 +13036,33 @@ class BadgeUpdateComponent {
     }
     submitForm() {
         var formData = new FormData();
-        formData.append("badgeIcon", this.form.get('badgeIcon').value);
-        formData.append("lat", this.latitude);
-        formData.append("long", this.longitude);
+        let val = [];
+        //console.log(this.form.get('badgeIcon').value);
+        if (this.form.get('badgeIcon').value != null) {
+            formData.append("badgeIcon", this.form.get('badgeIcon').value);
+        }
         formData.append("name", this.form.value.name);
-        formData.append("tours", JSON.stringify(this.form.get('tours').value));
+        for (let i = 0; i < this.form.get('tours').value.length; i++) {
+            val.push(this.form.get('tours').value[i].item_id);
+        }
+        //console.log(val);
+        formData.append("tours", JSON.stringify(val));
         formData.append("toggle", this.form.value.toggle ? 1 : 0);
-        formData.append("id", this.form.value.id);
+        if (this.form.value.toggle == true) {
+            formData.append("lat", this.marker.getPosition().lat());
+            formData.append("long", this.marker.getPosition().lng());
+        }
+        formData.append("benefits", this.form.value.benefits);
+        formData.append("_id", this.badges._id);
         this.submitted = true;
         if (this.form.valid) {
-            this.http.post('http://18.217.48.28:2000/badge/update', formData, { headers: this.getHeader(FormData) }).subscribe((response) => console.log(response), (error) => console.log(error));
-            // alert('Form Submitted succesfully!!!');
-            this.router.navigateByUrl('../badge-list');
-            console.table(this.form.value);
+            this.http.post('http://18.217.48.28:2000/badge/update', formData, { headers: this.getHeader(FormData) }).subscribe((response) => this.refresh(response), (error) => console.log(error));
         }
-        // 
+    }
+    refresh(response) {
+        if (response['meta']['status'] == 200) {
+            this.router.navigate(['/pages/badge/badge-list']);
+        }
     }
     getHeader(isFormData) {
         let headers = new _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpHeaders"]();
@@ -6147,41 +13072,51 @@ class BadgeUpdateComponent {
         headers = headers.append('Authorization', localStorage.getItem('access_token'));
         return headers;
     }
+    ngOnDestroy() {
+        if (this.activeRoute) {
+            this.activeRoute.unsubscribe();
+        }
+    }
 }
-BadgeUpdateComponent.ɵfac = function BadgeUpdateComponent_Factory(t) { return new (t || BadgeUpdateComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormBuilder"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_agm_core__WEBPACK_IMPORTED_MODULE_4__["MapsAPILoader"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__["RestService"])); };
+BadgeUpdateComponent.ɵfac = function BadgeUpdateComponent_Factory(t) { return new (t || BadgeUpdateComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormBuilder"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_agm_core__WEBPACK_IMPORTED_MODULE_4__["MapsAPILoader"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__["RestService"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_3__["ActivatedRoute"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_formdata_service__WEBPACK_IMPORTED_MODULE_6__["FormDataService"])); };
 BadgeUpdateComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: BadgeUpdateComponent, selectors: [["ngx-badge-update"]], viewQuery: function BadgeUpdateComponent_Query(rf, ctx) { if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵviewQuery"](_c0, true);
     } if (rf & 2) {
         var _t;
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵqueryRefresh"](_t = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵloadQuery"]()) && (ctx.searchElementRef = _t.first);
-    } }, decls: 33, vars: 7, consts: [[1, "container"], [3, "formGroup", "ngSubmit"], [1, "form-group", "input-group-lg"], ["for", "id"], ["placeholder", "Id", "formControlName", "id", "name", "id", 1, "form-control"], ["for", "name"], ["placeholder", "Name", "formControlName", "name", 1, "form-control"], [1, "md-form"], ["for", "categoryName"], ["formControlName", "tours", "id", "tours", 1, "form-control", "custom-select", 3, "multiple"], [3, "value"], ["id", "tours", 3, "value", 4, "ngFor", "ngForOf"], ["class", "text-danger", 4, "ngIf"], [1, "form-group"], ["for", "badgeIcon"], ["type", "file", "id", "badgeIcon", "name", "badgeIcon", "formControlName", "badgeIcon", 1, "form-control", 3, "change"], ["formControlName", "toggle", "labelPosition", "start", "value", "1", 1, "form-control", 3, "click"], ["class", "form-group input-group-lg mapdiv", 4, "ngIf"], ["routerLink", "../badge-list", 1, "btn", "btn-info"], ["id", "tours", 3, "value"], [1, "text-danger"], [1, "form-group", "input-group-lg", "mapdiv"], ["for", "location"], ["type", "text", "placeholder", "Search Nearest Location", "autocorrect", "off", "autocapitalize", "off", "spellcheck", "off", "type", "text", 1, "form-control", 3, "keydown.enter"], ["search", ""], [3, "latitude", "longitude", "zoom"], [3, "latitude", "longitude", "markerDraggable", "dragEnd"], ["for", "Latitude"], ["formControlName", "latitude", 1, "form-control", 3, "value"], ["for", "Longitude"], ["formControlName", "longitude", 1, "form-control", 3, "value"]], template: function BadgeUpdateComponent_Template(rf, ctx) { if (rf & 1) {
+    } }, decls: 40, vars: 20, consts: [[1, "container"], [1, "navbar", "navbar-expand-sm", "bg-primary", "navbar-dark"], [1, "navbar-nav"], [1, "nav-item"], [1, "nav-item", "right-btn"], ["href", "/pages/badge/badge-list", "routerlink", "/pages/badge/badge-list", 1, "btn", "nav-link"], [3, "formGroup", "ngSubmit"], [1, "form-group", "input-group-lg"], ["for", "name"], ["placeholder", "Name", "formControlName", "name", 1, "form-control", 3, "ngModel", "ngClass", "ngModelChange"], ["class", "invalid-feedback", 4, "ngIf"], ["for", "tours"], ["formControlName", "tours", 3, "placeholder", "data", "ngModel", "settings", "ngModelChange", "onSelect", "onSelectAll"], [1, "form-group"], ["for", "badgeIcon"], ["type", "file", "id", "badgeIcon", "name", "badgeIcon", "formControlName", "badgeIcon", 1, "form-control", 3, "change"], ["for", "benefits"], ["rows", "4", "cols", "50", "id", "benefits", "placeholder", "benefits", "formControlName", "benefits", 1, "form-control", 3, "ngModel", "ngClass", "ngModelChange"], ["formControlName", "toggle", 3, "ngModel", "click", "ngModelChange"], [1, "form-group", "input-group-lg", "mapdiv", 3, "hidden", "ngClass"], ["for", "location"], ["id", "pac-input", "type", "text", "placeholder", "Search Box", 1, "form-control"], ["id", "map"], [1, "btn", "btn-info"], [1, "invalid-feedback"], [4, "ngIf"]], template: function BadgeUpdateComponent_Template(rf, ctx) { if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "form", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngSubmit", function BadgeUpdateComponent_Template_form_ngSubmit_1_listener() { return ctx.submitForm(); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "label", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](4, "Id");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "nav", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "ul", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "li", 3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](5, "Update Badge");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](5, "input", 4);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "label", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](8, "Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "li", 4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "a", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](8, "Back");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](9, "input", 6);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "div", 7);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "label", 8);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](13, "Tours Name");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "select", 9);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "option", 10);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](16, "Select Tours");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](17, BadgeUpdateComponent_option_17_Template, 2, 2, "option", 11);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "form", 6);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngSubmit", function BadgeUpdateComponent_Template_form_ngSubmit_9_listener() { return ctx.submitForm(); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "div", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "label", 8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](12, "Name");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](18, BadgeUpdateComponent_span_18_Template, 2, 0, "span", 12);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "input", 9);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function BadgeUpdateComponent_Template_input_ngModelChange_13_listener($event) { return ctx.badges.name = $event; });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](14, BadgeUpdateComponent_div_14_Template, 2, 1, "div", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "div", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](16, "label", 11);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](17, "Change Tours Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](18, "ng-multiselect-dropdown", 12);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function BadgeUpdateComponent_Template_ng_multiselect_dropdown_ngModelChange_18_listener($event) { return ctx.selectedItems = $event; })("onSelect", function BadgeUpdateComponent_Template_ng_multiselect_dropdown_onSelect_18_listener($event) { return ctx.onItemSelect($event); })("onSelectAll", function BadgeUpdateComponent_Template_ng_multiselect_dropdown_onSelectAll_18_listener($event) { return ctx.onSelectAll($event); });
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](19, "div", 13);
@@ -6191,49 +13126,65 @@ BadgeUpdateComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdef
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](22, "input", 15);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function BadgeUpdateComponent_Template_input_change_22_listener($event) { return ctx.uploadProfile($event); });
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](23, BadgeUpdateComponent_span_23_Template, 2, 0, "span", 12);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](24, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](25, "label", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](26, "Location");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](23, "div", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](24, "label", 16);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](25, "benefits");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](27, "nb-toggle", 16);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function BadgeUpdateComponent_Template_nb_toggle_click_27_listener() { return ctx.showMyContainer = !ctx.showMyContainer; });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](28, "Location");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](26, "textarea", 17);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function BadgeUpdateComponent_Template_textarea_ngModelChange_26_listener($event) { return ctx.badges.benefits = $event; });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](27, BadgeUpdateComponent_div_27_Template, 2, 1, "div", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](28, "div", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](29, "nb-toggle", 18);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function BadgeUpdateComponent_Template_nb_toggle_click_29_listener() { return ctx.toggleDisplayDiv(ctx.badges.toggle); })("ngModelChange", function BadgeUpdateComponent_Template_nb_toggle_ngModelChange_29_listener($event) { return ctx.badges.toggle = $event; });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](30, "Location");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](29, BadgeUpdateComponent_div_29_Template, 21, 9, "div", 17);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](30, "div", 13);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](31, "button", 18);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](32, "Save");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](31, "div", 19);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](32, "label", 20);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](33, "Location");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](34, "div", 13);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](35, "input", 21);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](36, "div", 22);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](37, "div", 13);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](38, "button", 23);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](39, "Save");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     } if (rf & 2) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](9);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("formGroup", ctx.form);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](13);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("multiple", true);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx.badges.name)("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](14, _c1, ctx.submitted && ctx.f.name.errors));
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("value", null);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.name.errors);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("placeholder", "Select Tours")("data", ctx.dropdownList)("ngModel", ctx.selectedItems)("settings", ctx.dropdownSettings);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx.badges.benefits)("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](16, _c1, ctx.submitted && ctx.f.benefits.errors));
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.benefits.errors);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx.tours);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.tours.touched || ctx.submitted) && (ctx.registerFormControl.tours.errors == null ? null : ctx.registerFormControl.tours.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.badgeIcon.touched || ctx.submitted) && (ctx.registerFormControl.badgeIcon.errors == null ? null : ctx.registerFormControl.badgeIcon.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.showMyContainer);
-    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_1__["ɵangular_packages_forms_forms_y"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatusGroup"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormGroupDirective"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormControlName"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["SelectMultipleControlValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgSelectOption"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["ɵangular_packages_forms_forms_x"], _angular_common__WEBPACK_IMPORTED_MODULE_6__["NgForOf"], _angular_common__WEBPACK_IMPORTED_MODULE_6__["NgIf"], _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbToggleComponent"], _angular_router__WEBPACK_IMPORTED_MODULE_3__["RouterLink"], _agm_core__WEBPACK_IMPORTED_MODULE_4__["AgmMap"], _agm_core__WEBPACK_IMPORTED_MODULE_4__["AgmMarker"]], styles: ["agm-map[_ngcontent-%COMP%] {\n  height: 300px;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvYmFkZ2UvYmFkZ2UtdXBkYXRlL2JhZGdlLXVwZGF0ZS5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNJLGFBQWE7QUFDakIiLCJmaWxlIjoic3JjL2FwcC9wYWdlcy9iYWRnZS9iYWRnZS11cGRhdGUvYmFkZ2UtdXBkYXRlLmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiYWdtLW1hcCB7XHJcbiAgICBoZWlnaHQ6IDMwMHB4O1xyXG59Il19 */"] });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx.badges.toggle);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("hidden", ctx.isNotShowDiv)("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](18, _c2, ctx.badges.toggle == 1));
+    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_1__["ɵangular_packages_forms_forms_y"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatusGroup"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormGroupDirective"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormControlName"], _angular_common__WEBPACK_IMPORTED_MODULE_7__["NgClass"], _angular_common__WEBPACK_IMPORTED_MODULE_7__["NgIf"], ng_multiselect_dropdown__WEBPACK_IMPORTED_MODULE_8__["MultiSelectComponent"], _nebular_theme__WEBPACK_IMPORTED_MODULE_9__["NbToggleComponent"]], styles: ["agm-map {\n  height: 300px;\n}\n\ninput[type=\"image\"] {\n  width: 120px;\n  height: auto;\n}\n\nli.nav-item.right-btn {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn {\n  background: #fff;\n}\n\nli.nav-item.right-btn a.nav-link, li.nav-item.left-btn a.nav-link {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark {\n  height: 70px;\n}\n\nli h2 {\n  color: #fff;\n}\n\nform {\n  margin-top: 20px;\n}\n\ndiv#map {\n  width: 100% !important;\n  height: 400px !important;\n  position: relative !important;\n}\n\n/* Optional: Makes the sample page fill the window. */\n\nhtml,\nbody {\n  height: 100%;\n  margin: 0;\n  padding: 0;\n}\n\n#description {\n  font-family: Roboto;\n  font-size: 15px;\n  font-weight: 300;\n}\n\n#infowindow-content .title {\n  font-weight: bold;\n}\n\n#infowindow-content {\n  display: none;\n}\n\n#map #infowindow-content {\n  display: inline;\n}\n\n.pac-card {\n  margin: 10px 10px 0 0;\n  border-radius: 2px 0 0 2px;\n  box-sizing: border-box;\n  -moz-box-sizing: border-box;\n  outline: none;\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);\n  background-color: #fff;\n  font-family: Roboto;\n}\n\n#pac-container {\n  padding-bottom: 12px;\n  margin-right: 12px;\n}\n\n.pac-controls {\n  display: inline-block;\n  padding: 5px 11px;\n}\n\n.pac-controls label {\n  font-family: Roboto;\n  font-size: 13px;\n  font-weight: 300;\n}\n\n#pac-input {\n  background-color: #fff;\n  font-family: inherit;\n  font-size: 17px;\n  font-weight: 400;\n  margin-left: 0;\n  padding: 0 11px 0 13px;\n  text-overflow: ellipsis;\n  width: 100%;\n  color: #222b45 !important;\n}\n\n#pac-input:focus {\n  border-color: #4d90fe;\n}\n\n#title {\n  color: #fff;\n  background-color: #4d90fe;\n  font-size: 25px;\n  font-weight: 500;\n  padding: 6px 12px;\n}\n\n#target {\n  width: 345px;\n}\n\n.form-group.input-group-lg.mapdiv.show {\n  display: block !important;\n}\n\n.form-group.input-group-lg.mapdiv {\n  display: none !important;\n}\n\nform {\n  margin-top: 20px;\n}\n\n.form-control::-moz-placeholder {\n  height: calc(1.5em + 0.75rem + 8px) !important;\n  font-size: 17px;\n  color: #222b45 !important;\n  font-family: inherit;\n  font-weight: 400;\n  color: #000;\n}\n\n.form-control:-ms-input-placeholder {\n  height: calc(1.5em + 0.75rem + 8px) !important;\n  font-size: 17px;\n  color: #222b45 !important;\n  font-family: inherit;\n  font-weight: 400;\n  color: #000;\n}\n\n.form-control, .form-control::placeholder {\n  height: calc(1.5em + 0.75rem + 8px) !important;\n  font-size: 17px;\n  color: #222b45 !important;\n  font-family: inherit;\n  font-weight: 400;\n  color: #000;\n}\n\n.multiselect-dropdown .dropdown-btn {\n  height: 45px !important;\n  line-height: 1.9 !important;\n  border: 1px solid #ced4da !important;\n  font-size: 17px;\n}\n\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvYmFkZ2UvYmFkZ2UtdXBkYXRlL2JhZGdlLXVwZGF0ZS5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNJLGFBQWE7QUFDakI7O0FBQ0E7RUFDSSxZQUFZO0VBQ1osWUFBWTtBQUVoQjs7QUFBQTtFQUNJLGtCQUFrQjtFQUNsQixTQUFTO0VBQ1QsV0FBVztFQUNYLGdCQUFnQjtBQUdwQjs7QUFEQTtFQUNJLGdCQUFnQjtBQUlwQjs7QUFGQTtFQUFrRSxzQkFBc0I7RUFBRSxxQkFBcUI7RUFBRSxnQkFBZ0I7QUFRakk7O0FBUEE7RUFDSSxvQ0FBb0M7RUFDcEMsZ0NBQWlDO0FBVXJDOztBQVJBO0VBQ0ksWUFBWTtBQVdoQjs7QUFUQTtFQUFPLFdBQVc7QUFhbEI7O0FBWkE7RUFBTSxnQkFBZ0I7QUFnQnRCOztBQWRBO0VBQ0ksc0JBQXNCO0VBQ3RCLHdCQUF3QjtFQUN4Qiw2QkFBNkI7QUFpQmpDOztBQWRFLHFEQUFBOztBQUNBOztFQUVFLFlBQVk7RUFDWixTQUFTO0VBQ1QsVUFBVTtBQWlCZDs7QUFkRTtFQUNFLG1CQUFtQjtFQUNuQixlQUFlO0VBQ2YsZ0JBQWdCO0FBaUJwQjs7QUFkRTtFQUNFLGlCQUFpQjtBQWlCckI7O0FBZEU7RUFDRSxhQUFhO0FBaUJqQjs7QUFkRTtFQUNFLGVBQWU7QUFpQm5COztBQWRFO0VBQ0UscUJBQXFCO0VBQ3JCLDBCQUEwQjtFQUMxQixzQkFBc0I7RUFDdEIsMkJBQTJCO0VBQzNCLGFBQWE7RUFDYix3Q0FBd0M7RUFDeEMsc0JBQXNCO0VBQ3RCLG1CQUFtQjtBQWlCdkI7O0FBZEU7RUFDRSxvQkFBb0I7RUFDcEIsa0JBQWtCO0FBaUJ0Qjs7QUFkRTtFQUNFLHFCQUFxQjtFQUNyQixpQkFBaUI7QUFpQnJCOztBQWRFO0VBQ0UsbUJBQW1CO0VBQ25CLGVBQWU7RUFDZixnQkFBZ0I7QUFpQnBCOztBQWRFO0VBQ0Usc0JBQXNCO0VBQ3RCLG9CQUFvQjtFQUNwQixlQUFlO0VBQ2YsZ0JBQWdCO0VBQ2hCLGNBQWM7RUFDZCxzQkFBc0I7RUFDdEIsdUJBQXVCO0VBQ3ZCLFdBQVc7RUFDWCx5QkFBeUI7QUFpQjdCOztBQWRFO0VBQ0UscUJBQXFCO0FBaUJ6Qjs7QUFkRTtFQUNFLFdBQVc7RUFDWCx5QkFBeUI7RUFDekIsZUFBZTtFQUNmLGdCQUFnQjtFQUNoQixpQkFBaUI7QUFpQnJCOztBQWRFO0VBQ0UsWUFBWTtBQWlCaEI7O0FBZkU7RUFDRSx5QkFBeUI7QUFrQjdCOztBQWhCQTtFQUNFLHdCQUF3QjtBQW1CMUI7O0FBakJBO0VBQ0UsZ0JBQWdCO0FBb0JsQjs7QUFsQkE7RUFBMEMsOENBQThDO0VBQUMsZUFBZTtFQUFDLHlCQUF5QjtFQUFDLG9CQUFvQjtFQUFDLGdCQUFnQjtFQUFDLFdBQVc7QUEyQnBMOztBQTNCQTtFQUEwQyw4Q0FBOEM7RUFBQyxlQUFlO0VBQUMseUJBQXlCO0VBQUMsb0JBQW9CO0VBQUMsZ0JBQWdCO0VBQUMsV0FBVztBQTJCcEw7O0FBM0JBO0VBQTBDLDhDQUE4QztFQUFDLGVBQWU7RUFBQyx5QkFBeUI7RUFBQyxvQkFBb0I7RUFBQyxnQkFBZ0I7RUFBQyxXQUFXO0FBMkJwTDs7QUF6QkE7RUFBb0MsdUJBQXVCO0VBQUUsMkJBQTJCO0VBQUMsb0NBQW9DO0VBQUMsZUFBYztBQWdDNUkiLCJmaWxlIjoic3JjL2FwcC9wYWdlcy9iYWRnZS9iYWRnZS11cGRhdGUvYmFkZ2UtdXBkYXRlLmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiYWdtLW1hcCB7XHJcbiAgICBoZWlnaHQ6IDMwMHB4O1xyXG59XHJcbmlucHV0W3R5cGU9XCJpbWFnZVwiXSB7XHJcbiAgICB3aWR0aDogMTIwcHg7XHJcbiAgICBoZWlnaHQ6IGF1dG87XHJcbn1cclxubGkubmF2LWl0ZW0ucmlnaHQtYnRuIHtcclxuICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTtcclxuICAgIHRvcDogMTVweDtcclxuICAgIHJpZ2h0OiAyMHB4O1xyXG4gICAgYmFja2dyb3VuZDogI2ZmZjtcclxufVxyXG5saS5uYXYtaXRlbS5sZWZ0LWJ0biB7XHJcbiAgICBiYWNrZ3JvdW5kOiAjZmZmO1xyXG59XHJcbmxpLm5hdi1pdGVtLnJpZ2h0LWJ0biBhLm5hdi1saW5rLCBsaS5uYXYtaXRlbS5sZWZ0LWJ0biBhLm5hdi1saW5re2NvbG9yOiAjMDAwICFpbXBvcnRhbnQ7IHRleHQtZGVjb3JhdGlvbjogbm9uZTsgZm9udC13ZWlnaHQ6IDMwMDt9XHJcbi5iZy1wcmltYXJ5IHtcclxuICAgIGJhY2tncm91bmQtY29sb3I6ICMxN2EyYjggIWltcG9ydGFudDtcclxuICAgIGJvcmRlci1jb2xvcjogICMxN2EyYjggIWltcG9ydGFudDtcclxufVxyXG5uYXYubmF2YmFyLm5hdmJhci1leHBhbmQtc20uYmctcHJpbWFyeS5uYXZiYXItZGFyayB7XHJcbiAgICBoZWlnaHQ6IDcwcHg7XHJcbn1cclxubGkgaDIge2NvbG9yOiAjZmZmO31cclxuZm9ybSB7bWFyZ2luLXRvcDogMjBweDt9XHJcblxyXG5kaXYjbWFwIHtcclxuICAgIHdpZHRoOiAxMDAlICFpbXBvcnRhbnQ7XHJcbiAgICBoZWlnaHQ6IDQwMHB4ICFpbXBvcnRhbnQ7XHJcbiAgICBwb3NpdGlvbjogcmVsYXRpdmUgIWltcG9ydGFudDtcclxuICB9XHJcbiAgXHJcbiAgLyogT3B0aW9uYWw6IE1ha2VzIHRoZSBzYW1wbGUgcGFnZSBmaWxsIHRoZSB3aW5kb3cuICovXHJcbiAgaHRtbCxcclxuICBib2R5IHtcclxuICAgIGhlaWdodDogMTAwJTtcclxuICAgIG1hcmdpbjogMDtcclxuICAgIHBhZGRpbmc6IDA7XHJcbiAgfVxyXG4gIFxyXG4gICNkZXNjcmlwdGlvbiB7XHJcbiAgICBmb250LWZhbWlseTogUm9ib3RvO1xyXG4gICAgZm9udC1zaXplOiAxNXB4O1xyXG4gICAgZm9udC13ZWlnaHQ6IDMwMDtcclxuICB9XHJcbiAgXHJcbiAgI2luZm93aW5kb3ctY29udGVudCAudGl0bGUge1xyXG4gICAgZm9udC13ZWlnaHQ6IGJvbGQ7XHJcbiAgfVxyXG4gIFxyXG4gICNpbmZvd2luZG93LWNvbnRlbnQge1xyXG4gICAgZGlzcGxheTogbm9uZTtcclxuICB9XHJcbiAgXHJcbiAgI21hcCAjaW5mb3dpbmRvdy1jb250ZW50IHtcclxuICAgIGRpc3BsYXk6IGlubGluZTtcclxuICB9XHJcbiAgXHJcbiAgLnBhYy1jYXJkIHtcclxuICAgIG1hcmdpbjogMTBweCAxMHB4IDAgMDtcclxuICAgIGJvcmRlci1yYWRpdXM6IDJweCAwIDAgMnB4O1xyXG4gICAgYm94LXNpemluZzogYm9yZGVyLWJveDtcclxuICAgIC1tb3otYm94LXNpemluZzogYm9yZGVyLWJveDtcclxuICAgIG91dGxpbmU6IG5vbmU7XHJcbiAgICBib3gtc2hhZG93OiAwIDJweCA2cHggcmdiYSgwLCAwLCAwLCAwLjMpO1xyXG4gICAgYmFja2dyb3VuZC1jb2xvcjogI2ZmZjtcclxuICAgIGZvbnQtZmFtaWx5OiBSb2JvdG87XHJcbiAgfVxyXG4gIFxyXG4gICNwYWMtY29udGFpbmVyIHtcclxuICAgIHBhZGRpbmctYm90dG9tOiAxMnB4O1xyXG4gICAgbWFyZ2luLXJpZ2h0OiAxMnB4O1xyXG4gIH1cclxuICBcclxuICAucGFjLWNvbnRyb2xzIHtcclxuICAgIGRpc3BsYXk6IGlubGluZS1ibG9jaztcclxuICAgIHBhZGRpbmc6IDVweCAxMXB4O1xyXG4gIH1cclxuICBcclxuICAucGFjLWNvbnRyb2xzIGxhYmVsIHtcclxuICAgIGZvbnQtZmFtaWx5OiBSb2JvdG87XHJcbiAgICBmb250LXNpemU6IDEzcHg7XHJcbiAgICBmb250LXdlaWdodDogMzAwO1xyXG4gIH1cclxuICBcclxuICAjcGFjLWlucHV0IHtcclxuICAgIGJhY2tncm91bmQtY29sb3I6ICNmZmY7XHJcbiAgICBmb250LWZhbWlseTogaW5oZXJpdDtcclxuICAgIGZvbnQtc2l6ZTogMTdweDtcclxuICAgIGZvbnQtd2VpZ2h0OiA0MDA7XHJcbiAgICBtYXJnaW4tbGVmdDogMDtcclxuICAgIHBhZGRpbmc6IDAgMTFweCAwIDEzcHg7XHJcbiAgICB0ZXh0LW92ZXJmbG93OiBlbGxpcHNpcztcclxuICAgIHdpZHRoOiAxMDAlO1xyXG4gICAgY29sb3I6ICMyMjJiNDUgIWltcG9ydGFudDtcclxuICB9XHJcbiAgXHJcbiAgI3BhYy1pbnB1dDpmb2N1cyB7XHJcbiAgICBib3JkZXItY29sb3I6ICM0ZDkwZmU7XHJcbiAgfVxyXG4gIFxyXG4gICN0aXRsZSB7XHJcbiAgICBjb2xvcjogI2ZmZjtcclxuICAgIGJhY2tncm91bmQtY29sb3I6ICM0ZDkwZmU7XHJcbiAgICBmb250LXNpemU6IDI1cHg7XHJcbiAgICBmb250LXdlaWdodDogNTAwO1xyXG4gICAgcGFkZGluZzogNnB4IDEycHg7XHJcbiAgfVxyXG4gIFxyXG4gICN0YXJnZXQge1xyXG4gICAgd2lkdGg6IDM0NXB4O1xyXG4gIH1cclxuICAuZm9ybS1ncm91cC5pbnB1dC1ncm91cC1sZy5tYXBkaXYuc2hvdyB7XHJcbiAgICBkaXNwbGF5OiBibG9jayAhaW1wb3J0YW50O1xyXG59XHJcbi5mb3JtLWdyb3VwLmlucHV0LWdyb3VwLWxnLm1hcGRpdiB7XHJcbiAgZGlzcGxheTogbm9uZSAhaW1wb3J0YW50O1xyXG59XHJcbmZvcm0ge1xyXG4gIG1hcmdpbi10b3A6IDIwcHg7XHJcbn1cclxuLmZvcm0tY29udHJvbCwgLmZvcm0tY29udHJvbDo6cGxhY2Vob2xkZXJ7aGVpZ2h0OiBjYWxjKDEuNWVtICsgMC43NXJlbSArIDhweCkgIWltcG9ydGFudDtmb250LXNpemU6IDE3cHg7Y29sb3I6ICMyMjJiNDUgIWltcG9ydGFudDtmb250LWZhbWlseTogaW5oZXJpdDtmb250LXdlaWdodDogNDAwO2NvbG9yOiAjMDAwO1xyXG59XHJcbi5tdWx0aXNlbGVjdC1kcm9wZG93biAuZHJvcGRvd24tYnRue2hlaWdodDogNDVweCAhaW1wb3J0YW50OyBsaW5lLWhlaWdodDogMS45ICFpbXBvcnRhbnQ7Ym9yZGVyOiAxcHggc29saWQgI2NlZDRkYSAhaW1wb3J0YW50O2ZvbnQtc2l6ZToxN3B4O30iXX0= */"], encapsulation: 2 });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](BadgeUpdateComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
         args: [{
                 selector: 'ngx-badge-update',
                 templateUrl: './badge-update.component.html',
-                styleUrls: ['./badge-update.component.scss']
+                styleUrls: ['./badge-update.component.scss'],
+                encapsulation: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ViewEncapsulation"].None
             }]
-    }], function () { return [{ type: _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"] }, { type: _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormBuilder"] }, { type: _agm_core__WEBPACK_IMPORTED_MODULE_4__["MapsAPILoader"] }, { type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"] }, { type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__["RestService"] }]; }, { searchElementRef: [{
+    }], function () { return [{ type: _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"] }, { type: _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormBuilder"] }, { type: _agm_core__WEBPACK_IMPORTED_MODULE_4__["MapsAPILoader"] }, { type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"] }, { type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__["RestService"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_3__["ActivatedRoute"] }, { type: app_core_auth_services_formdata_service__WEBPACK_IMPORTED_MODULE_6__["FormDataService"] }]; }, { searchElementRef: [{
             type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ViewChild"],
             args: ['search']
         }] }); })();
@@ -6252,9 +13203,11 @@ BadgeUpdateComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdef
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "BadgeViewComponent", function() { return BadgeViewComponent; });
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
-/* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
-/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
+/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
+/* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
 /* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
+///<reference types="@types/googlemaps" />;
+///<reference types="@types/googlemaps" />;
 
 
 
@@ -6262,66 +13215,162 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-function BadgeViewComponent_div_3_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "div");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "label");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "b");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](4, "Name: ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](5);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "div");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "label");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "b");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](9, "No Of Badge: ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](10);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+const _c0 = ["gmap"];
+function BadgeViewComponent_p_28_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "p");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } if (rf & 2) {
-    const ctx_r0 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate1"](" ", ctx_r0.badge.name, " ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate1"](" ", ctx_r0.badge.noOFtoures, " ");
+    const tours_r2 = ctx.$implicit;
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](tours_r2.tourName);
 } }
+const _c1 = function (a0) { return { "hide": a0 }; };
 class BadgeViewComponent {
-    constructor(restService, router) {
+    constructor(restService, router, route, ngZone) {
         this.restService = restService;
         this.router = router;
+        this.route = route;
+        this.ngZone = ngZone;
+        this.showMyContainer = false;
+        this.tours = [];
+        this.badges = [];
+        this.submitted = false;
+        this.isHidden = false;
+    }
+    ngAfterContentInit(lat, long) {
+        let mapProp = {
+            center: new google.maps.LatLng(lat, long),
+            zoom: 15,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        this.map = new google.maps.Map(this.gmapElement.nativeElement, mapProp);
+        let location = new google.maps.LatLng(this.badges.lat, this.badges.long);
+        console.log('aaa');
+        let marker = new google.maps.Marker({
+            position: location,
+            map: this.map,
+            draggable: true
+        });
+    }
+    setMapType(mapTypeId) {
+        this.map.setMapTypeId(mapTypeId);
     }
     ngOnInit() {
-        this.restService.get("/category/categoryList").subscribe((data) => {
+        var id;
+        this.activeRoute = this.route.params.subscribe(params => {
+            id = { "_id": params['id'] };
+        });
+        this.restService.post("/badge/view", id).subscribe((data) => {
             this.badges = data.data;
+            console.log(this.badges.benefits);
+            this.ngAfterContentInit(this.badges.lat, this.badges.long);
+        }, (error) => {
+            console.log(error);
+        });
+        this.restService.get("/tours/list").subscribe((data) => {
+            this.tours = data.data;
         }, (error) => {
             console.log(error);
         });
     }
-    list() {
-        this.router.navigate(['categories/category-list']);
+    ngOnDestroy() {
+        if (this.activeRoute) {
+            this.activeRoute.unsubscribe();
+        }
     }
 }
-BadgeViewComponent.ɵfac = function BadgeViewComponent_Factory(t) { return new (t || BadgeViewComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__["RestService"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_2__["Router"])); };
-BadgeViewComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: BadgeViewComponent, selectors: [["ngx-badge-view"]], decls: 9, vars: 1, consts: [[4, "ngIf"], [1, "btn", "btn-primary", 3, "click"]], template: function BadgeViewComponent_Template(rf, ctx) { if (rf & 1) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "h2");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Category Details");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](2, "hr");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](3, BadgeViewComponent_div_3_Template, 11, 2, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](4, "br");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](5, "br");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "button", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function BadgeViewComponent_Template_button_click_6_listener() { return ctx.list(); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](7, "Back to Category List");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](8, "br");
+BadgeViewComponent.ɵfac = function BadgeViewComponent_Factory(t) { return new (t || BadgeViewComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_2__["RestService"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_1__["Router"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_1__["ActivatedRoute"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"])); };
+BadgeViewComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: BadgeViewComponent, selectors: [["ngx-badge-view"]], viewQuery: function BadgeViewComponent_Query(rf, ctx) { if (rf & 1) {
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵviewQuery"](_c0, true);
     } if (rf & 2) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.badges);
-    } }, directives: [_angular_common__WEBPACK_IMPORTED_MODULE_3__["NgIf"]], styles: ["\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiJzcmMvYXBwL3BhZ2VzL2JhZGdlL2JhZGdlLXZpZXcvYmFkZ2Utdmlldy5jb21wb25lbnQuc2NzcyJ9 */"] });
+        var _t;
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵqueryRefresh"](_t = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵloadQuery"]()) && (ctx.gmapElement = _t.first);
+    } }, decls: 42, vars: 8, consts: [[1, "navbar", "navbar-expand-sm", "bg-primary", "navbar-dark"], [1, "navbar-nav"], [1, "nav-item"], [1, "nav-item", "right-btn"], ["href", "/pages/badge/badge-list", "routerlink", "/pages/badge/badge-list", 1, "btn", "nav-link"], [1, "panel", "panel-primary"], [1, "panel-body"], [1, "table", "table-striped"], ["target", "_blank", 3, "href"], ["alt", "Picture", 3, "src"], [4, "ngFor", "ngForOf"], [3, "ngClass"], [1, "form-group", "input-group-lg"], [1, "container"], [2, "width", "100%", "height", "400px"], ["gmap", ""]], template: function BadgeViewComponent_Template(rf, ctx) { if (rf & 1) {
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "nav", 0);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "ul", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "li", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](4, "Badge Detail");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "li", 3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "a", 4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](7, "Back");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "div", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "div", 6);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "table", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "tbody");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](14, "Badge Icon");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "td");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](16, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](17, "a", 8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](18, "img", 9);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](19, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](20, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](21, "Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](22, "td");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](23);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](24, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](25, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](26, "Tours Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](27, "td");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](28, BadgeViewComponent_p_28_Template, 2, 1, "p", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](29, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](30, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](31, "Benefits");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](32, "td");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](33);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](34, "tr", 11);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](35, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](36, "Location");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](37, "td");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](38, "div", 12);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](39, "div", 13);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](40, "div", 14, 15);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+    } if (rf & 2) {
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](17);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("href", ctx.badges.badgeIcon, _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵsanitizeUrl"]);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("src", ctx.badges.badgeIcon, _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵsanitizeUrl"]);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](ctx.badges.name);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx.badges.tours);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](ctx.badges.benefits);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](6, _c1, ctx.badges.toggle == 0));
+    } }, directives: [_angular_common__WEBPACK_IMPORTED_MODULE_3__["NgForOf"], _angular_common__WEBPACK_IMPORTED_MODULE_3__["NgClass"]], styles: ["agm-map[_ngcontent-%COMP%] {\n  height: 300px;\n}\n\nth[_ngcontent-%COMP%] {\n  width: 170px;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%] {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn[_ngcontent-%COMP%] {\n  background: #fff;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%], li.nav-item.left-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%] {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark[_ngcontent-%COMP%] {\n  height: 70px;\n}\n\nli[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  color: #fff;\n}\n\nimg[_ngcontent-%COMP%] {\n  width: 90px;\n  height: auto;\n}\n\ntd[_ngcontent-%COMP%]   p[_ngcontent-%COMP%] {\n  display: inline-block;\n  margin-right: 0px;\n  border-right: 2px solid #000;\n  padding: 0 10px;\n}\n\ntd[_ngcontent-%COMP%]   p[_ngcontent-%COMP%]:first-child {\n  padding-left: 0;\n}\n\ntd[_ngcontent-%COMP%]   p[_ngcontent-%COMP%]:last-child {\n  border-right: none;\n}\n\ntr.hide[_ngcontent-%COMP%] {\n  display: none;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvYmFkZ2UvYmFkZ2Utdmlldy9iYWRnZS12aWV3LmNvbXBvbmVudC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0VBQ0ksYUFBYTtBQUNqQjs7QUFDQTtFQUNJLFlBQVk7QUFFaEI7O0FBQUE7RUFDSSxrQkFBa0I7RUFDbEIsU0FBUztFQUNULFdBQVc7RUFDWCxnQkFBZ0I7QUFHcEI7O0FBREE7RUFDSSxnQkFBZ0I7QUFJcEI7O0FBRkE7RUFBa0Usc0JBQXNCO0VBQUUscUJBQXFCO0VBQUUsZ0JBQWdCO0FBUWpJOztBQVBBO0VBQ0ksb0NBQW9DO0VBQ3BDLGdDQUFpQztBQVVyQzs7QUFSQTtFQUNJLFlBQVk7QUFXaEI7O0FBVEE7RUFBTyxXQUFXO0FBYWxCOztBQVpBO0VBQUssV0FBVztFQUFFLFlBQVk7QUFpQjlCOztBQWhCQTtFQUNJLHFCQUFxQjtFQUNyQixpQkFBaUI7RUFDakIsNEJBQTRCO0VBQzVCLGVBQWU7QUFtQm5COztBQWpCQTtFQUFrQixlQUFlO0FBcUJqQzs7QUFwQkE7RUFBaUIsa0JBQWtCO0FBd0JuQzs7QUF2QkE7RUFDSSxhQUFhO0FBMEJqQiIsImZpbGUiOiJzcmMvYXBwL3BhZ2VzL2JhZGdlL2JhZGdlLXZpZXcvYmFkZ2Utdmlldy5jb21wb25lbnQuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbImFnbS1tYXAge1xyXG4gICAgaGVpZ2h0OiAzMDBweDtcclxufVxyXG50aHtcclxuICAgIHdpZHRoOiAxNzBweDtcclxufVxyXG5saS5uYXYtaXRlbS5yaWdodC1idG4ge1xyXG4gICAgcG9zaXRpb246IGFic29sdXRlO1xyXG4gICAgdG9wOiAxNXB4O1xyXG4gICAgcmlnaHQ6IDIwcHg7XHJcbiAgICBiYWNrZ3JvdW5kOiAjZmZmO1xyXG59XHJcbmxpLm5hdi1pdGVtLmxlZnQtYnRuIHtcclxuICAgIGJhY2tncm91bmQ6ICNmZmY7XHJcbn1cclxubGkubmF2LWl0ZW0ucmlnaHQtYnRuIGEubmF2LWxpbmssIGxpLm5hdi1pdGVtLmxlZnQtYnRuIGEubmF2LWxpbmt7Y29sb3I6ICMwMDAgIWltcG9ydGFudDsgdGV4dC1kZWNvcmF0aW9uOiBub25lOyBmb250LXdlaWdodDogMzAwO31cclxuLmJnLXByaW1hcnkge1xyXG4gICAgYmFja2dyb3VuZC1jb2xvcjogIzE3YTJiOCAhaW1wb3J0YW50O1xyXG4gICAgYm9yZGVyLWNvbG9yOiAgIzE3YTJiOCAhaW1wb3J0YW50O1xyXG59XHJcbm5hdi5uYXZiYXIubmF2YmFyLWV4cGFuZC1zbS5iZy1wcmltYXJ5Lm5hdmJhci1kYXJrIHtcclxuICAgIGhlaWdodDogNzBweDtcclxufVxyXG5saSBoMiB7Y29sb3I6ICNmZmY7fVxyXG5pbWcge3dpZHRoOiA5MHB4OyBoZWlnaHQ6IGF1dG87fVxyXG50ZCBwIHtcclxuICAgIGRpc3BsYXk6IGlubGluZS1ibG9jaztcclxuICAgIG1hcmdpbi1yaWdodDogMHB4O1xyXG4gICAgYm9yZGVyLXJpZ2h0OiAycHggc29saWQgIzAwMDtcclxuICAgIHBhZGRpbmc6IDAgMTBweDtcclxufVxyXG50ZCBwOmZpcnN0LWNoaWxkIHtwYWRkaW5nLWxlZnQ6IDA7fVxyXG50ZCBwOmxhc3QtY2hpbGQge2JvcmRlci1yaWdodDogbm9uZTt9XHJcbnRyLmhpZGUge1xyXG4gICAgZGlzcGxheTogbm9uZTtcclxufSJdfQ== */"] });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](BadgeViewComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
         args: [{
@@ -6329,7 +13378,10 @@ BadgeViewComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefin
                 templateUrl: './badge-view.component.html',
                 styleUrls: ['./badge-view.component.scss']
             }]
-    }], function () { return [{ type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__["RestService"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_2__["Router"] }]; }, null); })();
+    }], function () { return [{ type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_2__["RestService"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_1__["Router"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_1__["ActivatedRoute"] }, { type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"] }]; }, { gmapElement: [{
+            type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ViewChild"],
+            args: ['gmap']
+        }] }); })();
 
 
 /***/ }),
@@ -6355,29 +13407,15 @@ class BadgeComponent {
     }
 }
 BadgeComponent.ɵfac = function BadgeComponent_Factory(t) { return new (t || BadgeComponent)(); };
-BadgeComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: BadgeComponent, selectors: [["ngx-badge"]], decls: 12, vars: 0, consts: [[1, "container"], [1, "navbar", "navbar-expand-sm", "bg-primary", "navbar-dark"], [1, "navbar-nav"], [1, "nav-item"], [1, "nav-item", "right-btn"], ["routerLink", "add", "routerLinkActive", "active", 1, "nav-link"], [1, "card"], [1, "card-body"]], template: function BadgeComponent_Template(rf, ctx) { if (rf & 1) {
+BadgeComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: BadgeComponent, selectors: [["ngx-badge"]], decls: 4, vars: 0, consts: [[1, "container"], [1, "card"], [1, "card-body"]], template: function BadgeComponent_Template(rf, ctx) { if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "nav", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "ul", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "li", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "h2");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](5, "Badge List");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "li", 4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "a", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](8, "Add Badge");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "div", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "div", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](3, "router-outlet");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "div", 7);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](11, "router-outlet");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    } }, directives: [_angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterLinkWithHref"], _angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterLinkActive"], _angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterOutlet"]], styles: ["li.nav-item.right-btn[_ngcontent-%COMP%] {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn[_ngcontent-%COMP%] {\n  background: #fff;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%], li.nav-item.left-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%] {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark[_ngcontent-%COMP%] {\n  height: 70px;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvYmFkZ2UvYmFkZ2UuY29tcG9uZW50LnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7RUFDSSxrQkFBa0I7RUFDbEIsU0FBUztFQUNULFdBQVc7RUFDWCxnQkFBZ0I7QUFDcEI7O0FBQ0E7RUFDSSxnQkFBZ0I7QUFFcEI7O0FBQUE7RUFBa0Usc0JBQXNCO0VBQUUscUJBQXFCO0VBQUUsZ0JBQWdCO0FBTWpJOztBQUxBO0VBQ0ksb0NBQW9DO0VBQ3BDLGdDQUFpQztBQVFyQzs7QUFOQTtFQUNJLFlBQVk7QUFTaEIiLCJmaWxlIjoic3JjL2FwcC9wYWdlcy9iYWRnZS9iYWRnZS5jb21wb25lbnQuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbImxpLm5hdi1pdGVtLnJpZ2h0LWJ0biB7XHJcbiAgICBwb3NpdGlvbjogYWJzb2x1dGU7XHJcbiAgICB0b3A6IDE1cHg7XHJcbiAgICByaWdodDogMjBweDtcclxuICAgIGJhY2tncm91bmQ6ICNmZmY7XHJcbn1cclxubGkubmF2LWl0ZW0ubGVmdC1idG4ge1xyXG4gICAgYmFja2dyb3VuZDogI2ZmZjtcclxufVxyXG5saS5uYXYtaXRlbS5yaWdodC1idG4gYS5uYXYtbGluaywgbGkubmF2LWl0ZW0ubGVmdC1idG4gYS5uYXYtbGlua3tjb2xvcjogIzAwMCAhaW1wb3J0YW50OyB0ZXh0LWRlY29yYXRpb246IG5vbmU7IGZvbnQtd2VpZ2h0OiAzMDA7fVxyXG4uYmctcHJpbWFyeSB7XHJcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiAjMTdhMmI4ICFpbXBvcnRhbnQ7XHJcbiAgICBib3JkZXItY29sb3I6ICAjMTdhMmI4ICFpbXBvcnRhbnQ7XHJcbn1cclxubmF2Lm5hdmJhci5uYXZiYXItZXhwYW5kLXNtLmJnLXByaW1hcnkubmF2YmFyLWRhcmsge1xyXG4gICAgaGVpZ2h0OiA3MHB4O1xyXG59Il19 */"] });
+    } }, directives: [_angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterOutlet"]], styles: ["li.nav-item.right-btn[_ngcontent-%COMP%] {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn[_ngcontent-%COMP%] {\n  background: #fff;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%], li.nav-item.left-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%] {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark[_ngcontent-%COMP%] {\n  height: 70px;\n}\n\nli[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  color: #fff;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvYmFkZ2UvYmFkZ2UuY29tcG9uZW50LnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7RUFDSSxrQkFBa0I7RUFDbEIsU0FBUztFQUNULFdBQVc7RUFDWCxnQkFBZ0I7QUFDcEI7O0FBQ0E7RUFDSSxnQkFBZ0I7QUFFcEI7O0FBQUE7RUFBa0Usc0JBQXNCO0VBQUUscUJBQXFCO0VBQUUsZ0JBQWdCO0FBTWpJOztBQUxBO0VBQ0ksb0NBQW9DO0VBQ3BDLGdDQUFpQztBQVFyQzs7QUFOQTtFQUNJLFlBQVk7QUFTaEI7O0FBUEE7RUFBTyxXQUFXO0FBV2xCIiwiZmlsZSI6InNyYy9hcHAvcGFnZXMvYmFkZ2UvYmFkZ2UuY29tcG9uZW50LnNjc3MiLCJzb3VyY2VzQ29udGVudCI6WyJsaS5uYXYtaXRlbS5yaWdodC1idG4ge1xyXG4gICAgcG9zaXRpb246IGFic29sdXRlO1xyXG4gICAgdG9wOiAxNXB4O1xyXG4gICAgcmlnaHQ6IDIwcHg7XHJcbiAgICBiYWNrZ3JvdW5kOiAjZmZmO1xyXG59XHJcbmxpLm5hdi1pdGVtLmxlZnQtYnRuIHtcclxuICAgIGJhY2tncm91bmQ6ICNmZmY7XHJcbn1cclxubGkubmF2LWl0ZW0ucmlnaHQtYnRuIGEubmF2LWxpbmssIGxpLm5hdi1pdGVtLmxlZnQtYnRuIGEubmF2LWxpbmt7Y29sb3I6ICMwMDAgIWltcG9ydGFudDsgdGV4dC1kZWNvcmF0aW9uOiBub25lOyBmb250LXdlaWdodDogMzAwO31cclxuLmJnLXByaW1hcnkge1xyXG4gICAgYmFja2dyb3VuZC1jb2xvcjogIzE3YTJiOCAhaW1wb3J0YW50O1xyXG4gICAgYm9yZGVyLWNvbG9yOiAgIzE3YTJiOCAhaW1wb3J0YW50O1xyXG59XHJcbm5hdi5uYXZiYXIubmF2YmFyLWV4cGFuZC1zbS5iZy1wcmltYXJ5Lm5hdmJhci1kYXJrIHtcclxuICAgIGhlaWdodDogNzBweDtcclxufVxyXG5saSBoMiB7Y29sb3I6ICNmZmY7fSJdfQ== */"] });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](BadgeComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
         args: [{
@@ -6387,17 +13425,6 @@ BadgeComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineCom
 
 
 <div class="container">
-  <nav class="navbar navbar-expand-sm bg-primary navbar-dark">
-  <!-- Links -->
-  <ul class="navbar-nav">
-    <li class="nav-item">
-        <h2>Badge List</h2>
-    </li>
-    <li class="nav-item right-btn">
-        <a routerLink="add" class="nav-link" routerLinkActive="active">Add Badge</a>
-    </li>
-  </ul>
-  </nav>
   
   <div class="card">
     <div class="card-body">
@@ -6530,691 +13557,6 @@ BadgeModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineInject
                 ]
             }]
     }], null, null); })();
-
-
-/***/ }),
-
-/***/ "./src/app/pages/catagories/catagories-routing.module.ts":
-/*!***************************************************************!*\
-  !*** ./src/app/pages/catagories/catagories-routing.module.ts ***!
-  \***************************************************************/
-/*! exports provided: CatagoriesRoutingModule, routedComponents */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CatagoriesRoutingModule", function() { return CatagoriesRoutingModule; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "routedComponents", function() { return routedComponents; });
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
-/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
-/* harmony import */ var _catagories_component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./catagories.component */ "./src/app/pages/catagories/catagories.component.ts");
-/* harmony import */ var _catagories_category_list_category_list_component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../catagories/category-list/category-list.component */ "./src/app/pages/catagories/category-list/category-list.component.ts");
-/* harmony import */ var _catagories_category_details_category_details_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../catagories/category-details/category-details.component */ "./src/app/pages/catagories/category-details/category-details.component.ts");
-/* harmony import */ var _catagories_update_category_update_category_component__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../catagories/update-category/update-category.component */ "./src/app/pages/catagories/update-category/update-category.component.ts");
-/* harmony import */ var _catagories_create_category_create_category_component__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../catagories/create-category/create-category.component */ "./src/app/pages/catagories/create-category/create-category.component.ts");
-
-
-
-
-
-
-
-
-
-const routes = [{
-        path: '',
-        component: _catagories_component__WEBPACK_IMPORTED_MODULE_2__["CatagoriesComponent"],
-        children: [
-            { path: 'category-list', component: _catagories_category_list_category_list_component__WEBPACK_IMPORTED_MODULE_3__["CategoryListComponent"] },
-            { path: 'add', component: _catagories_create_category_create_category_component__WEBPACK_IMPORTED_MODULE_6__["CreateCategoryComponent"] },
-            { path: 'update/:id', component: _catagories_update_category_update_category_component__WEBPACK_IMPORTED_MODULE_5__["UpdateCategoryComponent"] },
-            { path: 'details/:id', component: _catagories_category_details_category_details_component__WEBPACK_IMPORTED_MODULE_4__["CategoryDetailsComponent"] },
-        ],
-    },];
-class CatagoriesRoutingModule {
-}
-CatagoriesRoutingModule.ɵmod = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineNgModule"]({ type: CatagoriesRoutingModule });
-CatagoriesRoutingModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineInjector"]({ factory: function CatagoriesRoutingModule_Factory(t) { return new (t || CatagoriesRoutingModule)(); }, imports: [[_angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterModule"].forChild(routes)], _angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterModule"]] });
-(function () { (typeof ngJitMode === "undefined" || ngJitMode) && _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵsetNgModuleScope"](CatagoriesRoutingModule, { imports: [_angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterModule"]], exports: [_angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterModule"]] }); })();
-/*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](CatagoriesRoutingModule, [{
-        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["NgModule"],
-        args: [{
-                imports: [_angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterModule"].forChild(routes)],
-                exports: [_angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterModule"]],
-            }]
-    }], null, null); })();
-const routedComponents = [
-    _catagories_component__WEBPACK_IMPORTED_MODULE_2__["CatagoriesComponent"],
-];
-
-
-/***/ }),
-
-/***/ "./src/app/pages/catagories/catagories.component.ts":
-/*!**********************************************************!*\
-  !*** ./src/app/pages/catagories/catagories.component.ts ***!
-  \**********************************************************/
-/*! exports provided: CatagoriesComponent */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CatagoriesComponent", function() { return CatagoriesComponent; });
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
-/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
-
-
-
-class CatagoriesComponent {
-    constructor() {
-        this.title = 'Angular 9 + Spring Boot 2 CRUD Tutorial';
-    }
-}
-CatagoriesComponent.ɵfac = function CatagoriesComponent_Factory(t) { return new (t || CatagoriesComponent)(); };
-CatagoriesComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: CatagoriesComponent, selectors: [["ngx-categories"]], decls: 12, vars: 0, consts: [[1, "container"], [1, "navbar", "navbar-expand-sm", "bg-primary", "navbar-dark"], [1, "navbar-nav"], [1, "nav-item"], [1, "nav-item", "right-btn"], ["routerLink", "add", "routerLinkActive", "active", 1, "nav-link"], [1, "card"], [1, "card-body"]], template: function CatagoriesComponent_Template(rf, ctx) { if (rf & 1) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "nav", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "ul", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "li", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "h2");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](5, "Category List");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "li", 4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "a", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](8, "Add Category");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "div", 7);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](11, "router-outlet");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    } }, directives: [_angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterLinkWithHref"], _angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterLinkActive"], _angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterOutlet"]], styles: ["li.nav-item.right-btn[_ngcontent-%COMP%] {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn[_ngcontent-%COMP%] {\n  background: #fff;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%], li.nav-item.left-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%] {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark[_ngcontent-%COMP%] {\n  height: 70px;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvY2F0YWdvcmllcy9jYXRlZ29yaWVzLmNvbXBvbmVudC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0VBQ0ksa0JBQWtCO0VBQ2xCLFNBQVM7RUFDVCxXQUFXO0VBQ1gsZ0JBQWdCO0FBQ3BCOztBQUNBO0VBQ0ksZ0JBQWdCO0FBRXBCOztBQUFBO0VBQWtFLHNCQUFzQjtFQUFFLHFCQUFxQjtFQUFFLGdCQUFnQjtBQU1qSTs7QUFMQTtFQUNJLG9DQUFvQztFQUNwQyxnQ0FBaUM7QUFRckM7O0FBTkE7RUFDSSxZQUFZO0FBU2hCIiwiZmlsZSI6InNyYy9hcHAvcGFnZXMvY2F0YWdvcmllcy9jYXRlZ29yaWVzLmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsibGkubmF2LWl0ZW0ucmlnaHQtYnRuIHtcclxuICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTtcclxuICAgIHRvcDogMTVweDtcclxuICAgIHJpZ2h0OiAyMHB4O1xyXG4gICAgYmFja2dyb3VuZDogI2ZmZjtcclxufVxyXG5saS5uYXYtaXRlbS5sZWZ0LWJ0biB7XHJcbiAgICBiYWNrZ3JvdW5kOiAjZmZmO1xyXG59XHJcbmxpLm5hdi1pdGVtLnJpZ2h0LWJ0biBhLm5hdi1saW5rLCBsaS5uYXYtaXRlbS5sZWZ0LWJ0biBhLm5hdi1saW5re2NvbG9yOiAjMDAwICFpbXBvcnRhbnQ7IHRleHQtZGVjb3JhdGlvbjogbm9uZTsgZm9udC13ZWlnaHQ6IDMwMDt9XHJcbi5iZy1wcmltYXJ5IHtcclxuICAgIGJhY2tncm91bmQtY29sb3I6ICMxN2EyYjggIWltcG9ydGFudDtcclxuICAgIGJvcmRlci1jb2xvcjogICMxN2EyYjggIWltcG9ydGFudDtcclxufVxyXG5uYXYubmF2YmFyLm5hdmJhci1leHBhbmQtc20uYmctcHJpbWFyeS5uYXZiYXItZGFyayB7XHJcbiAgICBoZWlnaHQ6IDcwcHg7XHJcbn0iXX0= */"] });
-/*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](CatagoriesComponent, [{
-        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
-        args: [{
-                selector: 'ngx-categories',
-                styleUrls: ['categories.component.scss'],
-                template: `
-
-
-<div class="container">
-
- <nav class="navbar navbar-expand-sm bg-primary navbar-dark">
- <!-- Links -->
- <ul class="navbar-nav">
-    <li class="nav-item">
-        <h2>Category List</h2>
-    </li>
-    <li class="nav-item right-btn">
-       <a routerLink="add" class="nav-link" routerLinkActive="active">Add Category</a>
-    </li>
- </ul>
-</nav>
-  
-  <div class="card">
-    <div class="card-body">
-      <router-outlet></router-outlet>
-    </div>
-  </div>
-</div>`,
-            }]
-    }], null, null); })();
-
-
-/***/ }),
-
-/***/ "./src/app/pages/catagories/catagories.module.ts":
-/*!*******************************************************!*\
-  !*** ./src/app/pages/catagories/catagories.module.ts ***!
-  \*******************************************************/
-/*! exports provided: CatagoriesModule */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CatagoriesModule", function() { return CatagoriesModule; });
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
-/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
-/* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/forms */ "./node_modules/@angular/forms/__ivy_ngcc__/fesm2015/forms.js");
-/* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/common/http */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/http.js");
-/* harmony import */ var _catagories_catagories_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../catagories/catagories.component */ "./src/app/pages/catagories/catagories.component.ts");
-/* harmony import */ var _nebular_theme__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @nebular/theme */ "./node_modules/@nebular/theme/__ivy_ngcc__/fesm2015/index.js");
-/* harmony import */ var ngx_echarts__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ngx-echarts */ "./node_modules/ngx-echarts/__ivy_ngcc__/fesm2015/ngx-echarts.js");
-/* harmony import */ var _theme_theme_module__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../@theme/theme.module */ "./src/app/@theme/theme.module.ts");
-/* harmony import */ var _create_category_create_category_component__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./create-category/create-category.component */ "./src/app/pages/catagories/create-category/create-category.component.ts");
-/* harmony import */ var _category_details_category_details_component__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./category-details/category-details.component */ "./src/app/pages/catagories/category-details/category-details.component.ts");
-/* harmony import */ var _category_list_category_list_component__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./category-list/category-list.component */ "./src/app/pages/catagories/category-list/category-list.component.ts");
-/* harmony import */ var _update_category_update_category_component__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./update-category/update-category.component */ "./src/app/pages/catagories/update-category/update-category.component.ts");
-/* harmony import */ var _catagories_routing_module__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./catagories-routing.module */ "./src/app/pages/catagories/catagories-routing.module.ts");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class CatagoriesModule {
-}
-CatagoriesModule.ɵmod = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineNgModule"]({ type: CatagoriesModule });
-CatagoriesModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineInjector"]({ factory: function CatagoriesModule_Factory(t) { return new (t || CatagoriesModule)(); }, imports: [[
-            _catagories_routing_module__WEBPACK_IMPORTED_MODULE_12__["CatagoriesRoutingModule"],
-            _angular_forms__WEBPACK_IMPORTED_MODULE_2__["ReactiveFormsModule"],
-            _angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterModule"],
-            _angular_common_http__WEBPACK_IMPORTED_MODULE_3__["HttpClientModule"],
-            _theme_theme_module__WEBPACK_IMPORTED_MODULE_7__["ThemeModule"],
-            _angular_forms__WEBPACK_IMPORTED_MODULE_2__["FormsModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbCardModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbUserModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbButtonModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbTabsetModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbActionsModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbRadioModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbSelectModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbListModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbIconModule"],
-            ngx_echarts__WEBPACK_IMPORTED_MODULE_6__["NgxEchartsModule"],
-        ]] });
-(function () { (typeof ngJitMode === "undefined" || ngJitMode) && _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵsetNgModuleScope"](CatagoriesModule, { declarations: [_create_category_create_category_component__WEBPACK_IMPORTED_MODULE_8__["CreateCategoryComponent"], _category_details_category_details_component__WEBPACK_IMPORTED_MODULE_9__["CategoryDetailsComponent"], _category_list_category_list_component__WEBPACK_IMPORTED_MODULE_10__["CategoryListComponent"], _update_category_update_category_component__WEBPACK_IMPORTED_MODULE_11__["UpdateCategoryComponent"], _catagories_catagories_component__WEBPACK_IMPORTED_MODULE_4__["CatagoriesComponent"]], imports: [_catagories_routing_module__WEBPACK_IMPORTED_MODULE_12__["CatagoriesRoutingModule"],
-        _angular_forms__WEBPACK_IMPORTED_MODULE_2__["ReactiveFormsModule"],
-        _angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterModule"],
-        _angular_common_http__WEBPACK_IMPORTED_MODULE_3__["HttpClientModule"],
-        _theme_theme_module__WEBPACK_IMPORTED_MODULE_7__["ThemeModule"],
-        _angular_forms__WEBPACK_IMPORTED_MODULE_2__["FormsModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbCardModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbUserModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbButtonModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbTabsetModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbActionsModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbRadioModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbSelectModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbListModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbIconModule"],
-        ngx_echarts__WEBPACK_IMPORTED_MODULE_6__["NgxEchartsModule"]] }); })();
-/*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](CatagoriesModule, [{
-        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["NgModule"],
-        args: [{
-                declarations: [_create_category_create_category_component__WEBPACK_IMPORTED_MODULE_8__["CreateCategoryComponent"], _category_details_category_details_component__WEBPACK_IMPORTED_MODULE_9__["CategoryDetailsComponent"], _category_list_category_list_component__WEBPACK_IMPORTED_MODULE_10__["CategoryListComponent"], _update_category_update_category_component__WEBPACK_IMPORTED_MODULE_11__["UpdateCategoryComponent"], _catagories_catagories_component__WEBPACK_IMPORTED_MODULE_4__["CatagoriesComponent"]],
-                imports: [
-                    _catagories_routing_module__WEBPACK_IMPORTED_MODULE_12__["CatagoriesRoutingModule"],
-                    _angular_forms__WEBPACK_IMPORTED_MODULE_2__["ReactiveFormsModule"],
-                    _angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterModule"],
-                    _angular_common_http__WEBPACK_IMPORTED_MODULE_3__["HttpClientModule"],
-                    _theme_theme_module__WEBPACK_IMPORTED_MODULE_7__["ThemeModule"],
-                    _angular_forms__WEBPACK_IMPORTED_MODULE_2__["FormsModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbCardModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbUserModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbButtonModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbTabsetModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbActionsModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbRadioModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbSelectModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbListModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_5__["NbIconModule"],
-                    ngx_echarts__WEBPACK_IMPORTED_MODULE_6__["NgxEchartsModule"],
-                ]
-            }]
-    }], null, null); })();
-
-
-/***/ }),
-
-/***/ "./src/app/pages/catagories/category-details/category-details.component.ts":
-/*!*********************************************************************************!*\
-  !*** ./src/app/pages/catagories/category-details/category-details.component.ts ***!
-  \*********************************************************************************/
-/*! exports provided: CategoryDetailsComponent */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CategoryDetailsComponent", function() { return CategoryDetailsComponent; });
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
-/* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
-/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
-/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
-
-
-
-
-
-
-
-function CategoryDetailsComponent_div_3_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "div");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "label");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "b");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](4, "Name: ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](5);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "div");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "label");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "b");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](9, "Icon: ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](10);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-} if (rf & 2) {
-    const ctx_r0 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate1"](" ", ctx_r0.category.name, " ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate1"](" ", ctx_r0.category.icon, " ");
-} }
-class CategoryDetailsComponent {
-    constructor(restService, router) {
-        this.restService = restService;
-        this.router = router;
-    }
-    ngOnInit() {
-        this.restService.get("/category/categoryList").subscribe((data) => {
-            this.categories = data.data;
-        }, (error) => {
-            console.log(error);
-        });
-    }
-    list() {
-        this.router.navigate(['categories/category-list']);
-    }
-}
-CategoryDetailsComponent.ɵfac = function CategoryDetailsComponent_Factory(t) { return new (t || CategoryDetailsComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__["RestService"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_2__["Router"])); };
-CategoryDetailsComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: CategoryDetailsComponent, selectors: [["ngx-category-details"]], decls: 9, vars: 1, consts: [[4, "ngIf"], [1, "btn", "btn-primary", 3, "click"]], template: function CategoryDetailsComponent_Template(rf, ctx) { if (rf & 1) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "h2");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Category Details");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](2, "hr");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](3, CategoryDetailsComponent_div_3_Template, 11, 2, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](4, "br");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](5, "br");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "button", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function CategoryDetailsComponent_Template_button_click_6_listener() { return ctx.list(); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](7, "Back to Category List");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](8, "br");
-    } if (rf & 2) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.categories);
-    } }, directives: [_angular_common__WEBPACK_IMPORTED_MODULE_3__["NgIf"]], styles: ["\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiJzcmMvYXBwL3BhZ2VzL2NhdGFnb3JpZXMvY2F0ZWdvcnktZGV0YWlscy9jYXRlZ29yeS1kZXRhaWxzLmNvbXBvbmVudC5zY3NzIn0= */"] });
-/*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](CategoryDetailsComponent, [{
-        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
-        args: [{
-                selector: 'ngx-category-details',
-                templateUrl: './category-details.component.html',
-                styleUrls: ['./category-details.component.scss']
-            }]
-    }], function () { return [{ type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__["RestService"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_2__["Router"] }]; }, null); })();
-
-
-/***/ }),
-
-/***/ "./src/app/pages/catagories/category-list/category-list.component.ts":
-/*!***************************************************************************!*\
-  !*** ./src/app/pages/catagories/category-list/category-list.component.ts ***!
-  \***************************************************************************/
-/*! exports provided: CategoryListComponent */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CategoryListComponent", function() { return CategoryListComponent; });
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
-/* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! rxjs/operators */ "./node_modules/rxjs/_esm2015/operators/index.js");
-/* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
-/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
-/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
-
-
-
-
-
-
-
-function CategoryListComponent_tr_15_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "tr");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "td");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "td");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](4);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "td");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](6);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "td");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "button", 5);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](9, "Edit");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-} if (rf & 2) {
-    const category_r1 = ctx.$implicit;
-    const id_r2 = ctx.index;
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](id_r2 + 1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](category_r1.name);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](category_r1.icon);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate1"]("routerLink", "../update/", category_r1._id, "");
-} }
-class CategoryListComponent {
-    constructor(restService) {
-        this.restService = restService;
-    }
-    ngOnInit() {
-        this.reloadData();
-    }
-    reloadData() {
-        this.restService.get("/category/categoryList").subscribe((data) => {
-            this.categories = data.data;
-        }, (error) => {
-            console.log(error);
-        });
-    }
-    deleteCategory(id) {
-        const tour = this.category.find(x => x.id === id);
-        return this.category.delete(id)
-            .pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_1__["first"])())
-            .subscribe(() => this.categories = this.categories.filter(x => x.id !== id));
-    }
-}
-CategoryListComponent.ɵfac = function CategoryListComponent_Factory(t) { return new (t || CategoryListComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_2__["RestService"])); };
-CategoryListComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: CategoryListComponent, selectors: [["ngx-category-list"]], decls: 16, vars: 1, consts: [[1, "panel", "panel-primary"], [1, "panel-heading"], [1, "panel-body"], [1, "table", "table-striped"], [4, "ngFor", "ngForOf"], [1, "btn", "btn-info", 3, "routerLink"]], template: function CategoryListComponent_Template(rf, ctx) { if (rf & 1) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "div", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "table", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "thead");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "tr");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](7, "Id");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](9, "Name");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](11, "Icon");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](13, "Actions");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "tbody");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](15, CategoryListComponent_tr_15_Template, 10, 4, "tr", 4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    } if (rf & 2) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](15);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx.categories);
-    } }, directives: [_angular_common__WEBPACK_IMPORTED_MODULE_3__["NgForOf"], _angular_router__WEBPACK_IMPORTED_MODULE_4__["RouterLink"]], styles: [".btn-delete-user[_ngcontent-%COMP%] {\n  width: 60px;\n  text-align: center;\n  box-sizing: content-box;\n  margin: 0 10px;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%] {\n  position: absolute;\n  top: 8px;\n  right: 6px;\n  background: #fff;\n}\n\nli.nav-item.left-btn[_ngcontent-%COMP%] {\n  background: #fff;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%], li.nav-item.left-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%] {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvY2F0YWdvcmllcy9jYXRlZ29yeS1saXN0L2NhdGVnb3J5LWxpc3QuY29tcG9uZW50LnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7RUFDSSxXQUFXO0VBQ1gsa0JBQWtCO0VBQ2xCLHVCQUF1QjtFQUN2QixjQUFhO0FBQ2pCOztBQUNBO0VBQ0ksa0JBQWtCO0VBQ2xCLFFBQVE7RUFDUixVQUFVO0VBQ1YsZ0JBQWdCO0FBRXBCOztBQUFBO0VBQ0ksZ0JBQWdCO0FBR3BCOztBQURBO0VBQWtFLHNCQUFzQjtFQUFFLHFCQUFxQjtFQUFFLGdCQUFnQjtBQU9qSTs7QUFOQTtFQUNJLG9DQUFvQztFQUNwQyxnQ0FBaUM7QUFTckMiLCJmaWxlIjoic3JjL2FwcC9wYWdlcy9jYXRhZ29yaWVzL2NhdGVnb3J5LWxpc3QvY2F0ZWdvcnktbGlzdC5jb21wb25lbnQuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbIi5idG4tZGVsZXRlLXVzZXIge1xyXG4gICAgd2lkdGg6IDYwcHg7XHJcbiAgICB0ZXh0LWFsaWduOiBjZW50ZXI7XHJcbiAgICBib3gtc2l6aW5nOiBjb250ZW50LWJveDtcclxuICAgIG1hcmdpbjowIDEwcHg7XHJcbn1cclxubGkubmF2LWl0ZW0ucmlnaHQtYnRuIHtcclxuICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTtcclxuICAgIHRvcDogOHB4O1xyXG4gICAgcmlnaHQ6IDZweDtcclxuICAgIGJhY2tncm91bmQ6ICNmZmY7XHJcbn1cclxubGkubmF2LWl0ZW0ubGVmdC1idG4ge1xyXG4gICAgYmFja2dyb3VuZDogI2ZmZjtcclxufVxyXG5saS5uYXYtaXRlbS5yaWdodC1idG4gYS5uYXYtbGluaywgbGkubmF2LWl0ZW0ubGVmdC1idG4gYS5uYXYtbGlua3tjb2xvcjogIzAwMCAhaW1wb3J0YW50OyB0ZXh0LWRlY29yYXRpb246IG5vbmU7IGZvbnQtd2VpZ2h0OiAzMDA7fVxyXG4uYmctcHJpbWFyeSB7XHJcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiAjMTdhMmI4ICFpbXBvcnRhbnQ7XHJcbiAgICBib3JkZXItY29sb3I6ICAjMTdhMmI4ICFpbXBvcnRhbnQ7XHJcbn0iXX0= */"] });
-/*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](CategoryListComponent, [{
-        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
-        args: [{
-                selector: 'ngx-category-list',
-                templateUrl: './category-list.component.html',
-                styleUrls: ['./category-list.component.scss']
-            }]
-    }], function () { return [{ type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_2__["RestService"] }]; }, null); })();
-
-
-/***/ }),
-
-/***/ "./src/app/pages/catagories/create-category/create-category.component.ts":
-/*!*******************************************************************************!*\
-  !*** ./src/app/pages/catagories/create-category/create-category.component.ts ***!
-  \*******************************************************************************/
-/*! exports provided: CreateCategoryComponent */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CreateCategoryComponent", function() { return CreateCategoryComponent; });
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
-/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
-/* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/common/http */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/http.js");
-/* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/forms */ "./node_modules/@angular/forms/__ivy_ngcc__/fesm2015/forms.js");
-/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
-
-
-
-
-
-
-
-
-
-
-
-class CreateCategoryComponent {
-    constructor(http, router, fb, location) {
-        this.http = http;
-        this.router = router;
-        this.fb = fb;
-        this.location = location;
-        this.form = this.fb.group({
-            name: [''],
-            icon: [null]
-        });
-    }
-    ngOnInit() {
-    }
-    uploadFile(event) {
-        const file = event.target.files[0];
-        this.form.patchValue({
-            icon: file,
-            name: '',
-        });
-        this.form.get('icon').updateValueAndValidity();
-    }
-    submitForm() {
-        var formData = new FormData();
-        formData.append("name", this.form.get('name').value);
-        formData.append("icon", this.form.get('icon').value);
-        this.http.post('http://18.217.48.28:2000/category/create', formData, { headers: this.getHeader(FormData) }).subscribe((response) => console.log(response), (error) => console.log(error));
-        this.router.navigate(['../category-list']);
-    }
-    getHeader(isFormData) {
-        let headers = new _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpHeaders"]();
-        if (!isFormData) {
-            headers = headers.append('Content-Type', 'json');
-        }
-        headers = headers.append('Authorization', localStorage.getItem('access_token'));
-        return headers;
-    }
-}
-CreateCategoryComponent.ɵfac = function CreateCategoryComponent_Factory(t) { return new (t || CreateCategoryComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_1__["Router"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_forms__WEBPACK_IMPORTED_MODULE_3__["FormBuilder"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_common__WEBPACK_IMPORTED_MODULE_4__["Location"])); };
-CreateCategoryComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: CreateCategoryComponent, selectors: [["ngx-create-category"]], decls: 14, vars: 1, consts: [[2, "width", "500px", "margin", "auto"], [1, "submit-form"], [3, "formGroup", "ngSubmit"], [1, "form-group"], ["for", "icon"], ["type", "file", "name", "icon", 1, "form-control", 3, "change"], [1, "form-group", "input-group-lg"], ["for", "name"], ["placeholder", "Name", "formControlName", "name", "name", "name", 1, "form-control"], ["routerLink", "../category-list", 1, "btn", "btn-info"]], template: function CreateCategoryComponent_Template(rf, ctx) { if (rf & 1) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "div", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "form", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngSubmit", function CreateCategoryComponent_Template_form_ngSubmit_2_listener() { return ctx.submitForm(); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "div", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "label", 4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](5, "Icon");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "input", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function CreateCategoryComponent_Template_input_change_6_listener($event) { return ctx.uploadFile($event); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "label", 7);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](9, "Name");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](10, "input", 8);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "div", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "button", 9);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](13, "Create");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    } if (rf & 2) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("formGroup", ctx.form);
-    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_3__["ɵangular_packages_forms_forms_y"], _angular_forms__WEBPACK_IMPORTED_MODULE_3__["NgControlStatusGroup"], _angular_forms__WEBPACK_IMPORTED_MODULE_3__["FormGroupDirective"], _angular_forms__WEBPACK_IMPORTED_MODULE_3__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_3__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_3__["FormControlName"], _angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterLink"]], styles: ["\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiJzcmMvYXBwL3BhZ2VzL2NhdGFnb3JpZXMvY3JlYXRlLWNhdGVnb3J5L2NyZWF0ZS1jYXRlZ29yeS5jb21wb25lbnQuc2NzcyJ9 */"], encapsulation: 2 });
-/*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](CreateCategoryComponent, [{
-        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
-        args: [{
-                selector: 'ngx-create-category',
-                templateUrl: './create-category.component.html',
-                styleUrls: ['./create-category.component.scss'],
-                encapsulation: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ViewEncapsulation"].None
-            }]
-    }], function () { return [{ type: _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_1__["Router"] }, { type: _angular_forms__WEBPACK_IMPORTED_MODULE_3__["FormBuilder"] }, { type: _angular_common__WEBPACK_IMPORTED_MODULE_4__["Location"] }]; }, null); })();
-
-
-/***/ }),
-
-/***/ "./src/app/pages/catagories/update-category/update-category.component.ts":
-/*!*******************************************************************************!*\
-  !*** ./src/app/pages/catagories/update-category/update-category.component.ts ***!
-  \*******************************************************************************/
-/*! exports provided: UpdateCategoryComponent */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "UpdateCategoryComponent", function() { return UpdateCategoryComponent; });
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
-/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
-/* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/common/http */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/http.js");
-/* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
-/* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/forms */ "./node_modules/@angular/forms/__ivy_ngcc__/fesm2015/forms.js");
-/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
-
-
-
-
-
-
-
- // ActivatedRoue is used to get the current associated components information.
-
-
-
-
-
-
-class UpdateCategoryComponent {
-    constructor(restService, http, router, route, fb, location, actRoute) {
-        this.restService = restService;
-        this.http = http;
-        this.router = router;
-        this.route = route;
-        this.fb = fb;
-        this.location = location;
-        this.actRoute = actRoute;
-        this.submitted = false;
-        this.form = this.fb.group({
-            name: [''],
-            icon: [null]
-        });
-    }
-    ngOnInit() {
-    }
-    uploadFile(event) {
-        const file = event.target.files[0];
-        this.form.patchValue({
-            icon: file,
-        });
-        this.form.get('icon').updateValueAndValidity();
-    }
-    submitForm() {
-        var formData = new FormData();
-        formData.append("icon", this.form.get('icon').value);
-        formData.append("name", this.form.get('name').value);
-        var id;
-        this.activeRoute = this.route.params.subscribe(params => {
-            id = params['id'];
-        });
-        this.submitted = true;
-        if (this.form.valid) {
-            this.http.post('http://18.217.48.28:2000/category/categoryUpdate/{{id}}', formData, { headers: this.getHeader(FormData) }).subscribe((response) => console.log(response));
-            // alert('Form Submitted succesfully!!!');
-            this.router.navigate(['../category-list']);
-            console.table(this.form.value);
-        }
-    }
-    getHeader(isFormData) {
-        let headers = new _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpHeaders"]();
-        if (!isFormData) {
-            headers = headers.append('Content-Type', 'json');
-        }
-        headers = headers.append('Authorization', localStorage.getItem('access_token'));
-        return headers;
-    }
-    ngOnDestroy() {
-        debugger;
-        if (this.activeRoute) {
-            this.activeRoute.unsubscribe();
-        }
-    }
-}
-UpdateCategoryComponent.ɵfac = function UpdateCategoryComponent_Factory(t) { return new (t || UpdateCategoryComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_3__["RestService"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_1__["Router"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_1__["ActivatedRoute"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_forms__WEBPACK_IMPORTED_MODULE_4__["FormBuilder"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_common__WEBPACK_IMPORTED_MODULE_5__["Location"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_1__["ActivatedRoute"])); };
-UpdateCategoryComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: UpdateCategoryComponent, selectors: [["ngx-update-category"]], decls: 14, vars: 1, consts: [[2, "width", "500px", "margin", "auto"], [1, "submit-form"], [3, "formGroup", "ngSubmit"], [1, "form-group"], ["for", "icon"], ["type", "file", "name", "icon", "formControlName", "icon", 1, "form-control", 3, "change"], [1, "form-group", "input-group-lg"], ["for", "name"], ["placeholder", "Name", "formControlName", "name", "name", "name", 1, "form-control"], ["routerLink", "../category-list", 1, "btn", "btn-info"]], template: function UpdateCategoryComponent_Template(rf, ctx) { if (rf & 1) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "div", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "form", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngSubmit", function UpdateCategoryComponent_Template_form_ngSubmit_2_listener() { return ctx.submitForm(); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "div", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "label", 4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](5, "Icon");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "input", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function UpdateCategoryComponent_Template_input_change_6_listener($event) { return ctx.uploadFile($event); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "label", 7);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](9, "Name");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](10, "input", 8);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "div", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "button", 9);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](13, "Create");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    } if (rf & 2) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("formGroup", ctx.form);
-    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_4__["ɵangular_packages_forms_forms_y"], _angular_forms__WEBPACK_IMPORTED_MODULE_4__["NgControlStatusGroup"], _angular_forms__WEBPACK_IMPORTED_MODULE_4__["FormGroupDirective"], _angular_forms__WEBPACK_IMPORTED_MODULE_4__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_4__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_4__["FormControlName"], _angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterLink"]], styles: ["\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiJzcmMvYXBwL3BhZ2VzL2NhdGFnb3JpZXMvdXBkYXRlLWNhdGVnb3J5L3VwZGF0ZS1jYXRlZ29yeS5jb21wb25lbnQuc2NzcyJ9 */"], encapsulation: 2 });
-/*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](UpdateCategoryComponent, [{
-        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
-        args: [{
-                selector: 'ngx-update-category',
-                templateUrl: './update-category.component.html',
-                styleUrls: ['./update-category.component.scss'],
-                encapsulation: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ViewEncapsulation"].None
-            }]
-    }], function () { return [{ type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_3__["RestService"] }, { type: _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_1__["Router"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_1__["ActivatedRoute"] }, { type: _angular_forms__WEBPACK_IMPORTED_MODULE_4__["FormBuilder"] }, { type: _angular_common__WEBPACK_IMPORTED_MODULE_5__["Location"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_1__["ActivatedRoute"] }]; }, null); })();
 
 
 /***/ }),
@@ -7524,7 +13866,7 @@ const routes = [{
             },
             {
                 path: 'categories',
-                loadChildren: () => Promise.resolve(/*! import() */).then(__webpack_require__.bind(null, /*! ./catagories/catagories.module */ "./src/app/pages/catagories/catagories.module.ts"))
+                loadChildren: () => __webpack_require__.e(/*! import() | catagories-catagories-module */ "catagories-catagories-module").then(__webpack_require__.bind(null, /*! ./catagories/catagories.module */ "./src/app/pages/catagories/catagories.module.ts"))
                     .then(m => m.CatagoriesModule),
             },
             {
@@ -7548,7 +13890,7 @@ const routes = [{
             },
             {
                 path: '',
-                redirectTo: 'dashboard',
+                redirectTo: 'user',
                 pathMatch: 'full',
             },
             {
@@ -7639,18 +13981,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
 /* harmony import */ var _pages_component__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./pages.component */ "./src/app/pages/pages.component.ts");
 /* harmony import */ var _pages_routing_module__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./pages-routing.module */ "./src/app/pages/pages-routing.module.ts");
-/* harmony import */ var _catagories_catagories_module__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./catagories/catagories.module */ "./src/app/pages/catagories/catagories.module.ts");
-/* harmony import */ var _badge_badge_module__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./badge/badge.module */ "./src/app/pages/badge/badge.module.ts");
-/* harmony import */ var _tours_tours_module__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./tours/tours.module */ "./src/app/pages/tours/tours.module.ts");
-/* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @angular/common/http */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/http.js");
-/* harmony import */ var _user_list_user_list_component__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./user-list/user-list.component */ "./src/app/pages/user-list/user-list.component.ts");
-/* harmony import */ var _theme_theme_module__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../@theme/theme.module */ "./src/app/@theme/theme.module.ts");
-/* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @angular/forms */ "./node_modules/@angular/forms/__ivy_ngcc__/fesm2015/forms.js");
-/* harmony import */ var _nebular_theme__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @nebular/theme */ "./node_modules/@nebular/theme/__ivy_ngcc__/fesm2015/index.js");
-/* harmony import */ var ng2_search_filter__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ng2-search-filter */ "./node_modules/ng2-search-filter/__ivy_ngcc__/ng2-search-filter.js");
-
-
-
+/* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/common/http */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/http.js");
+/* harmony import */ var _user_list_user_list_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./user-list/user-list.component */ "./src/app/pages/user-list/user-list.component.ts");
+/* harmony import */ var _theme_theme_module__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../@theme/theme.module */ "./src/app/@theme/theme.module.ts");
+/* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @angular/forms */ "./node_modules/@angular/forms/__ivy_ngcc__/fesm2015/forms.js");
+/* harmony import */ var _nebular_theme__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @nebular/theme */ "./node_modules/@nebular/theme/__ivy_ngcc__/fesm2015/index.js");
+/* harmony import */ var ng2_search_filter__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ng2-search-filter */ "./node_modules/ng2-search-filter/__ivy_ngcc__/ng2-search-filter.js");
 
 
 
@@ -7665,64 +14001,55 @@ class PagesModule {
 }
 PagesModule.ɵmod = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineNgModule"]({ type: PagesModule });
 PagesModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineInjector"]({ factory: function PagesModule_Factory(t) { return new (t || PagesModule)(); }, imports: [[
-            ng2_search_filter__WEBPACK_IMPORTED_MODULE_11__["Ng2SearchPipeModule"],
-            _angular_forms__WEBPACK_IMPORTED_MODULE_9__["FormsModule"],
-            _angular_forms__WEBPACK_IMPORTED_MODULE_9__["ReactiveFormsModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbChatModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbDatepickerModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbDialogModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbMenuModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbSidebarModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbToastrModule"],
-            _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbWindowModule"],
-            _theme_theme_module__WEBPACK_IMPORTED_MODULE_8__["ThemeModule"],
+            ng2_search_filter__WEBPACK_IMPORTED_MODULE_8__["Ng2SearchPipeModule"],
+            _angular_forms__WEBPACK_IMPORTED_MODULE_6__["FormsModule"],
+            _angular_forms__WEBPACK_IMPORTED_MODULE_6__["ReactiveFormsModule"],
+            _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbChatModule"],
+            _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbDatepickerModule"],
+            _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbDialogModule"],
+            _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbMenuModule"],
+            _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbSidebarModule"],
+            _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbToastrModule"],
+            _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbWindowModule"],
+            _theme_theme_module__WEBPACK_IMPORTED_MODULE_5__["ThemeModule"],
             _pages_routing_module__WEBPACK_IMPORTED_MODULE_2__["PagesRoutingModule"],
-            _catagories_catagories_module__WEBPACK_IMPORTED_MODULE_3__["CatagoriesModule"],
-            _tours_tours_module__WEBPACK_IMPORTED_MODULE_5__["ToursModule"],
-            _angular_common_http__WEBPACK_IMPORTED_MODULE_6__["HttpClientModule"],
-            _badge_badge_module__WEBPACK_IMPORTED_MODULE_4__["BadgeModule"],
+            _angular_common_http__WEBPACK_IMPORTED_MODULE_3__["HttpClientModule"],
         ]] });
 (function () { (typeof ngJitMode === "undefined" || ngJitMode) && _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵsetNgModuleScope"](PagesModule, { declarations: [_pages_component__WEBPACK_IMPORTED_MODULE_1__["PagesComponent"],
-        _user_list_user_list_component__WEBPACK_IMPORTED_MODULE_7__["UserListComponent"]], imports: [ng2_search_filter__WEBPACK_IMPORTED_MODULE_11__["Ng2SearchPipeModule"],
-        _angular_forms__WEBPACK_IMPORTED_MODULE_9__["FormsModule"],
-        _angular_forms__WEBPACK_IMPORTED_MODULE_9__["ReactiveFormsModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbChatModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbDatepickerModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbDialogModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbMenuModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbSidebarModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbToastrModule"],
-        _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbWindowModule"],
-        _theme_theme_module__WEBPACK_IMPORTED_MODULE_8__["ThemeModule"],
+        _user_list_user_list_component__WEBPACK_IMPORTED_MODULE_4__["UserListComponent"]], imports: [ng2_search_filter__WEBPACK_IMPORTED_MODULE_8__["Ng2SearchPipeModule"],
+        _angular_forms__WEBPACK_IMPORTED_MODULE_6__["FormsModule"],
+        _angular_forms__WEBPACK_IMPORTED_MODULE_6__["ReactiveFormsModule"],
+        _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbChatModule"],
+        _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbDatepickerModule"],
+        _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbDialogModule"],
+        _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbMenuModule"],
+        _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbSidebarModule"],
+        _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbToastrModule"],
+        _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbWindowModule"],
+        _theme_theme_module__WEBPACK_IMPORTED_MODULE_5__["ThemeModule"],
         _pages_routing_module__WEBPACK_IMPORTED_MODULE_2__["PagesRoutingModule"],
-        _catagories_catagories_module__WEBPACK_IMPORTED_MODULE_3__["CatagoriesModule"],
-        _tours_tours_module__WEBPACK_IMPORTED_MODULE_5__["ToursModule"],
-        _angular_common_http__WEBPACK_IMPORTED_MODULE_6__["HttpClientModule"],
-        _badge_badge_module__WEBPACK_IMPORTED_MODULE_4__["BadgeModule"]] }); })();
+        _angular_common_http__WEBPACK_IMPORTED_MODULE_3__["HttpClientModule"]] }); })();
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](PagesModule, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["NgModule"],
         args: [{
                 imports: [
-                    ng2_search_filter__WEBPACK_IMPORTED_MODULE_11__["Ng2SearchPipeModule"],
-                    _angular_forms__WEBPACK_IMPORTED_MODULE_9__["FormsModule"],
-                    _angular_forms__WEBPACK_IMPORTED_MODULE_9__["ReactiveFormsModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbChatModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbDatepickerModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbDialogModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbMenuModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbSidebarModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbToastrModule"],
-                    _nebular_theme__WEBPACK_IMPORTED_MODULE_10__["NbWindowModule"],
-                    _theme_theme_module__WEBPACK_IMPORTED_MODULE_8__["ThemeModule"],
+                    ng2_search_filter__WEBPACK_IMPORTED_MODULE_8__["Ng2SearchPipeModule"],
+                    _angular_forms__WEBPACK_IMPORTED_MODULE_6__["FormsModule"],
+                    _angular_forms__WEBPACK_IMPORTED_MODULE_6__["ReactiveFormsModule"],
+                    _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbChatModule"],
+                    _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbDatepickerModule"],
+                    _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbDialogModule"],
+                    _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbMenuModule"],
+                    _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbSidebarModule"],
+                    _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbToastrModule"],
+                    _nebular_theme__WEBPACK_IMPORTED_MODULE_7__["NbWindowModule"],
+                    _theme_theme_module__WEBPACK_IMPORTED_MODULE_5__["ThemeModule"],
                     _pages_routing_module__WEBPACK_IMPORTED_MODULE_2__["PagesRoutingModule"],
-                    _catagories_catagories_module__WEBPACK_IMPORTED_MODULE_3__["CatagoriesModule"],
-                    _tours_tours_module__WEBPACK_IMPORTED_MODULE_5__["ToursModule"],
-                    _angular_common_http__WEBPACK_IMPORTED_MODULE_6__["HttpClientModule"],
-                    _badge_badge_module__WEBPACK_IMPORTED_MODULE_4__["BadgeModule"],
+                    _angular_common_http__WEBPACK_IMPORTED_MODULE_3__["HttpClientModule"],
                 ],
                 declarations: [
                     _pages_component__WEBPACK_IMPORTED_MODULE_1__["PagesComponent"],
-                    _user_list_user_list_component__WEBPACK_IMPORTED_MODULE_7__["UserListComponent"],
+                    _user_list_user_list_component__WEBPACK_IMPORTED_MODULE_4__["UserListComponent"],
                 ],
             }]
     }], null, null); })();
@@ -7745,8 +14072,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/common/http */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/http.js");
 /* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
 /* harmony import */ var _agm_core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @agm/core */ "./node_modules/@agm/core/__ivy_ngcc__/fesm2015/agm-core.js");
-/* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
-/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
+/* harmony import */ var _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @rxweb/reactive-form-validators */ "./node_modules/@rxweb/reactive-form-validators/__ivy_ngcc__/fesm2015/rxweb-reactive-form-validators.js");
+/* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
+/* harmony import */ var ng_multiselect_dropdown__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ng-multiselect-dropdown */ "./node_modules/ng-multiselect-dropdown/__ivy_ngcc__/fesm2015/ng-multiselect-dropdown.js");
+
+
+
 
 
 
@@ -7761,46 +14093,77 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const _c0 = ["search"];
-function ToursCreateComponent_span_6_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Picture is required ");
+function ToursCreateComponent_div_15_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Picture is required");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } }
-function ToursCreateComponent_span_11_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Name is required ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-} }
-function ToursCreateComponent_span_16_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Name is required ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-} }
-function ToursCreateComponent_option_23_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "option", 31);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1);
+function ToursCreateComponent_div_15_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 27);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, ToursCreateComponent_div_15_div_1_Template, 2, 0, "div", 28);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } if (rf & 2) {
-    const category_r8 = ctx.$implicit;
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("value", category_r8._id);
+    const ctx_r1 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](category_r8.name);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r1.f.picture.errors.required);
 } }
-function ToursCreateComponent_span_24_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Category name is required ");
+function ToursCreateComponent_div_20_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Name is required");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } }
-function ToursCreateComponent_span_29_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Audio File is required (Only Upload MP3 File) ");
+function ToursCreateComponent_div_20_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 27);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, ToursCreateComponent_div_20_div_1_Template, 2, 0, "div", 28);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} if (rf & 2) {
+    const ctx_r2 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r2.f.name.errors.required);
+} }
+function ToursCreateComponent_div_25_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Description is required");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } }
-function ToursCreateComponent_span_34_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Transcript is required ");
+function ToursCreateComponent_div_25_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 27);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, ToursCreateComponent_div_25_div_1_Template, 2, 0, "div", 28);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} if (rf & 2) {
+    const ctx_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r3.f.description.errors.required);
+} }
+function ToursCreateComponent_div_34_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Audio is required");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } }
+function ToursCreateComponent_div_34_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 27);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, ToursCreateComponent_div_34_div_1_Template, 2, 0, "div", 28);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} if (rf & 2) {
+    const ctx_r4 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r4.f.audio.errors.required);
+} }
+function ToursCreateComponent_div_39_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Transcript is required");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} }
+function ToursCreateComponent_div_39_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 27);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, ToursCreateComponent_div_39_div_1_Template, 2, 0, "div", 28);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} if (rf & 2) {
+    const ctx_r5 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r5.f.transcript.errors.required);
+} }
+const _c1 = function (a0) { return { "is-invalid": a0 }; };
 class ToursCreateComponent {
     constructor(http, router, fb, mapsAPILoader, ngZone, restService) {
         this.http = http;
@@ -7809,18 +14172,12 @@ class ToursCreateComponent {
         this.mapsAPILoader = mapsAPILoader;
         this.ngZone = ngZone;
         this.restService = restService;
+        this.dropdownList = [];
+        this.selectedItems = [];
+        this.dropdownSettings = {};
         this.categories = [];
+        this.myFiles = [];
         this.submitted = false;
-        this.form = this.fb.group({
-            picture: [null],
-            lat: [''],
-            long: [''],
-            name: [''],
-            description: [''],
-            categoryName: [''],
-            audio: [null],
-            transcript: [''],
-        });
     }
     reloadData() {
         this.restService.get("/category/categoryList").subscribe((data) => {
@@ -7829,71 +14186,119 @@ class ToursCreateComponent {
             console.log(error);
         });
     }
+    // convenience getter for easy access to form fields
+    get f() { return this.form.controls; }
     ngOnInit() {
-        this.reloadData();
-        //load Places Autocomplete
-        this.mapsAPILoader.load().then(() => {
-            this.setCurrentLocation();
-            this.geoCoder = new google.maps.Geocoder;
-            let autocomplete = new google.maps.places.Autocomplete(this.searchElementRef.nativeElement);
-            autocomplete.addListener("place_changed", () => {
-                this.ngZone.run(() => {
-                    //get the place result
-                    let place = autocomplete.getPlace();
-                    //verify result
-                    if (place.geometry === undefined || place.geometry === null) {
-                        return;
-                    }
-                    //set latitude, longitude and zoom
-                    this.latitude = place.geometry.location.lat();
-                    this.longitude = place.geometry.location.lng();
-                    this.zoom = 12;
-                });
-            });
+        this.form = this.fb.group({
+            picture: [null, [_rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_5__["RxwebValidators"].image({ maxHeight: 100, maxWidth: 100 }), _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_5__["RxwebValidators"].extension({ extensions: ["jpeg", "png"] })]],
+            lat: [''],
+            long: [''],
+            name: ['', _angular_forms__WEBPACK_IMPORTED_MODULE_1__["Validators"].required],
+            description: ['', _angular_forms__WEBPACK_IMPORTED_MODULE_1__["Validators"].required],
+            categoryName: ['', _angular_forms__WEBPACK_IMPORTED_MODULE_1__["Validators"].required],
+            audio: [null],
+            transcript: ['', _angular_forms__WEBPACK_IMPORTED_MODULE_1__["Validators"].required],
+            audioDuration: [''],
         });
+        this.initAutocomplete();
+        this.reloadData();
+        let tmp = [];
+        this.restService.get("/category/categoryList").subscribe(data => {
+            //console.log(data.data[0]._id);
+            for (let i = 0; i < data.data.length; i++) {
+                tmp.push({ item_id: data.data[i]._id, item_text: data.data[i].name });
+            }
+            this.dropdownList = tmp;
+        });
+        this.dropdownSettings = {
+            singleSelection: true,
+            idField: "item_id",
+            textField: "item_text",
+            selectAllText: "Select All",
+            unSelectAllText: "UnSelect All",
+            itemsShowLimit: 6,
+            allowSearchFilter: true
+        };
     }
-    markerDragEnd($event) {
-        console.log($event);
-        this.latitude = $event.latLng.lat();
-        this.longitude = $event.latLng.lng();
-        this.getAddress(this.latitude, this.longitude);
+    onItemSelect(item) {
+        console.log(item);
     }
-    getAddress(latitude, longitude) {
-        this.geoCoder.geocode({ 'location': { lat: latitude, lng: longitude } }, (results, status) => {
-            console.log(results);
-            console.log(status);
-            if (status === 'OK') {
-                if (results[0]) {
-                    this.zoom = 12;
-                    this.address = results[0].formatted_address;
+    onSelectAll(items) {
+        console.log(items);
+    }
+    initAutocomplete() {
+        const map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: -33.8688, lng: 151.2195 },
+            zoom: 13,
+            mapTypeId: "roadmap",
+        });
+        this.marker =
+            new google.maps.Marker({
+                map,
+                title: "place.name",
+                position: { lat: -33.8688, lng: 151.2195 },
+                draggable: true
+            });
+        google.maps.event.addListener(this.marker, 'dragend', function () {
+            console.log(this.marker.getPosition().lat());
+            console.log(this.marker.getPosition().lng());
+        });
+        map.addListener('dragend', () => {
+            console.log("place gytgyty");
+            console.log(this.marker.getPosition().lng());
+        });
+        // Create the search box and link it to the UI element.
+        const input = document.getElementById("pac-input");
+        const searchBox = new google.maps.places.SearchBox(input);
+        //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+        // Bias the SearchBox results towards current map's viewport.
+        map.addListener("bounds_changed", () => {
+            searchBox.setBounds(map.getBounds());
+        });
+        searchBox.addListener("places_changed", () => {
+            const places = searchBox.getPlaces();
+            if (places.length == 0) {
+                return;
+            }
+            const bounds = new google.maps.LatLngBounds();
+            places.forEach((place) => {
+                if (!place.geometry) {
+                    console.log("Returned place contains no geometry");
+                    return;
+                }
+                const icon = {
+                    url: place.icon,
+                    size: new google.maps.Size(71, 71),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(17, 34),
+                    scaledSize: new google.maps.Size(25, 25),
+                };
+                this.marker.setPosition(place.geometry.location);
+                console.log("place");
+                console.log(place.geometry.location.lat());
+                if (place.geometry.viewport) {
+                    // Only geocodes have viewport.
+                    bounds.union(place.geometry.viewport);
                 }
                 else {
-                    window.alert('No results found');
+                    bounds.extend(place.geometry.location);
                 }
-            }
-            else {
-                window.alert('Geocoder failed due to: ' + status);
-            }
-        });
-    }
-    setCurrentLocation() {
-        if ('geolocation' in navigator) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                this.latitude = position.coords.latitude;
-                this.longitude = position.coords.longitude;
-                this.zoom = 15;
             });
-        }
+            map.fitBounds(bounds);
+        });
     }
     get registerFormControl() {
         return this.form.controls;
     }
     uploadProfile(event) {
-        const userProfile = event.target.files[0];
-        this.form.patchValue({
-            picture: userProfile
-        });
-        this.form.get('picture').updateValueAndValidity();
+        // const userProfile = (event.target as HTMLInputElement).files[0];
+        // this.form.patchValue({
+        //   picture: userProfile
+        // });
+        // this.form.get('picture').updateValueAndValidity();
+        for (var i = 0; i < event.target.files.length; i++) {
+            this.myFiles.push(event.target.files[i]);
+        }
     }
     uploadAudio(event) {
         const audioFile = event.target.files[0];
@@ -7901,25 +14306,47 @@ class ToursCreateComponent {
             audio: audioFile
         });
         this.form.get('audio').updateValueAndValidity();
+        //here you can check the file type for attachedFile either video or audio
+        var audio = document.createElement('audio');
+        audio.preload = 'metadata';
+        audio.src = URL.createObjectURL(audioFile);
+        audio.onloadedmetadata = function () {
+            window.URL.revokeObjectURL(audio.src);
+            globalThis.audioDuration = Math.round(audio.duration * Math.pow(10, 0)) / Math.pow(10, 0); // here you could get the duration
+        };
     }
     submitForm() {
+        this.submitted = true;
+        if (this.form.invalid) {
+            return;
+        }
         var formData = new FormData();
-        formData.append("picture", this.form.get('picture').value);
-        formData.append("lat", this.latitude);
-        formData.append("long", this.longitude);
+        let val = [];
+        for (var i = 0; i < this.myFiles.length; i++) {
+            formData.append("picture", this.myFiles[i]);
+        }
+        formData.append("lat", this.marker.getPosition().lat());
+        formData.append("long", this.marker.getPosition().lng());
         formData.append("name", this.form.value.name);
         formData.append("description", this.form.get('description').value);
-        formData.append("categoryName", this.form.get('categoryName').value);
+        for (let i = 0; i < this.form.get('categoryName').value.length; i++) {
+            val.push(this.form.get('categoryName').value[i].item_id);
+        }
+        formData.append("categoryName", (val));
+        //formData.append("categoryName", this.form.get('categoryName').value);
         formData.append("audio", this.form.get('audio').value);
+        formData.append("audioDuration", globalThis.audioDuration);
         formData.append("transcript", this.form.value.transcript);
         this.submitted = true;
         if (this.form.valid) {
-            this.http.post('http://18.217.48.28:2000/tours/create', formData, { headers: this.getHeader(FormData) }).subscribe((response) => console.log(response), (error) => console.log(error));
-            // alert('Form Submitted succesfully!!!');
-            this.router.navigate(['../tours-list']);
-            console.table(this.form.value);
+            this.http.post('http://18.217.48.28:2000/tours/create', formData, { headers: this.getHeader(FormData) }).subscribe((response) => this.refresh(response), (error) => console.log(error));
+            // console.table(this.form.value);
         }
-        // 
+    }
+    refresh(response) {
+        if (response['meta']['status'] == 201) {
+            this.router.navigate(['/pages/tours/tours-list']);
+        }
     }
     getHeader(isFormData) {
         let headers = new _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpHeaders"]();
@@ -7930,150 +14357,128 @@ class ToursCreateComponent {
         return headers;
     }
 }
-ToursCreateComponent.ɵfac = function ToursCreateComponent_Factory(t) { return new (t || ToursCreateComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormBuilder"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_agm_core__WEBPACK_IMPORTED_MODULE_4__["MapsAPILoader"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__["RestService"])); };
+ToursCreateComponent.ɵfac = function ToursCreateComponent_Factory(t) { return new (t || ToursCreateComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormBuilder"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_agm_core__WEBPACK_IMPORTED_MODULE_4__["MapsAPILoader"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_6__["RestService"])); };
 ToursCreateComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: ToursCreateComponent, selectors: [["ngx-tours-create"]], viewQuery: function ToursCreateComponent_Query(rf, ctx) { if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵviewQuery"](_c0, true);
     } if (rf & 2) {
         var _t;
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵqueryRefresh"](_t = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵloadQuery"]()) && (ctx.searchElementRef = _t.first);
-    } }, decls: 61, vars: 18, consts: [[1, "container"], [3, "formGroup", "ngSubmit"], [1, "form-group"], ["for", "picture"], ["type", "file", "id", "picture", "name", "picture", "formControlName", "picture", 1, "form-control", 3, "change"], ["class", "text-danger", 4, "ngIf"], [1, "form-group", "input-group-lg"], ["for", "name"], ["placeholder", "Name", "id", "name", "formControlName", "name", "name", "name", 1, "form-control"], ["for", "description"], ["id", "description", "placeholder", "Description", "formControlName", "description", 1, "form-control"], ["for", "categoryName"], ["formControlName", "categoryName", "id", "categoryName", 1, "form-control"], [3, "value"], ["id", "categoryName", 3, "value", 4, "ngFor", "ngForOf"], ["for", "audio"], ["type", "file", "name", "audio", "id", "audio", "formControlName", "audio", 1, "form-control", 3, "change"], ["for", "transcript"], ["placeholder", "Transcript", "id", "transcript", "formControlName", "transcript", 1, "form-control"], ["for", "location"], ["type", "text", "id", "search", "placeholder", "Search Nearest Location", "autocorrect", "off", "autocapitalize", "off", "spellcheck", "off", "type", "text", 1, "form-control", 3, "keydown.enter"], ["search", ""], [3, "latitude", "longitude", "zoom"], [3, "latitude", "longitude", "markerDraggable", "dragEnd"], ["type", "text", "name", "latitude", "id", "latitude", 1, "form-control", 3, "value"], ["for", "Latitude"], ["type", "text", "name", "latitude", "id", "latitude", "formControlName", "lat", 1, "form-control", 3, "value"], ["for", "Longitude"], ["type", "text", "name", "longitude", "id", "longitude", "formControlName", "long", 1, "form-control", 3, "value"], ["routerLink", "../tours-list", 1, "btn", "btn-info", 2, "margin-left", "15px"], [1, "text-danger"], ["id", "categoryName", 3, "value"]], template: function ToursCreateComponent_Template(rf, ctx) { if (rf & 1) {
+    } }, decls: 49, vars: 25, consts: [[1, "container"], [1, "navbar", "navbar-expand-sm", "bg-primary", "navbar-dark"], [1, "navbar-nav"], [1, "nav-item"], [1, "nav-item", "right-btn"], ["href", "/pages/tours/tours-list", "routerlink", "/pages/tours/tours-list", 1, "btn", "nav-link"], [3, "formGroup", "ngSubmit"], ["heroForm", "ngForm"], [1, "form-group"], ["for", "picture"], ["type", "file", "multiple", "", "id", "picture", "name", "picture", "accept", "image/jpg, image/jpeg, image/png", 1, "form-control", 3, "ngClass", "change"], ["class", "invalid-feedback", 4, "ngIf"], [1, "form-group", "input-group-lg"], ["for", "name"], ["placeholder", "Name", "formControlName", "name", 1, "form-control", 3, "ngClass"], ["for", "description"], ["id", "description", "placeholder", "Description", "formControlName", "description", 1, "form-control", 3, "ngClass"], ["for", "tours"], ["formControlName", "categoryName", 3, "placeholder", "data", "ngModel", "settings", "ngModelChange", "onSelect", "onSelectAll"], ["for", "audio"], ["type", "file", "name", "audio", "id", "audio", "formControlName", "audio", 1, "form-control", 3, "ngClass", "change"], ["for", "transcript"], ["placeholder", "Transcript", "id", "transcript", "formControlName", "transcript", 1, "form-control", 3, "ngClass"], ["for", "location"], ["id", "pac-input", "type", "text", "placeholder", "Search Box", 1, "form-control"], ["id", "map"], [1, "btn", "btn-info", 2, "margin-left", "15px"], [1, "invalid-feedback"], [4, "ngIf"]], template: function ToursCreateComponent_Template(rf, ctx) { if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "form", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngSubmit", function ToursCreateComponent_Template_form_ngSubmit_1_listener() { return ctx.submitForm(); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "label", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](4, "Picture");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "input", 4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function ToursCreateComponent_Template_input_change_5_listener($event) { return ctx.uploadProfile($event); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](6, ToursCreateComponent_span_6_Template, 2, 0, "span", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "label", 7);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](9, "Name");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](10, "input", 8);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](11, ToursCreateComponent_span_11_Template, 2, 0, "span", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "label", 9);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](14, "Description");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](15, "textarea", 10);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](16, ToursCreateComponent_span_16_Template, 2, 0, "span", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](17, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](18, "label", 11);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](19, "Category Name");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](20, "select", 12);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](21, "option", 13);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](22, "Select Category");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](23, ToursCreateComponent_option_23_Template, 2, 2, "option", 14);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](24, ToursCreateComponent_span_24_Template, 2, 0, "span", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](25, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](26, "label", 15);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](27, "Audio");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](28, "input", 16);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function ToursCreateComponent_Template_input_change_28_listener($event) { return ctx.uploadAudio($event); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](29, ToursCreateComponent_span_29_Template, 2, 0, "span", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](30, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](31, "label", 17);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](32, "Transcript");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](33, "textarea", 18);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](34, ToursCreateComponent_span_34_Template, 2, 0, "span", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](35, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](36, "label", 19);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](37, "Location");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](38, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](39, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](40, "label");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](41, "Enter address");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](42, "input", 20, 21);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("keydown.enter", function ToursCreateComponent_Template_input_keydown_enter_42_listener($event) { return $event.preventDefault(); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "nav", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "ul", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "li", 3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](5, "Create Tour");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](44, "agm-map", 22);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](45, "agm-marker", 23);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("dragEnd", function ToursCreateComponent_Template_agm_marker_dragEnd_45_listener($event) { return ctx.markerDragEnd($event); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](46, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](47, "label", 17);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](48, "Address");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](49, "input", 24);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](50, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](51, "label", 25);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](52, "Latitude");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](53, "input", 26);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](54, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](55, "label", 27);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](56, "Longitude");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](57, "input", 28);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "li", 4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "a", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](8, "Back");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](58, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](59, "button", 29);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](60, "Create");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "form", 6, 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngSubmit", function ToursCreateComponent_Template_form_ngSubmit_9_listener() { return ctx.submitForm(); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "div", 8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "label", 9);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](13, "Picture");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "input", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function ToursCreateComponent_Template_input_change_14_listener($event) { return ctx.uploadProfile($event); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](15, ToursCreateComponent_div_15_Template, 2, 1, "div", 11);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](16, "div", 12);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](17, "label", 13);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](18, "Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](19, "input", 14);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](20, ToursCreateComponent_div_20_Template, 2, 1, "div", 11);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](21, "div", 12);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](22, "label", 15);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](23, "Description");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](24, "textarea", 16);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](25, ToursCreateComponent_div_25_Template, 2, 1, "div", 11);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](26, "div", 12);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](27, "label", 17);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](28, "Category Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](29, "ng-multiselect-dropdown", 18);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function ToursCreateComponent_Template_ng_multiselect_dropdown_ngModelChange_29_listener($event) { return ctx.selectedItems = $event; })("onSelect", function ToursCreateComponent_Template_ng_multiselect_dropdown_onSelect_29_listener($event) { return ctx.onItemSelect($event); })("onSelectAll", function ToursCreateComponent_Template_ng_multiselect_dropdown_onSelectAll_29_listener($event) { return ctx.onSelectAll($event); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](30, "div", 8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](31, "label", 19);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](32, "Audio");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](33, "input", 20);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function ToursCreateComponent_Template_input_change_33_listener($event) { return ctx.uploadAudio($event); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](34, ToursCreateComponent_div_34_Template, 2, 1, "div", 11);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](35, "div", 12);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](36, "label", 21);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](37, "Transcript");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](38, "textarea", 22);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](39, ToursCreateComponent_div_39_Template, 2, 1, "div", 11);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](40, "div", 12);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](41, "label", 23);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](42, "Location");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](43, "div", 8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](44, "input", 24);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](45, "div", 25);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](46, "div", 8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](47, "button", 26);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](48, "Create");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     } if (rf & 2) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](9);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("formGroup", ctx.form);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.picture.touched || ctx.submitted) && (ctx.registerFormControl.picture.errors == null ? null : ctx.registerFormControl.picture.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.name.touched || ctx.submitted) && (ctx.registerFormControl.name.errors == null ? null : ctx.registerFormControl.name.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.name.touched || ctx.submitted) && (ctx.registerFormControl.name.errors == null ? null : ctx.registerFormControl.name.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("value", null);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx.categories);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](15, _c1, ctx.submitted && ctx.f.picture.errors));
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.categoryName.touched || ctx.submitted) && (ctx.registerFormControl.categoryName.errors == null ? null : ctx.registerFormControl.categoryName.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.audio.touched || ctx.submitted) && (ctx.registerFormControl.audio.errors == null ? null : ctx.registerFormControl.audio.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.transcript.touched || ctx.submitted) && (ctx.registerFormControl.transcript.errors == null ? null : ctx.registerFormControl.transcript.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](10);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("latitude", ctx.latitude)("longitude", ctx.longitude)("zoom", ctx.zoom);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.picture.errors);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](17, _c1, ctx.submitted && ctx.f.name.errors));
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("latitude", ctx.latitude)("longitude", ctx.longitude)("markerDraggable", true);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.name.errors);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("value", ctx.address);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](19, _c1, ctx.submitted && ctx.f.description.errors));
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.description.errors);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("value", ctx.latitude);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("placeholder", "Select Tours")("data", ctx.dropdownList)("ngModel", ctx.selectedItems)("settings", ctx.dropdownSettings);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("value", ctx.longitude);
-    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_1__["ɵangular_packages_forms_forms_y"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatusGroup"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormGroupDirective"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormControlName"], _angular_common__WEBPACK_IMPORTED_MODULE_6__["NgIf"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["SelectControlValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgSelectOption"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["ɵangular_packages_forms_forms_x"], _angular_common__WEBPACK_IMPORTED_MODULE_6__["NgForOf"], _agm_core__WEBPACK_IMPORTED_MODULE_4__["AgmMap"], _agm_core__WEBPACK_IMPORTED_MODULE_4__["AgmMarker"], _angular_router__WEBPACK_IMPORTED_MODULE_3__["RouterLink"]], styles: ["agm-map[_ngcontent-%COMP%] {\n  height: 300px;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvdG91cnMvdG91cnMtY3JlYXRlL3RvdXJzLWNyZWF0ZS5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNJLGFBQWE7QUFDakIiLCJmaWxlIjoic3JjL2FwcC9wYWdlcy90b3Vycy90b3Vycy1jcmVhdGUvdG91cnMtY3JlYXRlLmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiYWdtLW1hcCB7XHJcbiAgICBoZWlnaHQ6IDMwMHB4O1xyXG59Il19 */"] });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](21, _c1, ctx.submitted && ctx.f.audio.errors));
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.audio.errors);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](23, _c1, ctx.submitted && ctx.f.transcript.errors));
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.transcript.errors);
+    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_1__["ɵangular_packages_forms_forms_y"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatusGroup"], _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_5__["ɵa"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormGroupDirective"], _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_5__["ɵi"], _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_5__["ɵj"], _angular_common__WEBPACK_IMPORTED_MODULE_7__["NgClass"], _angular_common__WEBPACK_IMPORTED_MODULE_7__["NgIf"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["DefaultValueAccessor"], _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_5__["ɵk"], _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_5__["ɵe"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormControlName"], ng_multiselect_dropdown__WEBPACK_IMPORTED_MODULE_8__["MultiSelectComponent"]], styles: ["agm-map {\n  height: 300px;\n}\n\nli.nav-item.right-btn {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn {\n  background: #fff;\n}\n\nli.nav-item.right-btn a.nav-link, li.nav-item.left-btn a.nav-link {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark {\n  height: 70px;\n}\n\nli h2 {\n  color: #fff;\n}\n\ndiv#map {\n  width: 100% !important;\n  height: 400px !important;\n  position: relative !important;\n}\n\n/* Optional: Makes the sample page fill the window. */\n\nhtml,\nbody {\n  height: 100%;\n  margin: 0;\n  padding: 0;\n}\n\n#infowindow-content .title {\n  font-weight: bold;\n}\n\n#infowindow-content {\n  display: none;\n}\n\n#map #infowindow-content {\n  display: inline;\n}\n\n.pac-card {\n  margin: 10px 10px 0 0;\n  border-radius: 2px 0 0 2px;\n  box-sizing: border-box;\n  -moz-box-sizing: border-box;\n  outline: none;\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);\n  background-color: #fff;\n  font-family: Roboto;\n}\n\n#pac-container {\n  padding-bottom: 12px;\n  margin-right: 12px;\n}\n\n.pac-controls {\n  display: inline-block;\n  padding: 5px 11px;\n}\n\n.pac-controls label {\n  font-family: Roboto;\n  font-size: 13px;\n  font-weight: 300;\n}\n\n#pac-input {\n  background-color: #fff;\n  font-family: inherit;\n  font-size: 17px;\n  font-weight: 400;\n  margin-left: 0;\n  padding: 0 11px 0 13px;\n  text-overflow: ellipsis;\n  width: 100%;\n  color: #222b45;\n}\n\n#pac-input:focus {\n  border-color: #4d90fe;\n}\n\n#title {\n  color: #fff;\n  background-color: #4d90fe;\n  font-size: 25px;\n  font-weight: 500;\n  padding: 6px 12px;\n}\n\n#target {\n  width: 345px;\n}\n\nform {\n  margin-top: 20px;\n}\n\n.form-control::-moz-placeholder {\n  height: calc(1.5em + 0.75rem + 8px) !important;\n  font-size: 17px !important;\n  color: #222b45 !important;\n  font-family: inherit;\n  font-weight: 400;\n  color: #000;\n}\n\n.form-control:-ms-input-placeholder {\n  height: calc(1.5em + 0.75rem + 8px) !important;\n  font-size: 17px !important;\n  color: #222b45 !important;\n  font-family: inherit;\n  font-weight: 400;\n  color: #000;\n}\n\n.form-control, .form-control::placeholder {\n  height: calc(1.5em + 0.75rem + 8px) !important;\n  font-size: 17px !important;\n  color: #222b45 !important;\n  font-family: inherit;\n  font-weight: 400;\n  color: #000;\n}\n\n.multiselect-dropdown .dropdown-btn {\n  height: 45px !important;\n  line-height: 1.9 !important;\n  border: 1px solid #ced4da !important;\n  font-size: 17px;\n}\n\n#description {\n  font-family: inherit;\n  font-size: 17px;\n  font-weight: 400;\n}\n\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvdG91cnMvdG91cnMtY3JlYXRlL3RvdXJzLWNyZWF0ZS5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFFQTtFQUNJLGFBQWE7QUFEakI7O0FBSUE7RUFDSSxrQkFBa0I7RUFDbEIsU0FBUztFQUNULFdBQVc7RUFDWCxnQkFBZ0I7QUFEcEI7O0FBR0U7RUFDRSxnQkFBZ0I7QUFBcEI7O0FBRUU7RUFBa0Usc0JBQXNCO0VBQUUscUJBQXFCO0VBQUUsZ0JBQWdCO0FBSW5JOztBQUhFO0VBQ0Usb0NBQW9DO0VBQ3BDLGdDQUFpQztBQU1yQzs7QUFKRTtFQUNFLFlBQVk7QUFPaEI7O0FBTEU7RUFBTyxXQUFXO0FBU3BCOztBQVJFO0VBQ0Usc0JBQXNCO0VBQ3RCLHdCQUF3QjtFQUN4Qiw2QkFBNkI7QUFXakM7O0FBUkUscURBQUE7O0FBQ0E7O0VBRUUsWUFBWTtFQUNaLFNBQVM7RUFDVCxVQUFVO0FBV2Q7O0FBUkU7RUFDRSxpQkFBaUI7QUFXckI7O0FBUkU7RUFDRSxhQUFhO0FBV2pCOztBQVJFO0VBQ0UsZUFBZTtBQVduQjs7QUFSRTtFQUNFLHFCQUFxQjtFQUNyQiwwQkFBMEI7RUFDMUIsc0JBQXNCO0VBQ3RCLDJCQUEyQjtFQUMzQixhQUFhO0VBQ2Isd0NBQXdDO0VBQ3hDLHNCQUFzQjtFQUN0QixtQkFBbUI7QUFXdkI7O0FBUkU7RUFDRSxvQkFBb0I7RUFDcEIsa0JBQWtCO0FBV3RCOztBQVJFO0VBQ0UscUJBQXFCO0VBQ3JCLGlCQUFpQjtBQVdyQjs7QUFSRTtFQUNFLG1CQUFtQjtFQUNuQixlQUFlO0VBQ2YsZ0JBQWdCO0FBV3BCOztBQVJFO0VBQ0Usc0JBQXNCO0VBQ3RCLG9CQUFvQjtFQUNwQixlQUFlO0VBQ2YsZ0JBQWdCO0VBQ2hCLGNBQWM7RUFDZCxzQkFBc0I7RUFDdEIsdUJBQXVCO0VBQ3ZCLFdBQVc7RUFDWCxjQUFjO0FBV2xCOztBQVJFO0VBQ0UscUJBQXFCO0FBV3pCOztBQVJFO0VBQ0UsV0FBVztFQUNYLHlCQUF5QjtFQUN6QixlQUFlO0VBQ2YsZ0JBQWdCO0VBQ2hCLGlCQUFpQjtBQVdyQjs7QUFSRTtFQUNFLFlBQVk7QUFXaEI7O0FBVEU7RUFDRSxnQkFBZ0I7QUFZcEI7O0FBVkE7RUFBMEMsOENBQThDO0VBQUMsMEJBQTBCO0VBQUMseUJBQXlCO0VBQUMsb0JBQW9CO0VBQUMsZ0JBQWdCO0VBQUMsV0FBVztBQW1CL0w7O0FBbkJBO0VBQTBDLDhDQUE4QztFQUFDLDBCQUEwQjtFQUFDLHlCQUF5QjtFQUFDLG9CQUFvQjtFQUFDLGdCQUFnQjtFQUFDLFdBQVc7QUFtQi9MOztBQW5CQTtFQUEwQyw4Q0FBOEM7RUFBQywwQkFBMEI7RUFBQyx5QkFBeUI7RUFBQyxvQkFBb0I7RUFBQyxnQkFBZ0I7RUFBQyxXQUFXO0FBbUIvTDs7QUFqQkE7RUFBb0MsdUJBQXVCO0VBQUUsMkJBQTJCO0VBQUMsb0NBQW9DO0VBQUMsZUFBYztBQXdCNUk7O0FBdkJBO0VBQ0Usb0JBQW9CO0VBQ3BCLGVBQWU7RUFDZixnQkFBZ0I7QUEwQmxCIiwiZmlsZSI6InNyYy9hcHAvcGFnZXMvdG91cnMvdG91cnMtY3JlYXRlL3RvdXJzLWNyZWF0ZS5jb21wb25lbnQuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbIlxyXG5cclxuYWdtLW1hcCB7XHJcbiAgICBoZWlnaHQ6IDMwMHB4O1xyXG59XHJcblxyXG5saS5uYXYtaXRlbS5yaWdodC1idG4ge1xyXG4gICAgcG9zaXRpb246IGFic29sdXRlO1xyXG4gICAgdG9wOiAxNXB4O1xyXG4gICAgcmlnaHQ6IDIwcHg7XHJcbiAgICBiYWNrZ3JvdW5kOiAjZmZmO1xyXG4gIH1cclxuICBsaS5uYXYtaXRlbS5sZWZ0LWJ0biB7XHJcbiAgICBiYWNrZ3JvdW5kOiAjZmZmO1xyXG4gIH1cclxuICBsaS5uYXYtaXRlbS5yaWdodC1idG4gYS5uYXYtbGluaywgbGkubmF2LWl0ZW0ubGVmdC1idG4gYS5uYXYtbGlua3tjb2xvcjogIzAwMCAhaW1wb3J0YW50OyB0ZXh0LWRlY29yYXRpb246IG5vbmU7IGZvbnQtd2VpZ2h0OiAzMDA7fVxyXG4gIC5iZy1wcmltYXJ5IHtcclxuICAgIGJhY2tncm91bmQtY29sb3I6ICMxN2EyYjggIWltcG9ydGFudDtcclxuICAgIGJvcmRlci1jb2xvcjogICMxN2EyYjggIWltcG9ydGFudDtcclxuICB9XHJcbiAgbmF2Lm5hdmJhci5uYXZiYXItZXhwYW5kLXNtLmJnLXByaW1hcnkubmF2YmFyLWRhcmsge1xyXG4gICAgaGVpZ2h0OiA3MHB4O1xyXG4gIH1cclxuICBsaSBoMiB7Y29sb3I6ICNmZmY7fVxyXG4gIGRpdiNtYXAge1xyXG4gICAgd2lkdGg6IDEwMCUgIWltcG9ydGFudDtcclxuICAgIGhlaWdodDogNDAwcHggIWltcG9ydGFudDtcclxuICAgIHBvc2l0aW9uOiByZWxhdGl2ZSAhaW1wb3J0YW50O1xyXG4gIH1cclxuICBcclxuICAvKiBPcHRpb25hbDogTWFrZXMgdGhlIHNhbXBsZSBwYWdlIGZpbGwgdGhlIHdpbmRvdy4gKi9cclxuICBodG1sLFxyXG4gIGJvZHkge1xyXG4gICAgaGVpZ2h0OiAxMDAlO1xyXG4gICAgbWFyZ2luOiAwO1xyXG4gICAgcGFkZGluZzogMDtcclxuICB9XHJcbiAgXHJcbiAgI2luZm93aW5kb3ctY29udGVudCAudGl0bGUge1xyXG4gICAgZm9udC13ZWlnaHQ6IGJvbGQ7XHJcbiAgfVxyXG4gIFxyXG4gICNpbmZvd2luZG93LWNvbnRlbnQge1xyXG4gICAgZGlzcGxheTogbm9uZTtcclxuICB9XHJcbiAgXHJcbiAgI21hcCAjaW5mb3dpbmRvdy1jb250ZW50IHtcclxuICAgIGRpc3BsYXk6IGlubGluZTtcclxuICB9XHJcbiAgXHJcbiAgLnBhYy1jYXJkIHtcclxuICAgIG1hcmdpbjogMTBweCAxMHB4IDAgMDtcclxuICAgIGJvcmRlci1yYWRpdXM6IDJweCAwIDAgMnB4O1xyXG4gICAgYm94LXNpemluZzogYm9yZGVyLWJveDtcclxuICAgIC1tb3otYm94LXNpemluZzogYm9yZGVyLWJveDtcclxuICAgIG91dGxpbmU6IG5vbmU7XHJcbiAgICBib3gtc2hhZG93OiAwIDJweCA2cHggcmdiYSgwLCAwLCAwLCAwLjMpO1xyXG4gICAgYmFja2dyb3VuZC1jb2xvcjogI2ZmZjtcclxuICAgIGZvbnQtZmFtaWx5OiBSb2JvdG87XHJcbiAgfVxyXG4gIFxyXG4gICNwYWMtY29udGFpbmVyIHtcclxuICAgIHBhZGRpbmctYm90dG9tOiAxMnB4O1xyXG4gICAgbWFyZ2luLXJpZ2h0OiAxMnB4O1xyXG4gIH1cclxuICBcclxuICAucGFjLWNvbnRyb2xzIHtcclxuICAgIGRpc3BsYXk6IGlubGluZS1ibG9jaztcclxuICAgIHBhZGRpbmc6IDVweCAxMXB4O1xyXG4gIH1cclxuICBcclxuICAucGFjLWNvbnRyb2xzIGxhYmVsIHtcclxuICAgIGZvbnQtZmFtaWx5OiBSb2JvdG87XHJcbiAgICBmb250LXNpemU6IDEzcHg7XHJcbiAgICBmb250LXdlaWdodDogMzAwO1xyXG4gIH1cclxuICBcclxuICAjcGFjLWlucHV0IHtcclxuICAgIGJhY2tncm91bmQtY29sb3I6ICNmZmY7XHJcbiAgICBmb250LWZhbWlseTogaW5oZXJpdDtcclxuICAgIGZvbnQtc2l6ZTogMTdweDtcclxuICAgIGZvbnQtd2VpZ2h0OiA0MDA7XHJcbiAgICBtYXJnaW4tbGVmdDogMDtcclxuICAgIHBhZGRpbmc6IDAgMTFweCAwIDEzcHg7XHJcbiAgICB0ZXh0LW92ZXJmbG93OiBlbGxpcHNpcztcclxuICAgIHdpZHRoOiAxMDAlO1xyXG4gICAgY29sb3I6ICMyMjJiNDU7XHJcbiAgfVxyXG4gIFxyXG4gICNwYWMtaW5wdXQ6Zm9jdXMge1xyXG4gICAgYm9yZGVyLWNvbG9yOiAjNGQ5MGZlO1xyXG4gIH1cclxuICBcclxuICAjdGl0bGUge1xyXG4gICAgY29sb3I6ICNmZmY7XHJcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiAjNGQ5MGZlO1xyXG4gICAgZm9udC1zaXplOiAyNXB4O1xyXG4gICAgZm9udC13ZWlnaHQ6IDUwMDtcclxuICAgIHBhZGRpbmc6IDZweCAxMnB4O1xyXG4gIH1cclxuICBcclxuICAjdGFyZ2V0IHtcclxuICAgIHdpZHRoOiAzNDVweDtcclxuICB9XHJcbiAgZm9ybSB7XHJcbiAgICBtYXJnaW4tdG9wOiAyMHB4O1xyXG59XHJcbi5mb3JtLWNvbnRyb2wsIC5mb3JtLWNvbnRyb2w6OnBsYWNlaG9sZGVye2hlaWdodDogY2FsYygxLjVlbSArIDAuNzVyZW0gKyA4cHgpICFpbXBvcnRhbnQ7Zm9udC1zaXplOiAxN3B4ICFpbXBvcnRhbnQ7Y29sb3I6ICMyMjJiNDUgIWltcG9ydGFudDtmb250LWZhbWlseTogaW5oZXJpdDtmb250LXdlaWdodDogNDAwO2NvbG9yOiAjMDAwO1xyXG59XHJcbi5tdWx0aXNlbGVjdC1kcm9wZG93biAuZHJvcGRvd24tYnRue2hlaWdodDogNDVweCAhaW1wb3J0YW50OyBsaW5lLWhlaWdodDogMS45ICFpbXBvcnRhbnQ7Ym9yZGVyOiAxcHggc29saWQgI2NlZDRkYSAhaW1wb3J0YW50O2ZvbnQtc2l6ZToxN3B4O31cclxuI2Rlc2NyaXB0aW9ue1xyXG4gIGZvbnQtZmFtaWx5OiBpbmhlcml0O1xyXG4gIGZvbnQtc2l6ZTogMTdweDtcclxuICBmb250LXdlaWdodDogNDAwO1xyXG4gIFxyXG59Il19 */"], encapsulation: 2 });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](ToursCreateComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
         args: [{
                 selector: 'ngx-tours-create',
                 templateUrl: './tours-create.component.html',
-                styleUrls: ['./tours-create.component.scss']
+                styleUrls: ['./tours-create.component.scss'],
+                encapsulation: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ViewEncapsulation"].None
             }]
-    }], function () { return [{ type: _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"] }, { type: _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormBuilder"] }, { type: _agm_core__WEBPACK_IMPORTED_MODULE_4__["MapsAPILoader"] }, { type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"] }, { type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__["RestService"] }]; }, { searchElementRef: [{
+    }], function () { return [{ type: _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"] }, { type: _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormBuilder"] }, { type: _agm_core__WEBPACK_IMPORTED_MODULE_4__["MapsAPILoader"] }, { type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"] }, { type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_6__["RestService"] }]; }, { searchElementRef: [{
             type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ViewChild"],
             args: ['search']
         }] }); })();
@@ -8092,10 +14497,11 @@ ToursCreateComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdef
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ToursDetailComponent", function() { return ToursDetailComponent; });
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
-/* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
-/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
+/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
+/* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
 /* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
-/* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/forms */ "./node_modules/@angular/forms/__ivy_ngcc__/fesm2015/forms.js");
+///<reference types="@types/googlemaps" />;
+///<reference types="@types/googlemaps" />;
 
 
 
@@ -8103,156 +14509,220 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-function ToursDetailComponent_div_1_button_17_Template(rf, ctx) { if (rf & 1) {
-    const _r5 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "button", 12);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function ToursDetailComponent_div_1_button_17_Template_button_click_0_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r5); const ctx_r4 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](2); return ctx_r4.updatePublished(false); });
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " UnPublish ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-} }
-function ToursDetailComponent_div_1_button_18_Template(rf, ctx) { if (rf & 1) {
-    const _r7 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "button", 12);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function ToursDetailComponent_div_1_button_18_Template_button_click_0_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r7); const ctx_r6 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](2); return ctx_r6.updatePublished(true); });
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Publish ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-} }
-function ToursDetailComponent_div_1_Template(rf, ctx) { if (rf & 1) {
-    const _r9 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 3);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "h4");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](2, "Tutorial");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "form");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "div", 4);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "label", 5);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](6, "Title");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "input", 6);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function ToursDetailComponent_div_1_Template_input_ngModelChange_7_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r9); const ctx_r8 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](); return ctx_r8.currentTours.title = $event; });
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "div", 4);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "label", 7);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](10, "Description");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "input", 8);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function ToursDetailComponent_div_1_Template_input_ngModelChange_11_listener($event) { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r9); const ctx_r10 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](); return ctx_r10.currentTours.description = $event; });
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "div", 4);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "label");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "strong");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](15, "Status:");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](16);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](17, ToursDetailComponent_div_1_button_17_Template, 2, 0, "button", 9);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](18, ToursDetailComponent_div_1_button_18_Template, 2, 0, "button", 9);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](19, "button", 10);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function ToursDetailComponent_div_1_Template_button_click_19_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r9); const ctx_r11 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](); return ctx_r11.deleteTours(); });
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](20, " Delete ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](21, "button", 11);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function ToursDetailComponent_div_1_Template_button_click_21_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r9); const ctx_r12 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](); return ctx_r12.updateTours(); });
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](22, " Update ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](23, "p");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](24);
+const _c0 = ["gmap"];
+function ToursDetailComponent_div_16_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 16);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "a", 17);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](2, "img", 18);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } if (rf & 2) {
-    const ctx_r0 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](7);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r0.currentTours.title);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx_r0.currentTours.description);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate1"](" ", ctx_r0.currentTours.published ? "Published" : "Pending", " ");
+    const picture_r3 = ctx.$implicit;
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r0.currentTutorial.published);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("href", picture_r3, _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵsanitizeUrl"]);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", !ctx_r0.currentTutorial.published);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](6);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](ctx_r0.message);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("src", picture_r3, _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵsanitizeUrl"]);
 } }
-function ToursDetailComponent_div_2_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](1, "br");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "p");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](3, "Cannot access this Tutorial...");
+function ToursDetailComponent_p_54_Template(rf, ctx) { if (rf & 1) {
+    const _r7 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "p", 19);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "button", 20);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function ToursDetailComponent_p_54_Template_button_click_2_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r7); const ctx_r6 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](); return ctx_r6.DltFeedback(); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnamespaceSVG"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "svg", 21);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](4, "path", 22);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](5, "path", 23);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} if (rf & 2) {
+    const feedback_r4 = ctx.$implicit;
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](feedback_r4.comment);
 } }
 class ToursDetailComponent {
-    constructor(restService, router, route) {
+    constructor(restService, router, route, ngZone) {
         this.restService = restService;
         this.router = router;
         this.route = route;
-        this.currentTours = null;
+        this.ngZone = ngZone;
+        this.categories = [];
+        this.tours = [];
         this.message = '';
+    }
+    ngAfterContentInit(lat, long) {
+        let mapProp = {
+            center: new google.maps.LatLng(lat, long),
+            zoom: 15,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        this.map = new google.maps.Map(this.gmapElement.nativeElement, mapProp);
+        let location = new google.maps.LatLng(this.tours.lat, this.tours.long);
+        let marker = new google.maps.Marker({
+            position: location,
+            map: this.map
+        });
+    }
+    setMapType(mapTypeId) {
+        this.map.setMapTypeId(mapTypeId);
     }
     ngOnInit() {
-        this.message = '';
-        this.getTours(this.route.snapshot.paramMap.get('id'));
-    }
-    getTours(id) {
-        this.restService.get(id)
-            .subscribe(data => {
-            this.currentTours = data;
-            console.log(data);
-        }, error => {
+        var id;
+        this.activeRoute = this.route.params.subscribe(params => {
+            id = { "_id": params['id'] };
+        });
+        this.restService.post("/tours/view", id).subscribe((data) => {
+            this.tours = data.data;
+            this.ngAfterContentInit(this.tours.lat, this.tours.long);
+        }, (error) => {
+            console.log(error);
+        });
+        this.DltFeedback();
+        this.restService.get("/category/categoryList").subscribe((data) => {
+            this.categories = data.data;
+        }, (error) => {
             console.log(error);
         });
     }
-    updatePublished(status) {
-        const data = {
-            title: this.currentTours.title,
-            description: this.currentTours.description,
-            published: status
-        };
-        this.restService.post(this.currentTours.id, data)
-            .subscribe(response => {
-            this.currentTours.published = status;
-            console.log(response);
-        }, error => {
+    ;
+    DltFeedback() {
+        let tmp = [];
+        console.log(this.tours.categoryName.name);
+        for (let i = 0; i < this.tours.categoryName.length; i++) {
+            tmp.push({ item_id: this.tours.categoryName._id, item_text: this.tours.categoryName.name });
+        }
+        //console.log(this.tours.feedback.i);
+        //console.log(this.tours.feedback[1]._id);
+        //console.log(this.tours.feedback[1]._id);
+        for (let i = 0; i < this.tours.feedback.length; i++) {
+            tmp.push({ item_id: this.tours.feedback[i]._id, item_text: this.tours.feedback[i].comment });
+        }
+        this.restService.put("/tours/" + this.tours.feedback[0]._id).subscribe((data) => {
+            window.location.reload();
+        }, (error) => {
             console.log(error);
         });
     }
-    updateTours() {
-        this.restService.post(this.currentTours.id, this.currentTours)
-            .subscribe(response => {
-            console.log(response);
-            this.message = 'The TOURS was updated successfully!';
-        }, error => {
-            console.log(error);
-        });
-    }
-    deleteTours() {
-        this.restService.delete(this.currentTours.id)
-            .subscribe(response => {
-            console.log(response);
-            this.router.navigate(['/tutorials']);
-        }, error => {
-            console.log(error);
-        });
+    ngOnDestroy() {
+        if (this.activeRoute) {
+            this.activeRoute.unsubscribe();
+        }
     }
 }
-ToursDetailComponent.ɵfac = function ToursDetailComponent_Factory(t) { return new (t || ToursDetailComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__["RestService"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_2__["Router"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_2__["ActivatedRoute"])); };
-ToursDetailComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: ToursDetailComponent, selectors: [["ngx-tours-detail"]], decls: 3, vars: 2, consts: [[2, "width", "400px", "margin", "auto"], ["class", "edit-form", 4, "ngIf"], [4, "ngIf"], [1, "edit-form"], [1, "form-group"], ["for", "title"], ["type", "text", "id", "title", "name", "title", 1, "form-control", 3, "ngModel", "ngModelChange"], ["for", "description"], ["type", "text", "id", "description", "name", "description", 1, "form-control", 3, "ngModel", "ngModelChange"], ["class", "badge badge-primary mr-2", 3, "click", 4, "ngIf"], [1, "badge", "badge-danger", "mr-2", 3, "click"], ["type", "submit", 1, "badge", "badge-success", 3, "click"], [1, "badge", "badge-primary", "mr-2", 3, "click"]], template: function ToursDetailComponent_Template(rf, ctx) { if (rf & 1) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, ToursDetailComponent_div_1_Template, 25, 6, "div", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](2, ToursDetailComponent_div_2_Template, 4, 0, "div", 2);
+ToursDetailComponent.ɵfac = function ToursDetailComponent_Factory(t) { return new (t || ToursDetailComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_2__["RestService"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_1__["Router"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_1__["ActivatedRoute"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"])); };
+ToursDetailComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: ToursDetailComponent, selectors: [["ngx-tours-detail"]], viewQuery: function ToursDetailComponent_Query(rf, ctx) { if (rf & 1) {
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵviewQuery"](_c0, true);
+    } if (rf & 2) {
+        var _t;
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵqueryRefresh"](_t = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵloadQuery"]()) && (ctx.gmapElement = _t.first);
+    } }, decls: 55, vars: 7, consts: [[1, "navbar", "navbar-expand-sm", "bg-primary", "navbar-dark"], [1, "navbar-nav"], [1, "nav-item"], [1, "nav-item", "right-btn"], ["href", "/pages/tours/tours-list", "routerlink", "/pages/tours/tours-list", 1, "btn", "nav-link"], [1, "panel", "panel-primary"], [1, "panel-body"], [1, "table", "table-striped"], ["class", "binding", 4, "ngFor", "ngForOf"], ["audio", "", "player", "", "controls", "", "pre-load", "none", 3, "src"], [1, "form-group", "input-group-lg"], [1, "container"], [2, "width", "100%", "height", "400px"], ["gmap", ""], [2, "padding-top", "40px"], ["style", "position: relative; display: block; border-bottom:2px solid #ccc; border-right: none; padding:0 15px 15px 0;", 4, "ngFor", "ngForOf"], [1, "binding"], ["target", "_blank", 3, "href"], ["alt", "Picture", 3, "src"], [2, "position", "relative", "display", "block", "border-bottom", "2px solid #ccc", "border-right", "none", "padding", "0 15px 15px 0"], [2, "position", "absolute", "right", "0", "top", "0", 3, "click"], ["version", "1.1", "id", "Capa_1", "xmlns", "http://www.w3.org/2000/svg", 0, "xmlns", "xlink", "http://www.w3.org/1999/xlink", "x", "0px", "y", "0px", "width", "408.483px", "height", "408.483px", "viewBox", "0 0 408.483 408.483", 0, "xml", "space", "preserve", 2, "enable-background", "new 0 0 408.483 408.483"], ["d", "M87.748,388.784c0.461,11.01,9.521,19.699,20.539,19.699h191.911c11.018,0,20.078-8.689,20.539-19.699l13.705-289.316\n               H74.043L87.748,388.784z M247.655,171.329c0-4.61,3.738-8.349,8.35-8.349h13.355c4.609,0,8.35,3.738,8.35,8.349v165.293\n               c0,4.611-3.738,8.349-8.35,8.349h-13.355c-4.61,0-8.35-3.736-8.35-8.349V171.329z M189.216,171.329\n               c0-4.61,3.738-8.349,8.349-8.349h13.355c4.609,0,8.349,3.738,8.349,8.349v165.293c0,4.611-3.737,8.349-8.349,8.349h-13.355\n               c-4.61,0-8.349-3.736-8.349-8.349V171.329L189.216,171.329z M130.775,171.329c0-4.61,3.738-8.349,8.349-8.349h13.356\n               c4.61,0,8.349,3.738,8.349,8.349v165.293c0,4.611-3.738,8.349-8.349,8.349h-13.356c-4.61,0-8.349-3.736-8.349-8.349V171.329z"], ["d", "M343.567,21.043h-88.535V4.305c0-2.377-1.927-4.305-4.305-4.305h-92.971c-2.377,0-4.304,1.928-4.304,4.305v16.737H64.916\n               c-7.125,0-12.9,5.776-12.9,12.901V74.47h304.451V33.944C356.467,26.819,350.692,21.043,343.567,21.043z"]], template: function ToursDetailComponent_Template(rf, ctx) { if (rf & 1) {
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "nav", 0);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "ul", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "li", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](4, "Tour Detail");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "li", 3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "a", 4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](7, "Back");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "div", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "div", 6);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "table", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "tbody");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](14, "Picture");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "td");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](16, ToursDetailComponent_div_16_Template, 3, 2, "div", 8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](17, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](18, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](19, "Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](20, "td");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](21);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](22, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](23, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](24, "Description");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](25, "td");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](26);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](27, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](28, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](29, "Category Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](30, "td");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](31);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](32, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](33, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](34, "Audio");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](35, "td");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](36, "audio", 9);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](37, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](38, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](39, "Transcript");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](40, "td");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](41);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](42, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](43, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](44, "Location");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](45, "td");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](46, "div", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](47, "div", 11);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](48, "div", 12, 13);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](50, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](51, "th", 14);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](52, "Feedback");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](53, "td", 14);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](54, ToursDetailComponent_p_54_Template, 6, 1, "p", 15);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     } if (rf & 2) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.currentTours);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", !ctx.currentTours);
-    } }, directives: [_angular_common__WEBPACK_IMPORTED_MODULE_3__["NgIf"], _angular_forms__WEBPACK_IMPORTED_MODULE_4__["ɵangular_packages_forms_forms_y"], _angular_forms__WEBPACK_IMPORTED_MODULE_4__["NgControlStatusGroup"], _angular_forms__WEBPACK_IMPORTED_MODULE_4__["NgForm"], _angular_forms__WEBPACK_IMPORTED_MODULE_4__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_4__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_4__["NgModel"]], styles: ["\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiJzcmMvYXBwL3BhZ2VzL3RvdXJzL3RvdXJzLWRldGFpbC90b3Vycy1kZXRhaWwuY29tcG9uZW50LnNjc3MifQ== */"] });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](16);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx.tours.picture);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](ctx.tours.name);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](ctx.tours.description);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](ctx.tours.categoryName && ctx.tours.categoryName.name);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("src", ctx.tours.audio, _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵsanitizeUrl"]);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](ctx.tours.transcript);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](13);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx.tours.feedback);
+    } }, directives: [_angular_common__WEBPACK_IMPORTED_MODULE_3__["NgForOf"]], styles: ["img[_ngcontent-%COMP%] {\n  width: 90px;\n  height: auto;\n}\n\ntd[_ngcontent-%COMP%]   div.binding[_ngcontent-%COMP%] {\n  display: inline-block;\n  margin-right: 0px;\n  border-right: 2px solid #000;\n  padding: 0 10px;\n}\n\ntd[_ngcontent-%COMP%]   div.binding[_ngcontent-%COMP%]:last-child {\n  border-right: none;\n}\n\nth[_ngcontent-%COMP%] {\n  width: 170px;\n}\n\n.bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%] {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn[_ngcontent-%COMP%] {\n  background: #fff;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%], li.nav-item.left-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%] {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark[_ngcontent-%COMP%] {\n  height: 70px;\n}\n\nli[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  color: #fff;\n}\n\n.title[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 0;\n  margin: 0;\n}\n\n.title[_ngcontent-%COMP%]   a.btn.btn-primary[_ngcontent-%COMP%] {\n  float: right;\n  background: #117a8b;\n  padding: 10px 20px !important;\n  border: #117a8b;\n  color: #fff !important;\n  text-decoration: none;\n}\n\nagm-map[_ngcontent-%COMP%] {\n  height: 300px;\n}\n\nbutton[_ngcontent-%COMP%], button[_ngcontent-%COMP%]:focus {\n  background-color: inherit;\n  border: none;\n  width: 30px;\n  height: 30px;\n  box-shadow: none;\n  outline: none;\n}\n\nbutton[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  overflow: hidden;\n  vertical-align: middle;\n  width: 30px;\n  height: 30px;\n}\n\nbutton[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%]:hover {\n  fill: red;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvdG91cnMvdG91cnMtZGV0YWlsL3RvdXJzLWRldGFpbC5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFDQTtFQUFLLFdBQVc7RUFBRSxZQUFZO0FBRTlCOztBQURBO0VBQ0kscUJBQXFCO0VBQ3JCLGlCQUFpQjtFQUNqQiw0QkFBNEI7RUFDNUIsZUFBZTtBQUluQjs7QUFGQTtFQUEyQixrQkFBa0I7QUFNN0M7O0FBTEE7RUFDSSxZQUFZO0FBUWhCOztBQU5BO0VBQ0ksb0NBQW9DO0VBQ3BDLGdDQUFpQztBQVNyQzs7QUFQQTtFQUNJLGtCQUFrQjtFQUNsQixTQUFTO0VBQ1QsV0FBVztFQUNYLGdCQUFnQjtBQVVwQjs7QUFSQTtFQUNJLGdCQUFnQjtBQVdwQjs7QUFUQTtFQUFrRSxzQkFBc0I7RUFBRSxxQkFBcUI7RUFBRSxnQkFBZ0I7QUFlakk7O0FBZEE7RUFDSSxvQ0FBb0M7RUFDcEMsZ0NBQWlDO0FBaUJyQzs7QUFmQTtFQUNJLFlBQVk7QUFrQmhCOztBQWhCQTtFQUFPLFdBQVc7QUFvQmxCOztBQW5CQTtFQUFXLHFCQUFxQjtFQUFDLFVBQVU7RUFBRSxTQUFTO0FBeUJ0RDs7QUF4QkE7RUFBMEIsWUFBWTtFQUFDLG1CQUFtQjtFQUFDLDZCQUE2QjtFQUFDLGVBQWU7RUFBQyxzQkFBc0I7RUFBQyxxQkFBcUI7QUFpQ3JKOztBQWhDQTtFQUNJLGFBQWE7QUFtQ2pCOztBQWpDQTtFQUNJLHlCQUF5QjtFQUN6QixZQUFZO0VBQ1osV0FBVztFQUNYLFlBQVk7RUFDWixnQkFBZ0I7RUFDaEIsYUFBYTtBQW9DakI7O0FBbENBO0VBQ0ksZ0JBQWdCO0VBQ2hCLHNCQUFzQjtFQUN0QixXQUFXO0VBQ1gsWUFBWTtBQXFDaEI7O0FBbkNBO0VBQ0ksU0FBUztBQXNDYiIsImZpbGUiOiJzcmMvYXBwL3BhZ2VzL3RvdXJzL3RvdXJzLWRldGFpbC90b3Vycy1kZXRhaWwuY29tcG9uZW50LnNjc3MiLCJzb3VyY2VzQ29udGVudCI6WyJcclxuaW1nIHt3aWR0aDogOTBweDsgaGVpZ2h0OiBhdXRvO31cclxudGQgZGl2LmJpbmRpbmcge1xyXG4gICAgZGlzcGxheTogaW5saW5lLWJsb2NrO1xyXG4gICAgbWFyZ2luLXJpZ2h0OiAwcHg7XHJcbiAgICBib3JkZXItcmlnaHQ6IDJweCBzb2xpZCAjMDAwO1xyXG4gICAgcGFkZGluZzogMCAxMHB4O1xyXG59XHJcbnRkIGRpdi5iaW5kaW5nOmxhc3QtY2hpbGQge2JvcmRlci1yaWdodDogbm9uZTt9XHJcbnRoIHtcclxuICAgIHdpZHRoOiAxNzBweDtcclxufVxyXG4uYmctcHJpbWFyeSB7XHJcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiAjMTdhMmI4ICFpbXBvcnRhbnQ7XHJcbiAgICBib3JkZXItY29sb3I6ICAjMTdhMmI4ICFpbXBvcnRhbnQ7XHJcbn1cclxubGkubmF2LWl0ZW0ucmlnaHQtYnRuIHtcclxuICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTtcclxuICAgIHRvcDogMTVweDtcclxuICAgIHJpZ2h0OiAyMHB4O1xyXG4gICAgYmFja2dyb3VuZDogI2ZmZjtcclxufVxyXG5saS5uYXYtaXRlbS5sZWZ0LWJ0biB7XHJcbiAgICBiYWNrZ3JvdW5kOiAjZmZmO1xyXG59XHJcbmxpLm5hdi1pdGVtLnJpZ2h0LWJ0biBhLm5hdi1saW5rLCBsaS5uYXYtaXRlbS5sZWZ0LWJ0biBhLm5hdi1saW5re2NvbG9yOiAjMDAwICFpbXBvcnRhbnQ7IHRleHQtZGVjb3JhdGlvbjogbm9uZTsgZm9udC13ZWlnaHQ6IDMwMDt9XHJcbi5iZy1wcmltYXJ5IHtcclxuICAgIGJhY2tncm91bmQtY29sb3I6ICMxN2EyYjggIWltcG9ydGFudDtcclxuICAgIGJvcmRlci1jb2xvcjogICMxN2EyYjggIWltcG9ydGFudDtcclxufVxyXG5uYXYubmF2YmFyLm5hdmJhci1leHBhbmQtc20uYmctcHJpbWFyeS5uYXZiYXItZGFyayB7XHJcbiAgICBoZWlnaHQ6IDcwcHg7XHJcbn1cclxubGkgaDIge2NvbG9yOiAjZmZmO31cclxuLnRpdGxlIGgxIHtkaXNwbGF5OiBpbmxpbmUtYmxvY2s7cGFkZGluZzogMDsgbWFyZ2luOiAwO31cclxuLnRpdGxlIGEuYnRuLmJ0bi1wcmltYXJ5IHtmbG9hdDogcmlnaHQ7YmFja2dyb3VuZDogIzExN2E4YjtwYWRkaW5nOiAxMHB4IDIwcHggIWltcG9ydGFudDtib3JkZXI6ICMxMTdhOGI7Y29sb3I6ICNmZmYgIWltcG9ydGFudDt0ZXh0LWRlY29yYXRpb246IG5vbmU7fVxyXG5hZ20tbWFwIHtcclxuICAgIGhlaWdodDogMzAwcHg7XHJcbn1cclxuYnV0dG9uLCBidXR0b246Zm9jdXN7XHJcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiBpbmhlcml0O1xyXG4gICAgYm9yZGVyOiBub25lO1xyXG4gICAgd2lkdGg6IDMwcHg7XHJcbiAgICBoZWlnaHQ6IDMwcHg7XHJcbiAgICBib3gtc2hhZG93OiBub25lO1xyXG4gICAgb3V0bGluZTogbm9uZTtcclxufVxyXG5idXR0b24gc3ZnIHtcclxuICAgIG92ZXJmbG93OiBoaWRkZW47XHJcbiAgICB2ZXJ0aWNhbC1hbGlnbjogbWlkZGxlO1xyXG4gICAgd2lkdGg6IDMwcHg7XHJcbiAgICBoZWlnaHQ6IDMwcHg7XHJcbn1cclxuYnV0dG9uIHN2Zzpob3ZlcntcclxuICAgIGZpbGw6IHJlZDtcclxufSJdfQ== */"] });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](ToursDetailComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
         args: [{
@@ -8260,7 +14730,10 @@ ToursDetailComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdef
                 templateUrl: './tours-detail.component.html',
                 styleUrls: ['./tours-detail.component.scss']
             }]
-    }], function () { return [{ type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__["RestService"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_2__["Router"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_2__["ActivatedRoute"] }]; }, null); })();
+    }], function () { return [{ type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_2__["RestService"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_1__["Router"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_1__["ActivatedRoute"] }, { type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"] }]; }, { gmapElement: [{
+            type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ViewChild"],
+            args: ['gmap']
+        }] }); })();
 
 
 /***/ }),
@@ -8277,10 +14750,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ToursListComponent", function() { return ToursListComponent; });
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
 /* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
-/* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! rxjs/operators */ "./node_modules/rxjs/_esm2015/operators/index.js");
+/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
 /* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/forms */ "./node_modules/@angular/forms/__ivy_ngcc__/fesm2015/forms.js");
-/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
-/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
+/* harmony import */ var _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @rxweb/reactive-form-validators */ "./node_modules/@rxweb/reactive-form-validators/__ivy_ngcc__/fesm2015/rxweb-reactive-form-validators.js");
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
 /* harmony import */ var ng2_search_filter__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ng2-search-filter */ "./node_modules/ng2-search-filter/__ivy_ngcc__/ng2-search-filter.js");
 
 
@@ -8291,7 +14764,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-function ToursListComponent_tr_16_Template(rf, ctx) { if (rf & 1) {
+function ToursListComponent_tr_24_Template(rf, ctx) { if (rf & 1) {
     const _r4 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "tr");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "td");
@@ -8304,12 +14777,13 @@ function ToursListComponent_tr_16_Template(rf, ctx) { if (rf & 1) {
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](6);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "td");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "button", 6);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](9, "Edit");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "button", 11);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function ToursListComponent_tr_24_Template_button_click_8_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r4); const ctx_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](); return ctx_r3.setDefault(); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](9, "View");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "button", 7);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function ToursListComponent_tr_16_Template_button_click_10_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r4); const tour_r1 = ctx.$implicit; const ctx_r3 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](); return ctx_r3.deleteTour(tour_r1._id); });
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](11, "Remove Feedback");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "button", 11);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function ToursListComponent_tr_24_Template_button_click_10_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r4); const ctx_r5 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"](); return ctx_r5.setDefault(); });
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](11, "Edit");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
@@ -8321,12 +14795,16 @@ function ToursListComponent_tr_16_Template(rf, ctx) { if (rf & 1) {
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](tour_r1.name);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](tour_r1.categoryName.name);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](tour_r1.categoryName && tour_r1.categoryName.name);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate1"]("routerLink", "../view/", tour_r1._id, "");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate1"]("routerLink", "../update/", tour_r1._id, "");
 } }
 class ToursListComponent {
     constructor(restService) {
         this.restService = restService;
-        this.tours = null;
+        this.tours = [];
     }
     ngOnInit() {
         this.reloadData();
@@ -8338,52 +14816,60 @@ class ToursListComponent {
             console.log(error);
         });
     }
-    deleteTour(id) {
-        const tour = this.tours.find(x => x.id === id);
-        return this.tours.delete(id)
-            .pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_2__["first"])())
-            .subscribe(() => this.tours = this.tours.filter(x => x.id !== id));
-    }
 }
 ToursListComponent.ɵfac = function ToursListComponent_Factory(t) { return new (t || ToursListComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__["RestService"])); };
-ToursListComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: ToursListComponent, selectors: [["ngx-tours-list"]], decls: 18, vars: 5, consts: [[1, "panel", "panel-primary"], [1, "input-group", "mb-4"], ["type", "text", "placeholder", "Search by name", 1, "form-control", 3, "ngModel", "ngModelChange"], [1, "panel-body"], [1, "table", "table-striped"], [4, "ngFor", "ngForOf"], ["routerLink", "../update", 1, "btn", "btn-info", 2, "margin-left", "10px"], [1, "btn", "btn-info", 2, "margin-left", "10px", 3, "click"]], template: function ToursListComponent_Template(rf, ctx) { if (rf & 1) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "div", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "input", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function ToursListComponent_Template_input_ngModelChange_2_listener($event) { return ctx.email = $event; });
+ToursListComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: ToursListComponent, selectors: [["ngx-tours-list"]], decls: 26, vars: 5, consts: [[1, "navbar", "navbar-expand-sm", "bg-primary", "navbar-dark"], [1, "navbar-nav"], [1, "nav-item"], [1, "nav-item", "right-btn"], ["routerLink", "../add", "routerLinkActive", "active", 1, "nav-link"], [1, "panel", "panel-primary", 2, "margin-top", "20px"], [1, "input-group", "mb-4"], ["type", "text", "placeholder", "Search by name", 1, "form-control", 3, "ngModel", "ngModelChange"], [1, "panel-body"], [1, "table", "table-striped"], [4, "ngFor", "ngForOf"], [1, "btn", "btn-info", 2, "margin-left", "10px", 3, "routerLink", "click"]], template: function ToursListComponent_Template(rf, ctx) { if (rf & 1) {
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "nav", 0);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "ul", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "li", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](4, "Tours List");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "div", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "table", 4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "thead");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "tr");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](8, "Id");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](10, "Tour Name");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](12, "Category Name");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](14, "Actions");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "li", 3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "a", 4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](7, "Add Tour");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "tbody");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](16, ToursListComponent_tr_16_Template, 12, 3, "tr", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipe"](17, "filter");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "div", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "div", 6);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "input", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function ToursListComponent_Template_input_ngModelChange_10_listener($event) { return ctx.email = $event; });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "div", 8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "table", 9);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "thead");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](16, "Id");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](17, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](18, "Tour Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](19, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](20, "Category Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](21, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](22, "Actions");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](23, "tbody");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](24, ToursListComponent_tr_24_Template, 12, 5, "tr", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipe"](25, "filter");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     } if (rf & 2) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](10);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx.email);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](14);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipeBind2"](17, 2, ctx.tours, ctx.email));
-    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_3__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_3__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_3__["NgModel"], _angular_common__WEBPACK_IMPORTED_MODULE_4__["NgForOf"], _angular_router__WEBPACK_IMPORTED_MODULE_5__["RouterLink"]], pipes: [ng2_search_filter__WEBPACK_IMPORTED_MODULE_6__["Ng2SearchPipe"]], styles: [".btn-delete-user[_ngcontent-%COMP%] {\n  width: 60px;\n  text-align: center;\n  box-sizing: content-box;\n  margin: 0 10px;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvdG91cnMvdG91cnMtbGlzdC90b3Vycy1saXN0LmNvbXBvbmVudC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0VBQ0ksV0FBVztFQUNYLGtCQUFrQjtFQUNsQix1QkFBdUI7RUFDdkIsY0FBYTtBQUNqQiIsImZpbGUiOiJzcmMvYXBwL3BhZ2VzL3RvdXJzL3RvdXJzLWxpc3QvdG91cnMtbGlzdC5jb21wb25lbnQuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbIi5idG4tZGVsZXRlLXVzZXIge1xyXG4gICAgd2lkdGg6IDYwcHg7XHJcbiAgICB0ZXh0LWFsaWduOiBjZW50ZXI7XHJcbiAgICBib3gtc2l6aW5nOiBjb250ZW50LWJveDtcclxuICAgIG1hcmdpbjowIDEwcHg7XHJcbn0iXX0= */"] });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipeBind2"](25, 2, ctx.tours, ctx.email));
+    } }, directives: [_angular_router__WEBPACK_IMPORTED_MODULE_2__["RouterLinkWithHref"], _angular_router__WEBPACK_IMPORTED_MODULE_2__["RouterLinkActive"], _angular_forms__WEBPACK_IMPORTED_MODULE_3__["DefaultValueAccessor"], _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_4__["ɵk"], _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_4__["ɵe"], _angular_forms__WEBPACK_IMPORTED_MODULE_3__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_3__["NgModel"], _angular_common__WEBPACK_IMPORTED_MODULE_5__["NgForOf"], _angular_router__WEBPACK_IMPORTED_MODULE_2__["RouterLink"]], pipes: [ng2_search_filter__WEBPACK_IMPORTED_MODULE_6__["Ng2SearchPipe"]], styles: [".btn-delete-user[_ngcontent-%COMP%] {\n  width: 60px;\n  text-align: center;\n  box-sizing: content-box;\n  margin: 0 10px;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%] {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn[_ngcontent-%COMP%] {\n  background: #fff;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%], li.nav-item.left-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%] {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark[_ngcontent-%COMP%] {\n  height: 70px;\n}\n\nli[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  color: #fff;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvdG91cnMvdG91cnMtbGlzdC90b3Vycy1saXN0LmNvbXBvbmVudC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0VBQ0ksV0FBVztFQUNYLGtCQUFrQjtFQUNsQix1QkFBdUI7RUFDdkIsY0FBYTtBQUNqQjs7QUFDQTtFQUNJLGtCQUFrQjtFQUNsQixTQUFTO0VBQ1QsV0FBVztFQUNYLGdCQUFnQjtBQUVwQjs7QUFBRTtFQUNFLGdCQUFnQjtBQUdwQjs7QUFERTtFQUFrRSxzQkFBc0I7RUFBRSxxQkFBcUI7RUFBRSxnQkFBZ0I7QUFPbkk7O0FBTkU7RUFDRSxvQ0FBb0M7RUFDcEMsZ0NBQWlDO0FBU3JDOztBQVBFO0VBQ0UsWUFBWTtBQVVoQjs7QUFSRTtFQUFPLFdBQVc7QUFZcEIiLCJmaWxlIjoic3JjL2FwcC9wYWdlcy90b3Vycy90b3Vycy1saXN0L3RvdXJzLWxpc3QuY29tcG9uZW50LnNjc3MiLCJzb3VyY2VzQ29udGVudCI6WyIuYnRuLWRlbGV0ZS11c2VyIHtcclxuICAgIHdpZHRoOiA2MHB4O1xyXG4gICAgdGV4dC1hbGlnbjogY2VudGVyO1xyXG4gICAgYm94LXNpemluZzogY29udGVudC1ib3g7XHJcbiAgICBtYXJnaW46MCAxMHB4O1xyXG59XHJcbmxpLm5hdi1pdGVtLnJpZ2h0LWJ0biB7XHJcbiAgICBwb3NpdGlvbjogYWJzb2x1dGU7XHJcbiAgICB0b3A6IDE1cHg7XHJcbiAgICByaWdodDogMjBweDtcclxuICAgIGJhY2tncm91bmQ6ICNmZmY7XHJcbiAgfVxyXG4gIGxpLm5hdi1pdGVtLmxlZnQtYnRuIHtcclxuICAgIGJhY2tncm91bmQ6ICNmZmY7XHJcbiAgfVxyXG4gIGxpLm5hdi1pdGVtLnJpZ2h0LWJ0biBhLm5hdi1saW5rLCBsaS5uYXYtaXRlbS5sZWZ0LWJ0biBhLm5hdi1saW5re2NvbG9yOiAjMDAwICFpbXBvcnRhbnQ7IHRleHQtZGVjb3JhdGlvbjogbm9uZTsgZm9udC13ZWlnaHQ6IDMwMDt9XHJcbiAgLmJnLXByaW1hcnkge1xyXG4gICAgYmFja2dyb3VuZC1jb2xvcjogIzE3YTJiOCAhaW1wb3J0YW50O1xyXG4gICAgYm9yZGVyLWNvbG9yOiAgIzE3YTJiOCAhaW1wb3J0YW50O1xyXG4gIH1cclxuICBuYXYubmF2YmFyLm5hdmJhci1leHBhbmQtc20uYmctcHJpbWFyeS5uYXZiYXItZGFyayB7XHJcbiAgICBoZWlnaHQ6IDcwcHg7XHJcbiAgfVxyXG4gIGxpIGgyIHtjb2xvcjogI2ZmZjt9Il19 */"] });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](ToursListComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
         args: [{
@@ -8413,6 +14899,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _tours_create_tours_create_component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./tours-create/tours-create.component */ "./src/app/pages/tours/tours-create/tours-create.component.ts");
 /* harmony import */ var _tours_update_tours_update_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./tours-update/tours-update.component */ "./src/app/pages/tours/tours-update/tours-update.component.ts");
 /* harmony import */ var _tours_component__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./tours.component */ "./src/app/pages/tours/tours.component.ts");
+/* harmony import */ var _tours_detail_tours_detail_component__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./tours-detail/tours-detail.component */ "./src/app/pages/tours/tours-detail/tours-detail.component.ts");
+
 
 
 
@@ -8427,7 +14915,8 @@ const routes = [{
         children: [
             { path: 'tours-list', component: _tours_list_tours_list_component__WEBPACK_IMPORTED_MODULE_2__["ToursListComponent"] },
             { path: 'add', component: _tours_create_tours_create_component__WEBPACK_IMPORTED_MODULE_3__["ToursCreateComponent"] },
-            { path: 'update', component: _tours_update_tours_update_component__WEBPACK_IMPORTED_MODULE_4__["ToursUpdateComponent"] },
+            { path: 'update/:id', component: _tours_update_tours_update_component__WEBPACK_IMPORTED_MODULE_4__["ToursUpdateComponent"] },
+            { path: 'view/:id', component: _tours_detail_tours_detail_component__WEBPACK_IMPORTED_MODULE_6__["ToursDetailComponent"] },
         ],
     },];
 class ToursRoutingModule {
@@ -8465,7 +14954,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/__ivy_ngcc__/fesm2015/router.js");
 /* harmony import */ var _agm_core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @agm/core */ "./node_modules/@agm/core/__ivy_ngcc__/fesm2015/agm-core.js");
 /* harmony import */ var app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! app/core_auth/services/rest.service */ "./src/app/core_auth/services/rest.service.ts");
-/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
+/* harmony import */ var _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @rxweb/reactive-form-validators */ "./node_modules/@rxweb/reactive-form-validators/__ivy_ngcc__/fesm2015/rxweb-reactive-form-validators.js");
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
+/* harmony import */ var ng_multiselect_dropdown__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ng-multiselect-dropdown */ "./node_modules/ng-multiselect-dropdown/__ivy_ngcc__/fesm2015/ng-multiselect-dropdown.js");
+
+
 
 
 
@@ -8480,55 +14973,64 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const _c0 = ["search"];
-function ToursUpdateComponent_span_8_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Picture is required ");
+function ToursUpdateComponent_div_18_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Name is required");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } }
-function ToursUpdateComponent_span_13_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Name is required ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-} }
-function ToursUpdateComponent_span_18_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Name is required ");
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-} }
-function ToursUpdateComponent_option_25_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "option", 31);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1);
+function ToursUpdateComponent_div_18_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 26);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, ToursUpdateComponent_div_18_div_1_Template, 2, 0, "div", 27);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } if (rf & 2) {
-    const category_r8 = ctx.$implicit;
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("value", category_r8._id);
+    const ctx_r0 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtextInterpolate"](category_r8.name);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r0.f.name.errors.required);
 } }
-function ToursUpdateComponent_span_26_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Category name is required ");
+function ToursUpdateComponent_div_23_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Name is required");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } }
-function ToursUpdateComponent_span_31_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Audio File is required (Only Upload MP3 File) ");
+function ToursUpdateComponent_div_23_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 26);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, ToursUpdateComponent_div_23_div_1_Template, 2, 0, "div", 27);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} if (rf & 2) {
+    const ctx_r1 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r1.f.description.errors.required);
+} }
+function ToursUpdateComponent_div_36_div_1_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, "Name is required");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
 } }
-function ToursUpdateComponent_span_36_Template(rf, ctx) { if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "span", 30);
-    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](1, " Transcript is required ");
+function ToursUpdateComponent_div_36_Template(rf, ctx) { if (rf & 1) {
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 26);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](1, ToursUpdateComponent_div_36_div_1_Template, 2, 0, "div", 27);
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+} if (rf & 2) {
+    const ctx_r2 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵnextContext"]();
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+    _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx_r2.f.transcript.errors.required);
 } }
+const _c1 = function (a0) { return { "is-invalid": a0 }; };
 class ToursUpdateComponent {
-    constructor(http, router, fb, mapsAPILoader, ngZone, restService) {
+    constructor(http, router, fb, mapsAPILoader, ngZone, restService, route) {
         this.http = http;
         this.router = router;
         this.fb = fb;
         this.mapsAPILoader = mapsAPILoader;
         this.ngZone = ngZone;
         this.restService = restService;
+        this.route = route;
+        this.dropdownList = [];
+        this.selectedItems = [];
+        this.dropdownSettings = {};
+        this.myFiles = [];
         this.categories = [];
+        this.tour = [];
         this.submitted = false;
         this.form = this.fb.group({
             picture: [null],
@@ -8539,80 +15041,120 @@ class ToursUpdateComponent {
             categoryName: [''],
             audio: [null],
             transcript: [''],
+            audioDuration: [''],
         });
     }
-    reloadData() {
-        this.restService.get("/category/categoryList").subscribe((data) => {
-            this.categories = data.data;
+    get f() { return this.form.controls; }
+    ngOnInit() {
+        let tmp = [];
+        this.restService.get("/category/categoryList").subscribe(data => {
+            //console.log(data.data[0]._id);
+            for (let i = 0; i < data.data.length; i++) {
+                tmp.push({ item_id: data.data[i]._id, item_text: data.data[i].name });
+            }
+            this.dropdownList = tmp;
+        });
+        var id;
+        this.activeRoute = this.route.params.subscribe(params => {
+            id = { "_id": params['id'] };
+        });
+        this.restService.post("/tours/view", id).subscribe((data) => {
+            this.tour = data.data;
+            const map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: this.tour.lat, lng: this.tour.long },
+                zoom: 15,
+                mapTypeId: "roadmap",
+            });
+            this.marker =
+                new google.maps.Marker({
+                    map,
+                    title: "place.name",
+                    position: { lat: this.tour.lat, lng: this.tour.long },
+                    draggable: true
+                });
+            google.maps.event.addListener(this.marker, 'dragend', function () {
+                console.log(this.marker.getPosition().lat());
+                console.log(this.marker.getPosition().lng());
+            });
+            map.addListener('dragend', () => {
+                console.log("place gytgyty");
+                console.log(this.marker.getPosition().lng());
+            });
+            // Create the search box and link it to the UI element.
+            const input = document.getElementById("pac-input");
+            const searchBox = new google.maps.places.SearchBox(input);
+            //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+            // Bias the SearchBox results towards current map's viewport.
+            map.addListener("bounds_changed", () => {
+                searchBox.setBounds(map.getBounds());
+            });
+            searchBox.addListener("places_changed", () => {
+                const places = searchBox.getPlaces();
+                if (places.length == 0) {
+                    return;
+                }
+                const bounds = new google.maps.LatLngBounds();
+                places.forEach((place) => {
+                    if (!place.geometry) {
+                        console.log("Returned place contains no geometry");
+                        return;
+                    }
+                    const icon = {
+                        url: place.icon,
+                        size: new google.maps.Size(71, 71),
+                        origin: new google.maps.Point(0, 0),
+                        anchor: new google.maps.Point(17, 34),
+                        scaledSize: new google.maps.Size(25, 25),
+                    };
+                    this.marker.setPosition(place.geometry.location);
+                    console.log("place");
+                    console.log(place.geometry.location.lat());
+                    if (place.geometry.viewport) {
+                        // Only geocodes have viewport.
+                        bounds.union(place.geometry.viewport);
+                    }
+                    else {
+                        bounds.extend(place.geometry.location);
+                    }
+                });
+                map.fitBounds(bounds);
+            });
+            console.log(this.tour.lat);
+            console.log(this.tour.long);
+            this.selectedItems = [
+                { item_id: this.tour.categoryName._id, item_text: this.tour.categoryName.name },
+            ];
         }, (error) => {
             console.log(error);
         });
+        this.dropdownSettings = {
+            singleSelection: true,
+            idField: "item_id",
+            textField: "item_text",
+            selectAllText: "Select All",
+            unSelectAllText: "UnSelect All",
+            itemsShowLimit: 6,
+            allowSearchFilter: true
+        };
     }
-    ngOnInit() {
-        this.reloadData();
-        //load Places Autocomplete
-        this.mapsAPILoader.load().then(() => {
-            this.setCurrentLocation();
-            this.geoCoder = new google.maps.Geocoder;
-            let autocomplete = new google.maps.places.Autocomplete(this.searchElementRef.nativeElement);
-            autocomplete.addListener("place_changed", () => {
-                this.ngZone.run(() => {
-                    //get the place result
-                    let place = autocomplete.getPlace();
-                    //verify result
-                    if (place.geometry === undefined || place.geometry === null) {
-                        return;
-                    }
-                    //set latitude, longitude and zoom
-                    this.latitude = place.geometry.location.lat();
-                    this.longitude = place.geometry.location.lng();
-                    this.zoom = 12;
-                });
-            });
-        });
+    onItemSelect(item) {
+        console.log(item);
     }
-    markerDragEnd($event) {
-        console.log($event);
-        this.latitude = $event.latLng.lat();
-        this.longitude = $event.latLng.lng();
-        this.getAddress(this.latitude, this.longitude);
-    }
-    getAddress(latitude, longitude) {
-        this.geoCoder.geocode({ 'location': { lat: latitude, lng: longitude } }, (results, status) => {
-            console.log(results);
-            console.log(status);
-            if (status === 'OK') {
-                if (results[0]) {
-                    this.zoom = 12;
-                    this.address = results[0].formatted_address;
-                }
-                else {
-                    window.alert('No results found');
-                }
-            }
-            else {
-                window.alert('Geocoder failed due to: ' + status);
-            }
-        });
-    }
-    setCurrentLocation() {
-        if ('geolocation' in navigator) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                this.latitude = position.coords.latitude;
-                this.longitude = position.coords.longitude;
-                this.zoom = 15;
-            });
-        }
+    onSelectAll(items) {
+        console.log(items);
     }
     get registerFormControl() {
         return this.form.controls;
     }
     uploadProfile(event) {
-        const userProfile = event.target.files[0];
-        this.form.patchValue({
-            picture: userProfile
-        });
-        this.form.get('picture').updateValueAndValidity();
+        // const userProfile = (event.target as HTMLInputElement).files[0];
+        // this.form.patchValue({
+        //   picture: userProfile
+        // });
+        // this.form.get('picture').updateValueAndValidity();
+        for (var i = 0; i < event.target.files.length; i++) {
+            this.myFiles.push(event.target.files[i]);
+        }
     }
     uploadAudio(event) {
         const audioFile = event.target.files[0];
@@ -8620,25 +15162,67 @@ class ToursUpdateComponent {
             audio: audioFile
         });
         this.form.get('audio').updateValueAndValidity();
+        //here you can check the file type for attachedFile either video or audio
+        var audio = document.createElement('audio');
+        audio.preload = 'metadata';
+        audio.src = URL.createObjectURL(audioFile);
+        audio.onloadedmetadata = function () {
+            window.URL.revokeObjectURL(audio.src);
+            globalThis.audioDuration = Math.round(audio.duration * Math.pow(10, 0)) / Math.pow(10, 0); // here you could get the duration
+        };
     }
     submitForm() {
+        let val = [];
         var formData = new FormData();
-        formData.append("picture", this.form.get('picture').value);
-        formData.append("lat", this.latitude);
-        formData.append("long", this.longitude);
+        //console.log(this.form.value.categoryName);
+        if (this.form.get('picture').value != null) {
+            for (var i = 0; i < this.myFiles.length; i++) {
+                formData.append("picture", this.myFiles[i]);
+            }
+        }
+        if (this.form.get('audio').value != null) {
+            formData.append("audio", this.form.get('audio').value);
+            formData.append("audioDuration", globalThis.audioDuration);
+        }
+        console.log(this.tour.audioDuration);
+        for (let i = 0; i < this.form.get('categoryName').value.length; i++) {
+            val.push(this.form.get('categoryName').value[i].item_id);
+            console.log(this.form.get('categoryName').value[i].item_id);
+        }
+        formData.append("categoryName", (val));
+        // if(this.form.get('categoryName').value)
+        // {
+        //   formData.append("categoryName", this.form.get('categoryName').value);
+        // }else{
+        //   console.log(this.prevcatid);
+        // }
+        if (this.form.get('lat').value != null) {
+            formData.append("lat", this.marker.getPosition().lat());
+        }
+        if (this.form.get('long').value != null) {
+            formData.append("long", this.marker.getPosition().lng());
+        }
         formData.append("name", this.form.value.name);
         formData.append("description", this.form.get('description').value);
-        formData.append("categoryName", this.form.get('categoryName').value);
-        formData.append("audio", this.form.get('audio').value);
         formData.append("transcript", this.form.value.transcript);
+        // if(this.form.get('feedback').value != null)
+        // {
+        //   formData.append("feedback", this.form.value.feedback);
+        // }
+        var id;
+        this.activeRoute = this.route.params.subscribe(params => {
+            id = params['id'];
+        });
         this.submitted = true;
         if (this.form.valid) {
-            this.http.post('http://18.217.48.28:2000/tours/update/{{tour._id}}', formData, { headers: this.getHeader(FormData) }).subscribe((response) => console.log(response), (error) => console.log(error));
-            // alert('Form Submitted succesfully!!!');
-            this.router.navigate(['/tours-list']);
-            console.table(this.form.value);
+            this.http.post('http://18.217.48.28:2000/tours/update/' + id, formData, { headers: this.getHeader(FormData) }).subscribe((response) => this.refresh(response), (error) => console.log(error));
+            //console.table(this.form.value);
         }
-        // 
+    }
+    refresh(response) {
+        if (response['meta']['status'] == 200) {
+            this.router.navigate(['/pages/tours/tours-list']);
+        }
     }
     getHeader(isFormData) {
         let headers = new _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpHeaders"]();
@@ -8648,154 +15232,130 @@ class ToursUpdateComponent {
         headers = headers.append('Authorization', localStorage.getItem('access_token'));
         return headers;
     }
+    ngOnDestroy() {
+        if (this.activeRoute) {
+            this.activeRoute.unsubscribe();
+        }
+    }
 }
-ToursUpdateComponent.ɵfac = function ToursUpdateComponent_Factory(t) { return new (t || ToursUpdateComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormBuilder"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_agm_core__WEBPACK_IMPORTED_MODULE_4__["MapsAPILoader"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__["RestService"])); };
+ToursUpdateComponent.ɵfac = function ToursUpdateComponent_Factory(t) { return new (t || ToursUpdateComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormBuilder"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_agm_core__WEBPACK_IMPORTED_MODULE_4__["MapsAPILoader"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__["RestService"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_3__["ActivatedRoute"])); };
 ToursUpdateComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: ToursUpdateComponent, selectors: [["ngx-tours-update"]], viewQuery: function ToursUpdateComponent_Query(rf, ctx) { if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵviewQuery"](_c0, true);
     } if (rf & 2) {
         var _t;
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵqueryRefresh"](_t = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵloadQuery"]()) && (ctx.searchElementRef = _t.first);
-    } }, decls: 63, vars: 18, consts: [[1, "container"], [3, "formGroup", "ngSubmit"], [1, "form-group"], ["for", "picture"], ["type", "file", "id", "picture", "name", "picture", "formControlName", "picture", 1, "form-control", 3, "change"], ["class", "text-danger", 4, "ngIf"], [1, "form-group", "input-group-lg"], ["for", "name"], ["placeholder", "Name", "id", "name", "formControlName", "name", "name", "name", 1, "form-control"], ["for", "description"], ["id", "description", "placeholder", "Description", "formControlName", "description", 1, "form-control"], ["for", "categoryName"], ["formControlName", "categoryName", "id", "categoryName", 1, "form-control"], [3, "value"], ["id", "categoryName", 3, "value", 4, "ngFor", "ngForOf"], ["for", "audio"], ["type", "file", "name", "audio", "id", "audio", "formControlName", "audio", 1, "form-control", 3, "change"], ["for", "transcript"], ["placeholder", "Transcript", "id", "transcript", "formControlName", "transcript", 1, "form-control"], ["for", "location"], ["type", "text", "id", "search", "placeholder", "Search Nearest Location", "autocorrect", "off", "autocapitalize", "off", "spellcheck", "off", "type", "text", 1, "form-control", 3, "keydown.enter"], ["search", ""], [3, "latitude", "longitude", "zoom"], [3, "latitude", "longitude", "markerDraggable", "dragEnd"], ["type", "text", "name", "latitude", "id", "latitude", 1, "form-control", 3, "value"], ["for", "Latitude"], ["type", "text", "name", "latitude", "id", "latitude", "formControlName", "lat", 1, "form-control", 3, "value"], ["for", "Longitude"], ["type", "text", "name", "longitude", "id", "longitude", "formControlName", "long", 1, "form-control", 3, "value"], ["routerLink", "../tours-list", 1, "btn", "btn-info", 2, "margin-left", "15px"], [1, "text-danger"], ["id", "categoryName", 3, "value"]], template: function ToursUpdateComponent_Template(rf, ctx) { if (rf & 1) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "h2");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](2, " Edit Tours");
+    } }, decls: 46, vars: 20, consts: [[1, "navbar", "navbar-expand-sm", "bg-primary", "navbar-dark"], [1, "navbar-nav"], [1, "nav-item"], [1, "nav-item", "right-btn"], ["href", "/pages/tours/tours-list", "routerlink", "/pages/tours/tours-list", 1, "btn", "nav-link"], [1, "container"], [3, "formGroup"], [1, "form-group"], ["for", "picture"], ["type", "file", "multiple", "", "id", "picture", "name", "picture", "formControlName", "picture", 1, "form-control", 3, "change"], [1, "form-group", "input-group-lg"], ["for", "name"], ["placeholder", "Name", "id", "name", "name", "name", "formControlName", "name", 1, "form-control", 3, "ngModel", "ngClass", "ngModelChange"], ["class", "invalid-feedback", 4, "ngIf"], ["for", "description"], ["id", "description", "placeholder", "Description", "formControlName", "description", 1, "form-control", 3, "ngModel", "ngClass", "ngModelChange"], ["for", "tours"], ["formControlName", "categoryName", 3, "placeholder", "data", "ngModel", "settings", "ngModelChange", "onSelect", "onSelectAll"], ["for", "audio"], ["type", "file", "name", "audio", "id", "audio", "formControlName", "audio", 1, "form-control", 3, "change"], ["for", "transcript"], ["placeholder", "Transcript", "id", "transcript", "formControlName", "transcript", 1, "form-control", 3, "ngModel", "ngClass", "ngModelChange"], ["for", "location"], ["id", "pac-input", "type", "text", "placeholder", "Search Box", 1, "form-control"], ["id", "map"], [1, "btn", "btn-info", 2, "margin-left", "15px", 3, "click"], [1, "invalid-feedback"], [4, "ngIf"]], template: function ToursUpdateComponent_Template(rf, ctx) { if (rf & 1) {
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "nav", 0);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "ul", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "li", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](4, "Tour Update");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "form", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngSubmit", function ToursUpdateComponent_Template_form_ngSubmit_3_listener() { return ctx.submitForm(); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "label", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](6, "Picture");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "input", 4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function ToursUpdateComponent_Template_input_change_7_listener($event) { return ctx.uploadProfile($event); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "li", 3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "a", 4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](7, "Back");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](8, ToursUpdateComponent_span_8_Template, 2, 0, "span", 5);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "label", 7);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](11, "Name");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](12, "input", 8);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](13, ToursUpdateComponent_span_13_Template, 2, 0, "span", 5);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "label", 9);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](16, "Description");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "div", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "form", 6);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "div", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "label", 8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](12, "Change Picture");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](17, "textarea", 10);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](18, ToursUpdateComponent_span_18_Template, 2, 0, "span", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "input", 9);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function ToursUpdateComponent_Template_input_change_13_listener($event) { return ctx.uploadProfile($event); });
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](19, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](20, "label", 11);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](21, "Category Name");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](22, "select", 12);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](23, "option", 13);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](24, "Select Category");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "div", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "label", 11);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](16, "Name");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](25, ToursUpdateComponent_option_25_Template, 2, 2, "option", 14);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](17, "input", 12);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function ToursUpdateComponent_Template_input_ngModelChange_17_listener($event) { return ctx.tour.name = $event; });
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](26, ToursUpdateComponent_span_26_Template, 2, 0, "span", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](18, ToursUpdateComponent_div_18_Template, 2, 1, "div", 13);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](27, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](28, "label", 15);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](29, "Audio");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](19, "div", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](20, "label", 14);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](21, "Description");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](30, "input", 16);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function ToursUpdateComponent_Template_input_change_30_listener($event) { return ctx.uploadAudio($event); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](22, "textarea", 15);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function ToursUpdateComponent_Template_textarea_ngModelChange_22_listener($event) { return ctx.tour.description = $event; });
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](31, ToursUpdateComponent_span_31_Template, 2, 0, "span", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](23, ToursUpdateComponent_div_23_Template, 2, 1, "div", 13);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](32, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](33, "label", 17);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](24, "div", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](25, "label", 16);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](26, "Category Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](27, "ng-multiselect-dropdown", 17);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function ToursUpdateComponent_Template_ng_multiselect_dropdown_ngModelChange_27_listener($event) { return ctx.selectedItems = $event; })("onSelect", function ToursUpdateComponent_Template_ng_multiselect_dropdown_onSelect_27_listener($event) { return ctx.onItemSelect($event); })("onSelectAll", function ToursUpdateComponent_Template_ng_multiselect_dropdown_onSelectAll_27_listener($event) { return ctx.onSelectAll($event); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](28, "div", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](29, "label", 18);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](30, "Change Audio");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](31, "input", 19);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("change", function ToursUpdateComponent_Template_input_change_31_listener($event) { return ctx.uploadAudio($event); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](32, "div", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](33, "label", 20);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](34, "Transcript");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](35, "textarea", 18);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](36, ToursUpdateComponent_span_36_Template, 2, 0, "span", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](35, "textarea", 21);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function ToursUpdateComponent_Template_textarea_ngModelChange_35_listener($event) { return ctx.tour.transcript = $event; });
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](37, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](38, "label", 19);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](36, ToursUpdateComponent_div_36_Template, 2, 1, "div", 13);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](37, "div", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](38, "label", 22);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](39, "Location");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](40, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](41, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](42, "label");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](43, "Enter address");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](40, "div", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](41, "input", 23);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](44, "input", 20, 21);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("keydown.enter", function ToursUpdateComponent_Template_input_keydown_enter_44_listener($event) { return $event.preventDefault(); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](42, "div", 24);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](46, "agm-map", 22);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](47, "agm-marker", 23);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("dragEnd", function ToursUpdateComponent_Template_agm_marker_dragEnd_47_listener($event) { return ctx.markerDragEnd($event); });
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](48, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](49, "label", 17);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](50, "Address");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](51, "input", 24);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](52, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](53, "label", 25);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](54, "Latitude");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](55, "input", 26);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](56, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](57, "label", 27);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](58, "Longitude");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](59, "input", 28);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](60, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](61, "button", 29);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](62, "Save");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](43, "div", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](44, "button", 25);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function ToursUpdateComponent_Template_button_click_44_listener() { return ctx.submitForm(); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](45, "Update");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     } if (rf & 2) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](9);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("formGroup", ctx.form);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.picture.touched || ctx.submitted) && (ctx.registerFormControl.picture.errors == null ? null : ctx.registerFormControl.picture.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.name.touched || ctx.submitted) && (ctx.registerFormControl.name.errors == null ? null : ctx.registerFormControl.name.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.name.touched || ctx.submitted) && (ctx.registerFormControl.name.errors == null ? null : ctx.registerFormControl.name.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("value", null);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", ctx.categories);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx.tour.name)("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](14, _c1, ctx.submitted && ctx.f.name.errors));
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.categoryName.touched || ctx.submitted) && (ctx.registerFormControl.categoryName.errors == null ? null : ctx.registerFormControl.categoryName.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.audio.touched || ctx.submitted) && (ctx.registerFormControl.audio.errors == null ? null : ctx.registerFormControl.audio.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", (ctx.registerFormControl.transcript.touched || ctx.submitted) && (ctx.registerFormControl.transcript.errors == null ? null : ctx.registerFormControl.transcript.errors.required));
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](10);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("latitude", ctx.latitude)("longitude", ctx.longitude)("zoom", ctx.zoom);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.name.errors);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx.tour.description)("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](16, _c1, ctx.submitted && ctx.f.description.errors));
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("latitude", ctx.latitude)("longitude", ctx.longitude)("markerDraggable", true);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.description.errors);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("value", ctx.address);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("value", ctx.latitude);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpropertyInterpolate"]("value", ctx.longitude);
-    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_1__["ɵangular_packages_forms_forms_y"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatusGroup"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormGroupDirective"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormControlName"], _angular_common__WEBPACK_IMPORTED_MODULE_6__["NgIf"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["SelectControlValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgSelectOption"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["ɵangular_packages_forms_forms_x"], _angular_common__WEBPACK_IMPORTED_MODULE_6__["NgForOf"], _agm_core__WEBPACK_IMPORTED_MODULE_4__["AgmMap"], _agm_core__WEBPACK_IMPORTED_MODULE_4__["AgmMarker"], _angular_router__WEBPACK_IMPORTED_MODULE_3__["RouterLink"]], styles: ["agm-map[_ngcontent-%COMP%] {\n  height: 300px;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvdG91cnMvdG91cnMtdXBkYXRlL3RvdXJzLXVwZGF0ZS5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNJLGFBQWE7QUFDakIiLCJmaWxlIjoic3JjL2FwcC9wYWdlcy90b3Vycy90b3Vycy11cGRhdGUvdG91cnMtdXBkYXRlLmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiYWdtLW1hcCB7XHJcbiAgICBoZWlnaHQ6IDMwMHB4O1xyXG59Il19 */"] });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("placeholder", "Select Tours")("data", ctx.dropdownList)("ngModel", ctx.selectedItems)("settings", ctx.dropdownSettings);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx.tour.transcript)("ngClass", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpureFunction1"](18, _c1, ctx.submitted && ctx.f.transcript.errors));
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngIf", ctx.submitted && ctx.f.transcript.errors);
+    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_1__["ɵangular_packages_forms_forms_y"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatusGroup"], _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_6__["ɵa"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormGroupDirective"], _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_6__["ɵi"], _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_6__["ɵj"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["DefaultValueAccessor"], _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_6__["ɵk"], _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_6__["ɵe"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormControlName"], _angular_common__WEBPACK_IMPORTED_MODULE_7__["NgClass"], _angular_common__WEBPACK_IMPORTED_MODULE_7__["NgIf"], ng_multiselect_dropdown__WEBPACK_IMPORTED_MODULE_8__["MultiSelectComponent"]], styles: ["agm-map {\n  height: 300px;\n}\n\ninput[type=\"image\"] {\n  width: 120px;\n  height: auto;\n}\n\nli.nav-item.right-btn {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn {\n  background: #fff;\n}\n\nli.nav-item.right-btn a.nav-link, li.nav-item.left-btn a.nav-link {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark {\n  height: 70px;\n}\n\nli h2 {\n  color: #fff;\n}\n\nform {\n  margin-top: 20px;\n}\n\ndiv#map {\n  width: 100% !important;\n  height: 400px !important;\n  position: relative !important;\n}\n\n/* Optional: Makes the sample page fill the window. */\n\nhtml,\nbody {\n  height: 100%;\n  margin: 0;\n  padding: 0;\n}\n\n#infowindow-content .title {\n  font-weight: bold;\n}\n\n#infowindow-content {\n  display: none;\n}\n\n#map #infowindow-content {\n  display: inline;\n}\n\n.pac-card {\n  margin: 10px 10px 0 0;\n  border-radius: 2px 0 0 2px;\n  box-sizing: border-box;\n  -moz-box-sizing: border-box;\n  outline: none;\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);\n  background-color: #fff;\n  font-family: Roboto;\n}\n\n#pac-container {\n  padding-bottom: 12px;\n  margin-right: 12px;\n}\n\n.pac-controls {\n  display: inline-block;\n  padding: 5px 11px;\n}\n\n.pac-controls label {\n  font-family: Roboto;\n  font-size: 13px;\n  font-weight: 300;\n}\n\n#pac-input {\n  background-color: #fff;\n  font-family: inherit;\n  font-size: 17px;\n  font-weight: 400;\n  margin-left: 0;\n  padding: 0 11px 0 13px;\n  text-overflow: ellipsis;\n  width: 100%;\n  color: #222b45;\n}\n\n#pac-input:focus {\n  border-color: #4d90fe;\n}\n\n#title {\n  color: #fff;\n  background-color: #4d90fe;\n  font-size: 25px;\n  font-weight: 500;\n  padding: 6px 12px;\n}\n\n#target {\n  width: 345px;\n}\n\n.form-control::-moz-placeholder {\n  height: calc(1.5em + 0.75rem + 8px) !important;\n  font-size: 17px;\n  color: #222b45 !important;\n  font-family: inherit;\n  font-weight: 400;\n  color: #000;\n}\n\n.form-control:-ms-input-placeholder {\n  height: calc(1.5em + 0.75rem + 8px) !important;\n  font-size: 17px;\n  color: #222b45 !important;\n  font-family: inherit;\n  font-weight: 400;\n  color: #000;\n}\n\n.form-control, .form-control::placeholder {\n  height: calc(1.5em + 0.75rem + 8px) !important;\n  font-size: 17px;\n  color: #222b45 !important;\n  font-family: inherit;\n  font-weight: 400;\n  color: #000;\n}\n\n#description, .input-group-lg > .form-control {\n  font-family: inherit;\n  font-size: 17px;\n  font-weight: 400;\n}\n\n.multiselect-dropdown .dropdown-btn {\n  height: 45px !important;\n  line-height: 1.9 !important;\n  border: 1px solid #ced4da !important;\n  font-size: 17px;\n}\n\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvdG91cnMvdG91cnMtdXBkYXRlL3RvdXJzLXVwZGF0ZS5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFDQTtFQUNJLGFBQWE7QUFBakI7O0FBRUE7RUFDSSxZQUFZO0VBQ1osWUFBWTtBQUNoQjs7QUFDQTtFQUNJLGtCQUFrQjtFQUNsQixTQUFTO0VBQ1QsV0FBVztFQUNYLGdCQUFnQjtBQUVwQjs7QUFBRTtFQUNFLGdCQUFnQjtBQUdwQjs7QUFERTtFQUFrRSxzQkFBc0I7RUFBRSxxQkFBcUI7RUFBRSxnQkFBZ0I7QUFPbkk7O0FBTkU7RUFDRSxvQ0FBb0M7RUFDcEMsZ0NBQWlDO0FBU3JDOztBQVBFO0VBQ0UsWUFBWTtBQVVoQjs7QUFSRTtFQUFPLFdBQVc7QUFZcEI7O0FBWEU7RUFDRSxnQkFBZ0I7QUFjcEI7O0FBWEE7RUFDRSxzQkFBc0I7RUFDdEIsd0JBQXdCO0VBQ3hCLDZCQUE2QjtBQWMvQjs7QUFYQSxxREFBQTs7QUFDQTs7RUFFRSxZQUFZO0VBQ1osU0FBUztFQUNULFVBQVU7QUFjWjs7QUFYQTtFQUNFLGlCQUFpQjtBQWNuQjs7QUFYQTtFQUNFLGFBQWE7QUFjZjs7QUFYQTtFQUNFLGVBQWU7QUFjakI7O0FBWEE7RUFDRSxxQkFBcUI7RUFDckIsMEJBQTBCO0VBQzFCLHNCQUFzQjtFQUN0QiwyQkFBMkI7RUFDM0IsYUFBYTtFQUNiLHdDQUF3QztFQUN4QyxzQkFBc0I7RUFDdEIsbUJBQW1CO0FBY3JCOztBQVhBO0VBQ0Usb0JBQW9CO0VBQ3BCLGtCQUFrQjtBQWNwQjs7QUFYQTtFQUNFLHFCQUFxQjtFQUNyQixpQkFBaUI7QUFjbkI7O0FBWEE7RUFDRSxtQkFBbUI7RUFDbkIsZUFBZTtFQUNmLGdCQUFnQjtBQWNsQjs7QUFYQTtFQUNFLHNCQUFzQjtFQUN0QixvQkFBb0I7RUFDcEIsZUFBZTtFQUNmLGdCQUFnQjtFQUNoQixjQUFjO0VBQ2Qsc0JBQXNCO0VBQ3RCLHVCQUF1QjtFQUN2QixXQUFXO0VBQ1gsY0FBYztBQWNoQjs7QUFYQTtFQUNFLHFCQUFxQjtBQWN2Qjs7QUFYQTtFQUNFLFdBQVc7RUFDWCx5QkFBeUI7RUFDekIsZUFBZTtFQUNmLGdCQUFnQjtFQUNoQixpQkFBaUI7QUFjbkI7O0FBWEE7RUFDRSxZQUFZO0FBY2Q7O0FBWEE7RUFBMEMsOENBQThDO0VBQUMsZUFBZTtFQUFDLHlCQUF5QjtFQUFDLG9CQUFvQjtFQUFDLGdCQUFnQjtFQUFDLFdBQVc7QUFvQnBMOztBQXBCQTtFQUEwQyw4Q0FBOEM7RUFBQyxlQUFlO0VBQUMseUJBQXlCO0VBQUMsb0JBQW9CO0VBQUMsZ0JBQWdCO0VBQUMsV0FBVztBQW9CcEw7O0FBcEJBO0VBQTBDLDhDQUE4QztFQUFDLGVBQWU7RUFBQyx5QkFBeUI7RUFBQyxvQkFBb0I7RUFBQyxnQkFBZ0I7RUFBQyxXQUFXO0FBb0JwTDs7QUFsQkE7RUFDRSxvQkFBb0I7RUFDcEIsZUFBZTtFQUNmLGdCQUFnQjtBQXFCbEI7O0FBbkJBO0VBQW9DLHVCQUF1QjtFQUFFLDJCQUEyQjtFQUFDLG9DQUFvQztFQUFFLGVBQWM7QUEwQjdJIiwiZmlsZSI6InNyYy9hcHAvcGFnZXMvdG91cnMvdG91cnMtdXBkYXRlL3RvdXJzLXVwZGF0ZS5jb21wb25lbnQuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbIlxyXG5hZ20tbWFwIHtcclxuICAgIGhlaWdodDogMzAwcHg7XHJcbn1cclxuaW5wdXRbdHlwZT1cImltYWdlXCJdIHtcclxuICAgIHdpZHRoOiAxMjBweDtcclxuICAgIGhlaWdodDogYXV0bztcclxufVxyXG5saS5uYXYtaXRlbS5yaWdodC1idG4ge1xyXG4gICAgcG9zaXRpb246IGFic29sdXRlO1xyXG4gICAgdG9wOiAxNXB4O1xyXG4gICAgcmlnaHQ6IDIwcHg7XHJcbiAgICBiYWNrZ3JvdW5kOiAjZmZmO1xyXG4gIH1cclxuICBsaS5uYXYtaXRlbS5sZWZ0LWJ0biB7XHJcbiAgICBiYWNrZ3JvdW5kOiAjZmZmO1xyXG4gIH1cclxuICBsaS5uYXYtaXRlbS5yaWdodC1idG4gYS5uYXYtbGluaywgbGkubmF2LWl0ZW0ubGVmdC1idG4gYS5uYXYtbGlua3tjb2xvcjogIzAwMCAhaW1wb3J0YW50OyB0ZXh0LWRlY29yYXRpb246IG5vbmU7IGZvbnQtd2VpZ2h0OiAzMDA7fVxyXG4gIC5iZy1wcmltYXJ5IHtcclxuICAgIGJhY2tncm91bmQtY29sb3I6ICMxN2EyYjggIWltcG9ydGFudDtcclxuICAgIGJvcmRlci1jb2xvcjogICMxN2EyYjggIWltcG9ydGFudDtcclxuICB9XHJcbiAgbmF2Lm5hdmJhci5uYXZiYXItZXhwYW5kLXNtLmJnLXByaW1hcnkubmF2YmFyLWRhcmsge1xyXG4gICAgaGVpZ2h0OiA3MHB4O1xyXG4gIH1cclxuICBsaSBoMiB7Y29sb3I6ICNmZmY7fVxyXG4gIGZvcm0ge1xyXG4gICAgbWFyZ2luLXRvcDogMjBweDtcclxufVxyXG5cclxuZGl2I21hcCB7XHJcbiAgd2lkdGg6IDEwMCUgIWltcG9ydGFudDtcclxuICBoZWlnaHQ6IDQwMHB4ICFpbXBvcnRhbnQ7XHJcbiAgcG9zaXRpb246IHJlbGF0aXZlICFpbXBvcnRhbnQ7XHJcbn1cclxuXHJcbi8qIE9wdGlvbmFsOiBNYWtlcyB0aGUgc2FtcGxlIHBhZ2UgZmlsbCB0aGUgd2luZG93LiAqL1xyXG5odG1sLFxyXG5ib2R5IHtcclxuICBoZWlnaHQ6IDEwMCU7XHJcbiAgbWFyZ2luOiAwO1xyXG4gIHBhZGRpbmc6IDA7XHJcbn1cclxuXHJcbiNpbmZvd2luZG93LWNvbnRlbnQgLnRpdGxlIHtcclxuICBmb250LXdlaWdodDogYm9sZDtcclxufVxyXG5cclxuI2luZm93aW5kb3ctY29udGVudCB7XHJcbiAgZGlzcGxheTogbm9uZTtcclxufVxyXG5cclxuI21hcCAjaW5mb3dpbmRvdy1jb250ZW50IHtcclxuICBkaXNwbGF5OiBpbmxpbmU7XHJcbn1cclxuXHJcbi5wYWMtY2FyZCB7XHJcbiAgbWFyZ2luOiAxMHB4IDEwcHggMCAwO1xyXG4gIGJvcmRlci1yYWRpdXM6IDJweCAwIDAgMnB4O1xyXG4gIGJveC1zaXppbmc6IGJvcmRlci1ib3g7XHJcbiAgLW1vei1ib3gtc2l6aW5nOiBib3JkZXItYm94O1xyXG4gIG91dGxpbmU6IG5vbmU7XHJcbiAgYm94LXNoYWRvdzogMCAycHggNnB4IHJnYmEoMCwgMCwgMCwgMC4zKTtcclxuICBiYWNrZ3JvdW5kLWNvbG9yOiAjZmZmO1xyXG4gIGZvbnQtZmFtaWx5OiBSb2JvdG87XHJcbn1cclxuXHJcbiNwYWMtY29udGFpbmVyIHtcclxuICBwYWRkaW5nLWJvdHRvbTogMTJweDtcclxuICBtYXJnaW4tcmlnaHQ6IDEycHg7XHJcbn1cclxuXHJcbi5wYWMtY29udHJvbHMge1xyXG4gIGRpc3BsYXk6IGlubGluZS1ibG9jaztcclxuICBwYWRkaW5nOiA1cHggMTFweDtcclxufVxyXG5cclxuLnBhYy1jb250cm9scyBsYWJlbCB7XHJcbiAgZm9udC1mYW1pbHk6IFJvYm90bztcclxuICBmb250LXNpemU6IDEzcHg7XHJcbiAgZm9udC13ZWlnaHQ6IDMwMDtcclxufVxyXG5cclxuI3BhYy1pbnB1dCB7XHJcbiAgYmFja2dyb3VuZC1jb2xvcjogI2ZmZjtcclxuICBmb250LWZhbWlseTogaW5oZXJpdDtcclxuICBmb250LXNpemU6IDE3cHg7XHJcbiAgZm9udC13ZWlnaHQ6IDQwMDtcclxuICBtYXJnaW4tbGVmdDogMDtcclxuICBwYWRkaW5nOiAwIDExcHggMCAxM3B4O1xyXG4gIHRleHQtb3ZlcmZsb3c6IGVsbGlwc2lzO1xyXG4gIHdpZHRoOiAxMDAlO1xyXG4gIGNvbG9yOiAjMjIyYjQ1O1xyXG59XHJcblxyXG4jcGFjLWlucHV0OmZvY3VzIHtcclxuICBib3JkZXItY29sb3I6ICM0ZDkwZmU7XHJcbn1cclxuXHJcbiN0aXRsZSB7XHJcbiAgY29sb3I6ICNmZmY7XHJcbiAgYmFja2dyb3VuZC1jb2xvcjogIzRkOTBmZTtcclxuICBmb250LXNpemU6IDI1cHg7XHJcbiAgZm9udC13ZWlnaHQ6IDUwMDtcclxuICBwYWRkaW5nOiA2cHggMTJweDtcclxufVxyXG5cclxuI3RhcmdldCB7XHJcbiAgd2lkdGg6IDM0NXB4O1xyXG59XHJcblxyXG4uZm9ybS1jb250cm9sLCAuZm9ybS1jb250cm9sOjpwbGFjZWhvbGRlcntoZWlnaHQ6IGNhbGMoMS41ZW0gKyAwLjc1cmVtICsgOHB4KSAhaW1wb3J0YW50O2ZvbnQtc2l6ZTogMTdweDtjb2xvcjogIzIyMmI0NSAhaW1wb3J0YW50O2ZvbnQtZmFtaWx5OiBpbmhlcml0O2ZvbnQtd2VpZ2h0OiA0MDA7Y29sb3I6ICMwMDA7XHJcbn1cclxuI2Rlc2NyaXB0aW9uLCAuaW5wdXQtZ3JvdXAtbGcgPiAuZm9ybS1jb250cm9se1xyXG4gIGZvbnQtZmFtaWx5OiBpbmhlcml0O1xyXG4gIGZvbnQtc2l6ZTogMTdweDtcclxuICBmb250LXdlaWdodDogNDAwO1xyXG59XHJcbi5tdWx0aXNlbGVjdC1kcm9wZG93biAuZHJvcGRvd24tYnRue2hlaWdodDogNDVweCAhaW1wb3J0YW50OyBsaW5lLWhlaWdodDogMS45ICFpbXBvcnRhbnQ7Ym9yZGVyOiAxcHggc29saWQgI2NlZDRkYSAhaW1wb3J0YW50OyBmb250LXNpemU6MTdweDt9Il19 */"], encapsulation: 2 });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](ToursUpdateComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
         args: [{
                 selector: 'ngx-tours-update',
                 templateUrl: './tours-update.component.html',
-                styleUrls: ['./tours-update.component.scss']
+                styleUrls: ['./tours-update.component.scss'],
+                encapsulation: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ViewEncapsulation"].None
             }]
-    }], function () { return [{ type: _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"] }, { type: _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormBuilder"] }, { type: _agm_core__WEBPACK_IMPORTED_MODULE_4__["MapsAPILoader"] }, { type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"] }, { type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__["RestService"] }]; }, { searchElementRef: [{
+    }], function () { return [{ type: _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"] }, { type: _angular_forms__WEBPACK_IMPORTED_MODULE_1__["FormBuilder"] }, { type: _agm_core__WEBPACK_IMPORTED_MODULE_4__["MapsAPILoader"] }, { type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["NgZone"] }, { type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_5__["RestService"] }, { type: _angular_router__WEBPACK_IMPORTED_MODULE_3__["ActivatedRoute"] }]; }, { searchElementRef: [{
             type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ViewChild"],
             args: ['search']
         }] }); })();
@@ -8824,29 +15384,15 @@ class ToursComponent {
     }
 }
 ToursComponent.ɵfac = function ToursComponent_Factory(t) { return new (t || ToursComponent)(); };
-ToursComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: ToursComponent, selectors: [["ngx-tours"]], decls: 12, vars: 0, consts: [[1, "container"], [1, "navbar", "navbar-expand-sm", "bg-primary", "navbar-dark"], [1, "navbar-nav"], [1, "nav-item"], [1, "nav-item", "right-btn"], ["routerLink", "add", "routerLinkActive", "active", 1, "nav-link"], [1, "card"], [1, "card-body"]], template: function ToursComponent_Template(rf, ctx) { if (rf & 1) {
+ToursComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: ToursComponent, selectors: [["ngx-tours"]], decls: 4, vars: 0, consts: [[1, "container"], [1, "card"], [1, "card-body"]], template: function ToursComponent_Template(rf, ctx) { if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "nav", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "ul", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "li", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "h2");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](5, "Tours List");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "li", 4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "a", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](8, "Add Tours");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "div", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "div", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](3, "router-outlet");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "div", 7);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](11, "router-outlet");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    } }, directives: [_angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterLinkWithHref"], _angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterLinkActive"], _angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterOutlet"]], styles: ["li.nav-item.right-btn[_ngcontent-%COMP%] {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn[_ngcontent-%COMP%] {\n  background: #fff;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%], li.nav-item.left-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%] {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark[_ngcontent-%COMP%] {\n  height: 70px;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvdG91cnMvdG91cnMuY29tcG9uZW50LnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7RUFDRSxrQkFBa0I7RUFDbEIsU0FBUztFQUNULFdBQVc7RUFDWCxnQkFBZ0I7QUFDbEI7O0FBQ0E7RUFDRSxnQkFBZ0I7QUFFbEI7O0FBQUE7RUFBa0Usc0JBQXNCO0VBQUUscUJBQXFCO0VBQUUsZ0JBQWdCO0FBTWpJOztBQUxBO0VBQ0Usb0NBQW9DO0VBQ3BDLGdDQUFpQztBQVFuQzs7QUFOQTtFQUNFLFlBQVk7QUFTZCIsImZpbGUiOiJzcmMvYXBwL3BhZ2VzL3RvdXJzL3RvdXJzLmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsibGkubmF2LWl0ZW0ucmlnaHQtYnRuIHtcclxuICBwb3NpdGlvbjogYWJzb2x1dGU7XHJcbiAgdG9wOiAxNXB4O1xyXG4gIHJpZ2h0OiAyMHB4O1xyXG4gIGJhY2tncm91bmQ6ICNmZmY7XHJcbn1cclxubGkubmF2LWl0ZW0ubGVmdC1idG4ge1xyXG4gIGJhY2tncm91bmQ6ICNmZmY7XHJcbn1cclxubGkubmF2LWl0ZW0ucmlnaHQtYnRuIGEubmF2LWxpbmssIGxpLm5hdi1pdGVtLmxlZnQtYnRuIGEubmF2LWxpbmt7Y29sb3I6ICMwMDAgIWltcG9ydGFudDsgdGV4dC1kZWNvcmF0aW9uOiBub25lOyBmb250LXdlaWdodDogMzAwO31cclxuLmJnLXByaW1hcnkge1xyXG4gIGJhY2tncm91bmQtY29sb3I6ICMxN2EyYjggIWltcG9ydGFudDtcclxuICBib3JkZXItY29sb3I6ICAjMTdhMmI4ICFpbXBvcnRhbnQ7XHJcbn1cclxubmF2Lm5hdmJhci5uYXZiYXItZXhwYW5kLXNtLmJnLXByaW1hcnkubmF2YmFyLWRhcmsge1xyXG4gIGhlaWdodDogNzBweDtcclxufSJdfQ== */"] });
+    } }, directives: [_angular_router__WEBPACK_IMPORTED_MODULE_1__["RouterOutlet"]], styles: ["li.nav-item.right-btn[_ngcontent-%COMP%] {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn[_ngcontent-%COMP%] {\n  background: #fff;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%], li.nav-item.left-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%] {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark[_ngcontent-%COMP%] {\n  height: 70px;\n}\n\nli[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  color: #fff;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvdG91cnMvdG91cnMuY29tcG9uZW50LnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQ0E7RUFDRSxrQkFBa0I7RUFDbEIsU0FBUztFQUNULFdBQVc7RUFDWCxnQkFBZ0I7QUFBbEI7O0FBRUE7RUFDRSxnQkFBZ0I7QUFDbEI7O0FBQ0E7RUFBa0Usc0JBQXNCO0VBQUUscUJBQXFCO0VBQUUsZ0JBQWdCO0FBS2pJOztBQUpBO0VBQ0Usb0NBQW9DO0VBQ3BDLGdDQUFpQztBQU9uQzs7QUFMQTtFQUNFLFlBQVk7QUFRZDs7QUFOQTtFQUFPLFdBQVc7QUFVbEIiLCJmaWxlIjoic3JjL2FwcC9wYWdlcy90b3Vycy90b3Vycy5jb21wb25lbnQuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbIlxyXG5saS5uYXYtaXRlbS5yaWdodC1idG4ge1xyXG4gIHBvc2l0aW9uOiBhYnNvbHV0ZTtcclxuICB0b3A6IDE1cHg7XHJcbiAgcmlnaHQ6IDIwcHg7XHJcbiAgYmFja2dyb3VuZDogI2ZmZjtcclxufVxyXG5saS5uYXYtaXRlbS5sZWZ0LWJ0biB7XHJcbiAgYmFja2dyb3VuZDogI2ZmZjtcclxufVxyXG5saS5uYXYtaXRlbS5yaWdodC1idG4gYS5uYXYtbGluaywgbGkubmF2LWl0ZW0ubGVmdC1idG4gYS5uYXYtbGlua3tjb2xvcjogIzAwMCAhaW1wb3J0YW50OyB0ZXh0LWRlY29yYXRpb246IG5vbmU7IGZvbnQtd2VpZ2h0OiAzMDA7fVxyXG4uYmctcHJpbWFyeSB7XHJcbiAgYmFja2dyb3VuZC1jb2xvcjogIzE3YTJiOCAhaW1wb3J0YW50O1xyXG4gIGJvcmRlci1jb2xvcjogICMxN2EyYjggIWltcG9ydGFudDtcclxufVxyXG5uYXYubmF2YmFyLm5hdmJhci1leHBhbmQtc20uYmctcHJpbWFyeS5uYXZiYXItZGFyayB7XHJcbiAgaGVpZ2h0OiA3MHB4O1xyXG59XHJcbmxpIGgyIHtjb2xvcjogI2ZmZjt9Il19 */"] });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](ToursComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
         args: [{
@@ -8856,18 +15402,6 @@ ToursComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineCom
 
 
 <div class="container">
-  <nav class="navbar navbar-expand-sm bg-primary navbar-dark">
-  <!-- Links -->
-  <ul class="navbar-nav">
-    <li class="nav-item">
-        <h2>Tours List</h2>
-    </li>
-    <li class="nav-item right-btn">
-        <a routerLink="add" class="nav-link" routerLinkActive="active">Add Tours</a>
-    </li>
-  </ul>
-  </nav>
-  
   <div class="card">
     <div class="card-body">
       <router-outlet></router-outlet>
@@ -8905,6 +15439,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _agm_core__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @agm/core */ "./node_modules/@agm/core/__ivy_ngcc__/fesm2015/agm-core.js");
 /* harmony import */ var _tours_detail_tours_detail_component__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./tours-detail/tours-detail.component */ "./src/app/pages/tours/tours-detail/tours-detail.component.ts");
 /* harmony import */ var ng2_search_filter__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ng2-search-filter */ "./node_modules/ng2-search-filter/__ivy_ngcc__/ng2-search-filter.js");
+/* harmony import */ var ang_music_player__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ang-music-player */ "./node_modules/ang-music-player/__ivy_ngcc__/fesm2015/ang-music-player.js");
+/* harmony import */ var _ng_select_ng_select__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! @ng-select/ng-select */ "./node_modules/@ng-select/ng-select/__ivy_ngcc__/fesm2015/ng-select-ng-select.js");
+/* harmony import */ var _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! @rxweb/reactive-form-validators */ "./node_modules/@rxweb/reactive-form-validators/__ivy_ngcc__/fesm2015/rxweb-reactive-form-validators.js");
+/* harmony import */ var ng_multiselect_dropdown__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ng-multiselect-dropdown */ "./node_modules/ng-multiselect-dropdown/__ivy_ngcc__/fesm2015/ng-multiselect-dropdown.js");
+
+
+
+
 
 
 
@@ -8927,6 +15469,10 @@ class ToursModule {
 }
 ToursModule.ɵmod = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineNgModule"]({ type: ToursModule });
 ToursModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineInjector"]({ factory: function ToursModule_Factory(t) { return new (t || ToursModule)(); }, imports: [[
+            ng_multiselect_dropdown__WEBPACK_IMPORTED_MODULE_18__["NgMultiSelectDropDownModule"],
+            _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_17__["RxReactiveFormsModule"],
+            _ng_select_ng_select__WEBPACK_IMPORTED_MODULE_16__["NgSelectModule"],
+            ang_music_player__WEBPACK_IMPORTED_MODULE_15__["AngMusicPlayerModule"],
             ng2_search_filter__WEBPACK_IMPORTED_MODULE_14__["Ng2SearchPipeModule"],
             _tours_routing_module__WEBPACK_IMPORTED_MODULE_10__["ToursRoutingModule"],
             _angular_forms__WEBPACK_IMPORTED_MODULE_5__["ReactiveFormsModule"],
@@ -8949,7 +15495,11 @@ ToursModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineInject
                 libraries: ['places']
             })
         ]] });
-(function () { (typeof ngJitMode === "undefined" || ngJitMode) && _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵsetNgModuleScope"](ToursModule, { declarations: [_tours_list_tours_list_component__WEBPACK_IMPORTED_MODULE_1__["ToursListComponent"], _tours_create_tours_create_component__WEBPACK_IMPORTED_MODULE_2__["ToursCreateComponent"], _tours_update_tours_update_component__WEBPACK_IMPORTED_MODULE_3__["ToursUpdateComponent"], _tours_component__WEBPACK_IMPORTED_MODULE_11__["ToursComponent"], _tours_detail_tours_detail_component__WEBPACK_IMPORTED_MODULE_13__["ToursDetailComponent"]], imports: [ng2_search_filter__WEBPACK_IMPORTED_MODULE_14__["Ng2SearchPipeModule"],
+(function () { (typeof ngJitMode === "undefined" || ngJitMode) && _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵsetNgModuleScope"](ToursModule, { declarations: [_tours_list_tours_list_component__WEBPACK_IMPORTED_MODULE_1__["ToursListComponent"], _tours_create_tours_create_component__WEBPACK_IMPORTED_MODULE_2__["ToursCreateComponent"], _tours_update_tours_update_component__WEBPACK_IMPORTED_MODULE_3__["ToursUpdateComponent"], _tours_component__WEBPACK_IMPORTED_MODULE_11__["ToursComponent"], _tours_detail_tours_detail_component__WEBPACK_IMPORTED_MODULE_13__["ToursDetailComponent"]], imports: [ng_multiselect_dropdown__WEBPACK_IMPORTED_MODULE_18__["NgMultiSelectDropDownModule"],
+        _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_17__["RxReactiveFormsModule"],
+        _ng_select_ng_select__WEBPACK_IMPORTED_MODULE_16__["NgSelectModule"],
+        ang_music_player__WEBPACK_IMPORTED_MODULE_15__["AngMusicPlayerModule"],
+        ng2_search_filter__WEBPACK_IMPORTED_MODULE_14__["Ng2SearchPipeModule"],
         _tours_routing_module__WEBPACK_IMPORTED_MODULE_10__["ToursRoutingModule"],
         _angular_forms__WEBPACK_IMPORTED_MODULE_5__["ReactiveFormsModule"],
         _angular_router__WEBPACK_IMPORTED_MODULE_4__["RouterModule"],
@@ -8971,6 +15521,10 @@ ToursModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineInject
         args: [{
                 declarations: [_tours_list_tours_list_component__WEBPACK_IMPORTED_MODULE_1__["ToursListComponent"], _tours_create_tours_create_component__WEBPACK_IMPORTED_MODULE_2__["ToursCreateComponent"], _tours_update_tours_update_component__WEBPACK_IMPORTED_MODULE_3__["ToursUpdateComponent"], _tours_component__WEBPACK_IMPORTED_MODULE_11__["ToursComponent"], _tours_detail_tours_detail_component__WEBPACK_IMPORTED_MODULE_13__["ToursDetailComponent"]],
                 imports: [
+                    ng_multiselect_dropdown__WEBPACK_IMPORTED_MODULE_18__["NgMultiSelectDropDownModule"],
+                    _rxweb_reactive_form_validators__WEBPACK_IMPORTED_MODULE_17__["RxReactiveFormsModule"],
+                    _ng_select_ng_select__WEBPACK_IMPORTED_MODULE_16__["NgSelectModule"],
+                    ang_music_player__WEBPACK_IMPORTED_MODULE_15__["AngMusicPlayerModule"],
                     ng2_search_filter__WEBPACK_IMPORTED_MODULE_14__["Ng2SearchPipeModule"],
                     _tours_routing_module__WEBPACK_IMPORTED_MODULE_10__["ToursRoutingModule"],
                     _angular_forms__WEBPACK_IMPORTED_MODULE_5__["ReactiveFormsModule"],
@@ -9021,7 +15575,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-function UserListComponent_tr_25_Template(rf, ctx) { if (rf & 1) {
+function UserListComponent_tr_28_Template(rf, ctx) { if (rf & 1) {
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "tr");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "td");
     _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](2);
@@ -9077,47 +15631,53 @@ class UserListComponent {
     }
 }
 UserListComponent.ɵfac = function UserListComponent_Factory(t) { return new (t || UserListComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__["RestService"])); };
-UserListComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: UserListComponent, selectors: [["ngx-user-list"]], decls: 27, vars: 5, consts: [[1, "card"], [1, "card-body"], [1, "panel", "panel-primary"], [1, "panel-heading"], [1, "input-group", "mb-4"], ["type", "text", "placeholder", "Search by name", 1, "form-control", 3, "ngModel", "ngModelChange"], [1, "panel-body"], [1, "table", "table-striped"], [4, "ngFor", "ngForOf"]], template: function UserListComponent_Template(rf, ctx) { if (rf & 1) {
+UserListComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: UserListComponent, selectors: [["ngx-user-list"]], decls: 30, vars: 5, consts: [[1, "container"], [1, "card"], [1, "navbar", "navbar-expand-sm", "bg-primary", "navbar-dark"], [1, "navbar-nav"], [1, "nav-item"], [1, "card-body"], [1, "panel", "panel-primary"], [1, "input-group", "mb-4"], ["type", "text", "placeholder", "Search by name", 1, "form-control", 3, "ngModel", "ngModelChange"], [1, "panel-body"], [1, "table", "table-striped"], [4, "ngFor", "ngForOf"]], template: function UserListComponent_Template(rf, ctx) { if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "div", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "div", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "div", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "h2");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](5, "Users List");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "nav", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "ul", 3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "li", 4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](6, "User List");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "div", 4);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "input", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function UserListComponent_Template_input_ngModelChange_7_listener($event) { return ctx.email = $event; });
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "div", 5);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](8, "div", 6);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "table", 7);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "thead");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "tr");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](13, "Id");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](15, "First Name");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](16, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](17, "Last Name");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](18, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](19, "Email");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](20, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](21, "No Of Tours");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](22, "th");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](23, "No Of Badges");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "div", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "input", 8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("ngModelChange", function UserListComponent_Template_input_ngModelChange_10_listener($event) { return ctx.email = $event; });
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "div", 9);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](12, "table", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "thead");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](14, "tr");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](16, "Id");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](24, "tbody");
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](25, UserListComponent_tr_25_Template, 13, 6, "tr", 8);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipe"](26, "filter");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](17, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](18, "First Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](19, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](20, "Last Name");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](21, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](22, "Email");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](23, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](24, "No Of Tours");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](25, "th");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](26, "No Of Badges");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](27, "tbody");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtemplate"](28, UserListComponent_tr_28_Template, 13, 6, "tr", 11);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipe"](29, "filter");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
@@ -9125,11 +15685,11 @@ UserListComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefine
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
     } if (rf & 2) {
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](10);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngModel", ctx.email);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵadvance"](18);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipeBind2"](26, 2, ctx.users, ctx.email));
-    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_2__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["NgModel"], _angular_common__WEBPACK_IMPORTED_MODULE_3__["NgForOf"]], pipes: [ng2_search_filter__WEBPACK_IMPORTED_MODULE_4__["Ng2SearchPipe"]], styles: [".bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvdXNlci1saXN0L3VzZXItbGlzdC5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNJLG9DQUFvQztFQUNwQyxnQ0FBaUM7QUFDckMiLCJmaWxlIjoic3JjL2FwcC9wYWdlcy91c2VyLWxpc3QvdXNlci1saXN0LmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiLmJnLXByaW1hcnkge1xyXG4gICAgYmFja2dyb3VuZC1jb2xvcjogIzE3YTJiOCAhaW1wb3J0YW50O1xyXG4gICAgYm9yZGVyLWNvbG9yOiAgIzE3YTJiOCAhaW1wb3J0YW50O1xyXG59Il19 */"] });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵproperty"]("ngForOf", _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵpipeBind2"](29, 2, ctx.users, ctx.email));
+    } }, directives: [_angular_forms__WEBPACK_IMPORTED_MODULE_2__["DefaultValueAccessor"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["NgControlStatus"], _angular_forms__WEBPACK_IMPORTED_MODULE_2__["NgModel"], _angular_common__WEBPACK_IMPORTED_MODULE_3__["NgForOf"]], pipes: [ng2_search_filter__WEBPACK_IMPORTED_MODULE_4__["Ng2SearchPipe"]], styles: [".bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%] {\n  position: absolute;\n  top: 15px;\n  right: 20px;\n  background: #fff;\n}\n\nli.nav-item.left-btn[_ngcontent-%COMP%] {\n  background: #fff;\n}\n\nli.nav-item.right-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%], li.nav-item.left-btn[_ngcontent-%COMP%]   a.nav-link[_ngcontent-%COMP%] {\n  color: #000 !important;\n  text-decoration: none;\n  font-weight: 300;\n}\n\n.bg-primary[_ngcontent-%COMP%] {\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n}\n\nnav.navbar.navbar-expand-sm.bg-primary.navbar-dark[_ngcontent-%COMP%] {\n  height: 70px;\n}\n\nli[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  color: #fff;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcGFnZXMvdXNlci1saXN0L3VzZXItbGlzdC5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNJLG9DQUFvQztFQUNwQyxnQ0FBaUM7QUFDckM7O0FBQ0E7RUFDSSxrQkFBa0I7RUFDbEIsU0FBUztFQUNULFdBQVc7RUFDWCxnQkFBZ0I7QUFFcEI7O0FBQUE7RUFDSSxnQkFBZ0I7QUFHcEI7O0FBREE7RUFBa0Usc0JBQXNCO0VBQUUscUJBQXFCO0VBQUUsZ0JBQWdCO0FBT2pJOztBQU5BO0VBQ0ksb0NBQW9DO0VBQ3BDLGdDQUFpQztBQVNyQzs7QUFQQTtFQUNJLFlBQVk7QUFVaEI7O0FBUkE7RUFBTyxXQUFXO0FBWWxCIiwiZmlsZSI6InNyYy9hcHAvcGFnZXMvdXNlci1saXN0L3VzZXItbGlzdC5jb21wb25lbnQuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbIi5iZy1wcmltYXJ5IHtcclxuICAgIGJhY2tncm91bmQtY29sb3I6ICMxN2EyYjggIWltcG9ydGFudDtcclxuICAgIGJvcmRlci1jb2xvcjogICMxN2EyYjggIWltcG9ydGFudDtcclxufVxyXG5saS5uYXYtaXRlbS5yaWdodC1idG4ge1xyXG4gICAgcG9zaXRpb246IGFic29sdXRlO1xyXG4gICAgdG9wOiAxNXB4O1xyXG4gICAgcmlnaHQ6IDIwcHg7XHJcbiAgICBiYWNrZ3JvdW5kOiAjZmZmO1xyXG59XHJcbmxpLm5hdi1pdGVtLmxlZnQtYnRuIHtcclxuICAgIGJhY2tncm91bmQ6ICNmZmY7XHJcbn1cclxubGkubmF2LWl0ZW0ucmlnaHQtYnRuIGEubmF2LWxpbmssIGxpLm5hdi1pdGVtLmxlZnQtYnRuIGEubmF2LWxpbmt7Y29sb3I6ICMwMDAgIWltcG9ydGFudDsgdGV4dC1kZWNvcmF0aW9uOiBub25lOyBmb250LXdlaWdodDogMzAwO31cclxuLmJnLXByaW1hcnkge1xyXG4gICAgYmFja2dyb3VuZC1jb2xvcjogIzE3YTJiOCAhaW1wb3J0YW50O1xyXG4gICAgYm9yZGVyLWNvbG9yOiAgIzE3YTJiOCAhaW1wb3J0YW50O1xyXG59XHJcbm5hdi5uYXZiYXIubmF2YmFyLWV4cGFuZC1zbS5iZy1wcmltYXJ5Lm5hdmJhci1kYXJrIHtcclxuICAgIGhlaWdodDogNzBweDtcclxufVxyXG5saSBoMiB7Y29sb3I6ICNmZmY7fSJdfQ== */"] });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](UserListComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
         args: [{
@@ -9138,6 +15698,212 @@ UserListComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefine
                 styleUrls: ['./user-list.component.scss']
             }]
     }], function () { return [{ type: app_core_auth_services_rest_service__WEBPACK_IMPORTED_MODULE_1__["RestService"] }]; }, null); })();
+
+
+/***/ }),
+
+/***/ "./src/app/privacy-policy/privacy-policy.component.ts":
+/*!************************************************************!*\
+  !*** ./src/app/privacy-policy/privacy-policy.component.ts ***!
+  \************************************************************/
+/*! exports provided: PrivacyPolicyComponent */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PrivacyPolicyComponent", function() { return PrivacyPolicyComponent; });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
+
+
+class PrivacyPolicyComponent {
+    constructor() { }
+    ngOnInit() {
+    }
+}
+PrivacyPolicyComponent.ɵfac = function PrivacyPolicyComponent_Factory(t) { return new (t || PrivacyPolicyComponent)(); };
+PrivacyPolicyComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: PrivacyPolicyComponent, selectors: [["ngx-privacy-policy"]], decls: 115, vars: 0, consts: [[1, "privacy"], [1, "title"], [1, "content"], [1, "address"], ["href", "https://goo.gl/maps/aFSyHwLzEiSgXuJ39"], ["href", "https://www.explord.com.au", "target", "_blank"], ["href", "mailto:info@explord.com.au"], ["href", "tel:0474761402"]], template: function PrivacyPolicyComponent_Template(rf, ctx) { if (rf & 1) {
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "div", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "h1");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](3, "Privacy Policy");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "div", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](6, " Explor\u2019d is committed to providing quality services to you and this policy outlines our ongoing obligations to you in respect of how we manage your Personal Information. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](8, " We have adopted the Australian Privacy Principles (APPs) contained in the Privacy Act 1988 (Cth) (the Privacy Act). The NPPs govern the way in which we collect, use, disclose, store, secure and dispose of your Personal Information. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](10, " A copy of the Australian Privacy Principles may be obtained from the website of The Office of the Australian Information Commissioner at www.aoic.gov.au ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](11, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](12, " What is Personal Information and why do we collect it? ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](13, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](14, " Personal Information is information or an opinion that identifies an individual. Examples of Personal Information we collect include: names, email addresses, and images. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](15, "strong");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](16, " When you create an account with us, or when you use our services, we collect and store: ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](17, "ul");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](18, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](19, "Account details (including your name, email address, passwords, and other identification information).");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](20, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](21, "Profile information you provide such as your profile photo, and your age range");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](22, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](23, "Comments you make on any of our tours.");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](24, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](25, "Information you provide to us when you sign up to receive email updates or other communications from us.");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](26, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](27, "Information you provide to websites that link to or from our services, including any social networking sites to which you choose to link your account.");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](28, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](29, "Any information you provide as part of a survey.");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](30, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](31, "When you use our services, we automatically receive and record information from your mobile device for purposes of providing you services that are relevant and useful to you:");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](32, "ul");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](33, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](34, " Your precise geolocation, where you have enabled this on your mobile device or GPS device. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](35, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](36, " Install ID ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](37, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](38, " Your IP address ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](39, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](40, " Time and date of access and use of the services ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](41, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](42, " Personal Information is obtained in many ways, including when you sign up, when you use our app, by email, via our website www.explord.com.au, from media and publications, from other publicly available sources, from cookies and from third parties. We don\u2019t guarantee website links or policy of authorised third parties. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](43, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](44, " We collect your Personal Information for the primary purpose of providing our services to you, providing information to our clients and marketing. We may also use your Personal Information for secondary purposes closely related to the primary purpose, in circumstances where you would reasonably expect such use or disclosure. You may unsubscribe from our mailing/marketing lists at any time by contacting us in writing. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](45, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](46, " When we collect Personal Information we will, where appropriate and where possible, explain to you why we are collecting the information and how we plan to use it. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](47, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](48, "Sensitive Information");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](49, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](50, " Sensitive information is defined in the Privacy Act to include information or opinion about such things as an individual's racial or ethnic origin, political opinions, membership of a political association, religious or philosophical beliefs, membership of a trade union or other professional body, criminal record or health information. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](51, "strong");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](52, "Sensitive information will be used by us only:");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](53, "ul");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](54, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](55, " For the primary purpose for which it was obtained ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](56, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](57, " For a secondary purpose that is directly related to the primary purpose ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](58, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](59, " With your consent; or where required or authorised by law. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](60, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](61, " Third Parties ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](62, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](63, " Where reasonable and practicable to do so, we will collect your Personal Information only from you. However, in some circumstances we may be provided with information by third parties. In such a case we will take reasonable steps to ensure that you are made aware of the information provided to us by the third party. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](64, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](65, "Disclosure of Personal Information");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](66, "strong");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](67, " Your Personal Information may be disclosed in a number of circumstances including the following: ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](68, "ul");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](69, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](70, " Third parties where you consent to the use or disclosure; and ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](71, "li");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](72, " Where required or authorised by law. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](73, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](74, " Security of Personal Information ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](75, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](76, " Your Personal Information is stored in a manner that reasonably protects it from misuse and loss and from unauthorized access, modification or disclosure. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](77, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](78, " When your Personal Information is no longer needed for the purpose for which it was obtained, we will take reasonable steps to destroy or permanently de-identify your Personal Information. However, most of the Personal Information is or will be stored in client files which will be kept by us for a minimum of 7 years. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](79, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](80, " Access to your Personal Information ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](81, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](82, " You may access the Personal Information we hold about you and to update and/or correct it, subject to certain exceptions. If you wish to access your Personal Information, please contact us in writing. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](83, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](84, " Explor\u2019d will not charge any fee for your access request, but may charge an administrative fee for providing a copy of your Personal Information. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](85, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](86, " In order to protect your Personal Information we may require identification from you before releasing the requested information. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](87, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](88, "Maintaining the Quality of your Personal Information");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](89, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](90, " It is an important to us that your Personal Information is up to date. We will take reasonable steps to make sure that your Personal Information is accurate, complete and up-to-date. If you find that the information we have is not up to date or is inaccurate, please advise us as soon as practicable so we can update our records and ensure we can continue to provide quality services to you. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](91, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](92, "Policy Updates");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](93, "p");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](94, " This Policy may change from time to time and is available on our website. ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](95, "h2");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](96, " Privacy Policy Complaints and Enquiries ");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](97, "strong");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](98, "If you have any queries or complaints about our Privacy Policy please contact us at:");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](99, "div", 3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](100, "a", 4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](101, "Explor\u2019d");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](102, "br");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](103, " 39 Lawrence Street");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](104, "br");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](105, " Wodonga Victoria 3690");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](106, "br");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](107, "a", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](108, "www.explord.com.au");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](109, "br");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](110, "a", 6);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](111, "info@explord.com.au");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](112, "br");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](113, "a", 7);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](114, "0474761402");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+    } }, styles: [".title[_ngcontent-%COMP%] {\n  text-align: center;\n  background-color: #17a2b8 !important;\n  border-color: #17a2b8 !important;\n  padding: 10px;\n  color: #fff;\n  margin: 0 0 20px 0;\n}\n\n.title[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n  padding: 0;\n  margin: 0;\n}\n\n.content[_ngcontent-%COMP%] {\n  padding: 15px;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcHJpdmFjeS1wb2xpY3kvcHJpdmFjeS1wb2xpY3kuY29tcG9uZW50LnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7RUFDSSxrQkFBa0I7RUFDbEIsb0NBQW9DO0VBQ3BDLGdDQUFnQztFQUNoQyxhQUFhO0VBQ2IsV0FBVztFQUNYLGtCQUFrQjtBQUN0Qjs7QUFDQTtFQUFVLFVBQVU7RUFBQyxTQUFTO0FBSTlCOztBQUhBO0VBQ0ksYUFBYTtBQU1qQiIsImZpbGUiOiJzcmMvYXBwL3ByaXZhY3ktcG9saWN5L3ByaXZhY3ktcG9saWN5LmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiLnRpdGxle1xyXG4gICAgdGV4dC1hbGlnbjogY2VudGVyO1xyXG4gICAgYmFja2dyb3VuZC1jb2xvcjogIzE3YTJiOCAhaW1wb3J0YW50O1xyXG4gICAgYm9yZGVyLWNvbG9yOiAjMTdhMmI4ICFpbXBvcnRhbnQ7XHJcbiAgICBwYWRkaW5nOiAxMHB4O1xyXG4gICAgY29sb3I6ICNmZmY7XHJcbiAgICBtYXJnaW46IDAgMCAyMHB4IDA7XHJcbn1cclxuLnRpdGxlIGgxe3BhZGRpbmc6IDA7bWFyZ2luOiAwO31cclxuLmNvbnRlbnR7XHJcbiAgICBwYWRkaW5nOiAxNXB4O1xyXG59Il19 */"] });
+/*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](PrivacyPolicyComponent, [{
+        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
+        args: [{
+                selector: 'ngx-privacy-policy',
+                templateUrl: './privacy-policy.component.html',
+                styleUrls: ['./privacy-policy.component.scss']
+            }]
+    }], function () { return []; }, null); })();
 
 
 /***/ }),
@@ -9178,10 +15944,11 @@ const environment = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
-/* harmony import */ var _environments_environment__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./environments/environment */ "./src/environments/environment.ts");
-/* harmony import */ var _app_app_module__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./app/app.module */ "./src/app/app.module.ts");
-/* harmony import */ var _angular_platform_browser__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/platform-browser */ "./node_modules/@angular/platform-browser/__ivy_ngcc__/fesm2015/platform-browser.js");
+/* harmony import */ var _polyfills__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./polyfills */ "./src/polyfills.ts");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
+/* harmony import */ var _environments_environment__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./environments/environment */ "./src/environments/environment.ts");
+/* harmony import */ var _app_app_module__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./app/app.module */ "./src/app/app.module.ts");
+/* harmony import */ var _angular_platform_browser__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/platform-browser */ "./node_modules/@angular/platform-browser/__ivy_ngcc__/fesm2015/platform-browser.js");
 /**
  * @license
  * Copyright Akveo. All Rights Reserved.
@@ -9191,11 +15958,82 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-if (_environments_environment__WEBPACK_IMPORTED_MODULE_1__["environment"].production) {
-    Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["enableProdMode"])();
+
+if (_environments_environment__WEBPACK_IMPORTED_MODULE_2__["environment"].production) {
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["enableProdMode"])();
 }
-_angular_platform_browser__WEBPACK_IMPORTED_MODULE_3__["platformBrowser"]().bootstrapModule(_app_app_module__WEBPACK_IMPORTED_MODULE_2__["AppModule"])
+_angular_platform_browser__WEBPACK_IMPORTED_MODULE_4__["platformBrowser"]().bootstrapModule(_app_app_module__WEBPACK_IMPORTED_MODULE_3__["AppModule"])
     .catch(err => console.error(err));
+
+
+/***/ }),
+
+/***/ "./src/polyfills.ts":
+/*!**************************!*\
+  !*** ./src/polyfills.ts ***!
+  \**************************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var classlist_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! classlist.js */ "./node_modules/classlist.js/classList.js");
+/* harmony import */ var classlist_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(classlist_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var web_animations_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! web-animations-js */ "./node_modules/web-animations-js/web-animations.min.js");
+/* harmony import */ var web_animations_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(web_animations_js__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var core_js_es6_reflect__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/es6/reflect */ "./node_modules/core-js/es6/reflect.js");
+/* harmony import */ var core_js_es6_reflect__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_es6_reflect__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var core_js_es7_reflect__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/es7/reflect */ "./node_modules/core-js/es7/reflect.js");
+/* harmony import */ var core_js_es7_reflect__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_es7_reflect__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var zone_js_dist_zone__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! zone.js/dist/zone */ "./node_modules/zone.js/dist/zone-evergreen.js");
+/* harmony import */ var zone_js_dist_zone__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(zone_js_dist_zone__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var core_js_es7_array__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/es7/array */ "./node_modules/core-js/es7/array.js");
+/* harmony import */ var core_js_es7_array__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(core_js_es7_array__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var core_js_es7_object__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/es7/object */ "./node_modules/core-js/es7/object.js");
+/* harmony import */ var core_js_es7_object__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(core_js_es7_object__WEBPACK_IMPORTED_MODULE_6__);
+/**
+ * This file includes polyfills needed by Angular and is loaded before the app.
+ * You can add your own extra polyfills to this file.
+ *
+ * This file is divided into 2 sections:
+ *   1. Browser polyfills. These are applied before loading ZoneJS and are sorted by browsers.
+ *   2. Application imports. Files imported after ZoneJS that should be loaded before your main
+ *      file.
+ *
+ * The current setup is for so-called "evergreen" browsers; the last versions of browsers that
+ * automatically update themselves. This includes Safari >= 10, Chrome >= 55 (including Opera),
+ * Edge >= 13 on the desktop, and iOS 10 and Chrome on mobile.
+ *
+ * Learn more in https://angular.io/guide/browser-support
+ */
+/***************************************************************************************************
+* BROWSER POLYFILLS
+*/
+/** IE10 and IE11 requires the following for NgClass support on SVG elements */
+ // Run `npm install --save classlist.js`.
+/** IE10 and IE11 requires the following to support `@angular/animation`. */
+ // Run `npm install --save web-animations-js`.
+/** Evergreen browsers require these. **/
+
+
+/** ALL Firefox browsers require the following to support `@angular/animation`. **/
+// import 'web-animations-js';  // Run `npm install --save web-animations-js`.
+/***************************************************************************************************
+ * Zone JS is required by Angular itself.
+ */
+ // Included with Angular CLI.
+/***************************************************************************************************
+ * APPLICATION IMPORTS
+ */
+/**
+ * Date, currency, decimal and percent pipes.
+ * Needed for: All but Chrome, Firefox, Edge, IE11 and Safari 10
+ */
+
+
+if (typeof SVGElement.prototype.contains === 'undefined') {
+    SVGElement.prototype.contains = HTMLDivElement.prototype.contains;
+}
 
 
 /***/ }),

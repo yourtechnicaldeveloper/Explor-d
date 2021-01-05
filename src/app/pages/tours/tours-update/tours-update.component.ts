@@ -252,12 +252,12 @@ export class ToursUpdateComponent implements OnInit {
       this.http.post('http://18.217.48.28:2000/tours/update/' + id, formData, { headers: this.getHeader(FormData) }).subscribe(
       (response) => this.refresh(response),
       (error) => console.log(error)
-      
     );
       //console.table(this.form.value);
     }
   }
     refresh(response){
+      
       if(response['meta']['status'] == 200){
         this.router.navigate(['/pages/tours/tours-list']);
       }    
