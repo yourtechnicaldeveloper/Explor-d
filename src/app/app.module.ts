@@ -28,10 +28,19 @@ import { PagesModule } from './pages/pages.module';
 import { ToursModule } from '../app/pages/tours/tours.module';
 import { FileTypeValidatorDirective } from './directives/file-type-validator.directive';
 import { BadgeModule } from './pages/badge/badge.module';
-
+import { PrivacyPolicyComponent } from './privacy-policy/privacy-policy.component';
+import { FAQComponent } from './faq/faq.component';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 @NgModule({
-  declarations: [AppComponent, LoginComponent, FileTypeValidatorDirective],
+  declarations: [AppComponent, LoginComponent, FileTypeValidatorDirective, PrivacyPolicyComponent, FAQComponent],
   imports: [
+    MatExpansionModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
     FormsModule,
     ReactiveFormsModule,
     BrowserModule,
@@ -54,4 +63,5 @@ import { BadgeModule } from './pages/badge/badge.module';
   bootstrap: [AppComponent],
 })
 export class AppModule {
+  
 }

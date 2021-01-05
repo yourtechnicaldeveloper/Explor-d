@@ -53,27 +53,8 @@ export class ToursUpdateComponent implements OnInit {
 
      }
      get f() { return this.form.controls; }
-    
-     reloadData(){
-      
-      // var id;
-      // this.activeRoute = this.route.params.subscribe(params => {
-      // id = { "_id" : params['id'] };
-      // });
-
-      // this.restService.post("/tours/view/", id).subscribe((data) => {
-      //   this.tour = data.data;
-      // }, (error) => {
-      //   console.log(error)
-      // });
-     }
-
-     
 
   ngOnInit(): void {
-
-    this.reloadData();
-    this.initAutocomplete();
 
     let tmp = [];
       this.restService.get("/category/categoryList").subscribe(data => {
@@ -91,7 +72,73 @@ export class ToursUpdateComponent implements OnInit {
 
       this.restService.post("/tours/view", id).subscribe((data) => {
         this.tour = data.data;
-        //console.log(this.tour.categoryName.name);
+        const map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: this.tour.lat, lng: this.tour.long },
+          zoom: 15,
+          mapTypeId: "roadmap",
+        });
+        this.marker =
+            new google.maps.Marker({
+              map,
+              title: "place.name",
+              position: { lat: this.tour.lat, lng: this.tour.long },
+              draggable:true
+            })
+         google.maps.event.addListener(this.marker, 'dragend', function() {
+          
+          console.log(this.marker.getPosition().lat());
+          console.log(this.marker.getPosition().lng());
+         
+       });
+       map.addListener('dragend', ()=>{
+        console.log("place gytgyty");
+        console.log(this.marker.getPosition().lng());
+      });
+        // Create the search box and link it to the UI element.
+        const input = <HTMLInputElement>document.getElementById("pac-input");
+        const searchBox = new google.maps.places.SearchBox(input);
+        //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+        // Bias the SearchBox results towards current map's viewport.
+        map.addListener("bounds_changed", () => {
+          searchBox.setBounds(map.getBounds());
+        });
+        
+        searchBox.addListener("places_changed", () => {
+          const places = searchBox.getPlaces();
+      
+          if (places.length == 0) {
+            return;
+          }
+    
+          const bounds = new google.maps.LatLngBounds();
+          places.forEach((place) => {
+            if (!place.geometry) {
+              console.log("Returned place contains no geometry");
+              return;
+            }
+            const icon = {
+              url: place.icon,
+              size: new google.maps.Size(71, 71),
+              origin: new google.maps.Point(0, 0),
+              anchor: new google.maps.Point(17, 34),
+              scaledSize: new google.maps.Size(25, 25),
+            };
+            
+            this.marker.setPosition(place.geometry.location);
+            console.log("place");
+            console.log(place.geometry.location.lat());
+            
+            if (place.geometry.viewport) {
+              // Only geocodes have viewport.
+              bounds.union(place.geometry.viewport);
+            } else {
+              bounds.extend(place.geometry.location);
+            }
+          });
+          map.fitBounds(bounds);
+        });
+        console.log(this.tour.lat);
+        console.log(this.tour.long);
         this.selectedItems = [
           { item_id: this.tour.categoryName._id, item_text: this.tour.categoryName.name },
           //console.log(this.tour.categoryName._id)
@@ -116,76 +163,6 @@ export class ToursUpdateComponent implements OnInit {
   }
   onSelectAll(items: any) {
     console.log(items);
-  }
-  initAutocomplete() {
-       
-    const map = new google.maps.Map(document.getElementById("map"), {
-      center: { lat: -33.8688, lng: 151.2195 },
-      zoom: 13,
-      mapTypeId: "roadmap",
-    });
-    this.marker =
-        new google.maps.Marker({
-          map,
-          title: "place.name",
-          position: { lat: -33.8688, lng: 151.2195 },
-          draggable:true
-        })
-     google.maps.event.addListener(this.marker, 'dragend', function() {
-      
-      console.log(this.marker.getPosition().lat());
-      console.log(this.marker.getPosition().lng());
-     
-   });
-   map.addListener('dragend', ()=>{
-    console.log("place gytgyty");
-    console.log(this.marker.getPosition().lng());
-  });
-    // Create the search box and link it to the UI element.
-    const input = <HTMLInputElement>document.getElementById("pac-input");
-    const searchBox = new google.maps.places.SearchBox(input);
-    //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-    // Bias the SearchBox results towards current map's viewport.
-    map.addListener("bounds_changed", () => {
-      searchBox.setBounds(map.getBounds());
-    });
-    
-    searchBox.addListener("places_changed", () => {
-      const places = searchBox.getPlaces();
-  
-      if (places.length == 0) {
-        return;
-      }
-
-      const bounds = new google.maps.LatLngBounds();
-      places.forEach((place) => {
-        if (!place.geometry) {
-          console.log("Returned place contains no geometry");
-          return;
-        }
-        const icon = {
-          url: place.icon,
-          size: new google.maps.Size(71, 71),
-          origin: new google.maps.Point(0, 0),
-          anchor: new google.maps.Point(17, 34),
-          scaledSize: new google.maps.Size(25, 25),
-        };
-        
-        this.marker.setPosition(place.geometry.location);
-        console.log("place");
-        console.log(place.geometry.location.lat());
-        
-        if (place.geometry.viewport) {
-          // Only geocodes have viewport.
-          bounds.union(place.geometry.viewport);
-        } else {
-          bounds.extend(place.geometry.location);
-        }
-      });
-      map.fitBounds(bounds);
-    });
-   
-   
   }
   get registerFormControl() {
     return this.form.controls;
@@ -217,6 +194,7 @@ export class ToursUpdateComponent implements OnInit {
     audio.onloadedmetadata = function() {
       window.URL.revokeObjectURL(audio.src);
       globalThis.audioDuration = Math.round(audio.duration*Math.pow(10,0))/Math.pow(10,0); // here you could get the duration
+      
     }
   }
   submitForm() {
@@ -232,14 +210,10 @@ export class ToursUpdateComponent implements OnInit {
     if(this.form.get('audio').value != null)
     {
       formData.append("audio", this.form.get('audio').value);
-    }
-    if(this.form.get('audioDuration').value != null)
-    {
       formData.append("audioDuration", globalThis.audioDuration);
     }
     
-    //formData.append("audioDuration", globalThis.audioDuration);
-
+    console.log(this.tour.audioDuration);
     for (let i = 0; i < this.form.get('categoryName').value.length; i++) {
       val.push(this.form.get('categoryName').value[i].item_id);
       console.log(this.form.get('categoryName').value[i].item_id)
@@ -251,8 +225,14 @@ export class ToursUpdateComponent implements OnInit {
     // }else{
     //   console.log(this.prevcatid);
     // }
-    formData.append("lat", this.marker.getPosition().lat());
-    formData.append("long", this.marker.getPosition().lng());
+    if(this.form.get('lat').value != null)
+    {
+      formData.append("lat", this.marker.getPosition().lat());
+    }
+    if(this.form.get('long').value != null)
+    {
+      formData.append("long", this.marker.getPosition().lng());
+    }
     formData.append("name", this.form.value.name);
     formData.append("description", this.form.get('description').value);
     formData.append("transcript", this.form.value.transcript);

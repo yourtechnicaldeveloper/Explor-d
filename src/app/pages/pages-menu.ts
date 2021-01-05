@@ -27,5 +27,17 @@ export const MENU_ITEMS: NbMenuItem[] = [
     icon: 'browser-outline',
     link: '/pages/badge/badge-list',
   }, 
+
+  {
+    title: 'FAQ',
+    icon: 'browser-outline',
+    link: '/pages/layout/accordion',
+  }, 
+
+  {
+    title: 'Privacy Policy',
+    icon: 'browser-outline',
+    link: '/pages/privacy-policy',
+  }, 
   
 ];

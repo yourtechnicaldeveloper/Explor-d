@@ -15,7 +15,7 @@ export class BadgeListComponent implements OnInit {
   ngOnInit(){
     this.reloadData();
   }
-
+  
   reloadData() {
     this.restService.post("/badge/listing").subscribe((data) => {
       this.badges = data.data;

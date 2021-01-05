@@ -3,6 +3,8 @@ import { NgModule } from '@angular/core';
 
 import { LoginComponent } from './login/login.component';
 import { AuthGuard } from './core_auth/auth/auth.guard';
+import { PrivacyPolicyComponent } from './privacy-policy/privacy-policy.component';
+import { FAQComponent } from './faq/faq.component';
 
 export const routes: Routes = [
   {
@@ -16,6 +18,12 @@ export const routes: Routes = [
   },
   { 
     path: 'login', component: LoginComponent,
+  },
+  { 
+    path: 'privacy-policy', component: PrivacyPolicyComponent,
+  },
+  { 
+    path: 'faq', component: FAQComponent,
   },
 ];
 

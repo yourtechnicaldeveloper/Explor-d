@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MapsAPILoader  } from '@agm/core';
 import { RestService } from 'app/core_auth/services/rest.service';
 import { FormDataService } from 'app/core_auth/services/formdata.service';
+import { data } from 'jquery';
 
 @Component({
   selector: 'ngx-badge-update',
@@ -34,7 +35,7 @@ export class BadgeUpdateComponent implements OnInit {
 
   form: FormGroup;
   constructor(private http: HttpClient, private router: Router,public fb: FormBuilder, private mapsAPILoader: MapsAPILoader,
-    private ngZone: NgZone, private restService: RestService, private route: ActivatedRoute, private formDataService: FormDataService,) {
+    private ngZone: NgZone, private restService: RestService, private route: ActivatedRoute, private formDataService: FormDataService) {
 
       this.form = this.fb.group({
         _id:[''],
@@ -52,83 +53,10 @@ export class BadgeUpdateComponent implements OnInit {
      toggleDisplayDiv() {
       this.isNotShowDiv = !this.isNotShowDiv;
     }
-    reloadData(){
-      this.initAutocomplete();
-    };
 
-    initAutocomplete() {
-       
-      const map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: -33.8688, lng: 151.2195 },
-        zoom: 13,
-        mapTypeId: "roadmap",
-      });
-      this.marker =
-          new google.maps.Marker({
-            map,
-            title: "place.name",
-            position: { lat: -33.8688, lng: 151.2195 },
-            draggable:true
-          })
-       google.maps.event.addListener(this.marker, 'dragend', function() {
-        
-        console.log(this.marker.getPosition().lat());
-        console.log(this.marker.getPosition().lng());
-       
-     });
-     map.addListener('dragend', ()=>{
-      console.log("place gytgyty");
-      console.log(this.marker.getPosition().lng());
-    });
-      // Create the search box and link it to the UI element.
-      const input = <HTMLInputElement>document.getElementById("pac-input");
-      const searchBox = new google.maps.places.SearchBox(input);
-      //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-      // Bias the SearchBox results towards current map's viewport.
-      map.addListener("bounds_changed", () => {
-        searchBox.setBounds(map.getBounds());
-      });
-      
-      searchBox.addListener("places_changed", () => {
-        const places = searchBox.getPlaces();
-    
-        if (places.length == 0) {
-          return;
-        }
-
-        const bounds = new google.maps.LatLngBounds();
-        places.forEach((place) => {
-          if (!place.geometry) {
-            console.log("Returned place contains no geometry");
-            return;
-          }
-          const icon = {
-            url: place.icon,
-            size: new google.maps.Size(71, 71),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(17, 34),
-            scaledSize: new google.maps.Size(25, 25),
-          };
-          
-          this.marker.setPosition(place.geometry.location);
-          console.log("place");
-          console.log(place.geometry.location.lat());
-          
-          if (place.geometry.viewport) {
-            // Only geocodes have viewport.
-            bounds.union(place.geometry.viewport);
-          } else {
-            bounds.extend(place.geometry.location);
-          }
-        });
-        map.fitBounds(bounds);
-      });
-     
-     
-    }
     
   ngOnInit(): void {
-    this.reloadData();
+    //this.reloadData();
     //getData(): void {
       let tmp = [];
       this.restService.get("/tours/list").subscribe(data => {
@@ -145,7 +73,80 @@ export class BadgeUpdateComponent implements OnInit {
       let sel = [];
       this.restService.post("/badge/view", id).subscribe((data) => {
         this.badges = data.data;
-        console.log(this.badges.benefits);
+        // console.log(this.badges.lat);
+        // console.log(this.badges.name);
+        
+        const map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: parseFloat(this.badges.lat), lng: parseFloat(this.badges.long) },
+          zoom: 15,
+          mapTypeId: "roadmap",
+          
+        });
+        this.marker =
+            new google.maps.Marker({
+              map,
+              title: "place.name",
+              position: { lat: parseFloat(this.badges.lat), lng: parseFloat(this.badges.long) },
+              draggable:true
+            })
+            this.marker.setMap(map);
+            //console.log("Marker Set");
+         google.maps.event.addListener(this.marker, 'dragend', function() {
+          
+          console.log(this.marker.getPosition().lat());
+          console.log(this.marker.getPosition().lng());
+         
+       });
+       google.maps.event.addListenerOnce(map, 'idle', function(){
+        google.maps.event.trigger(map, 'resize');
+      });
+      //  map.addListener('dragend', ()=>{
+      //   console.log("get position on drag");
+      //   console.log(this.marker.getPosition().lng());
+      // });
+        // Create the search box and link it to the UI element.
+        const input = <HTMLInputElement>document.getElementById("pac-input");
+        const searchBox = new google.maps.places.SearchBox(input);
+        //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+        // Bias the SearchBox results towards current map's viewport.
+        map.addListener("bounds_changed", () => {
+          searchBox.setBounds(map.getBounds());
+        });
+        
+        searchBox.addListener("places_changed", () => {
+          const places = searchBox.getPlaces();
+      
+          if (places.length == 0) {
+            return;
+          }
+  
+          const bounds = new google.maps.LatLngBounds();
+          places.forEach((place) => {
+            if (!place.geometry) {
+              console.log("Returned place contains no geometry");
+              return;
+            }
+            const icon = {
+              url: place.icon,
+              size: new google.maps.Size(71, 71),
+              origin: new google.maps.Point(0, 0),
+              anchor: new google.maps.Point(17, 34),
+              scaledSize: new google.maps.Size(25, 25),
+            };
+            
+            this.marker.setPosition(place.geometry.location);
+            console.log("place");
+            console.log(place.geometry.location.lat());
+            console.log(place.geometry.location.lng());
+            if (place.geometry.viewport) {
+              // Only geocodes have viewport.
+              bounds.union(place.geometry.viewport);
+            } else {
+              bounds.extend(place.geometry.location);
+            }
+          });
+          map.fitBounds(bounds);
+        });
         for (let i = 0; i < this.badges.tours.length; i++) {
           sel.push({ item_id: this.badges.tours[i].toursId, item_text: this.badges.tours[i].tourName });
         }
@@ -164,7 +165,6 @@ export class BadgeUpdateComponent implements OnInit {
           allowSearchFilter: true
         };
   }
-  
   onItemSelect(item: any) {
     console.log(item);
   }
@@ -194,7 +194,7 @@ export class BadgeUpdateComponent implements OnInit {
   submitForm() {
       var formData: any = new FormData();
       let val = [];
-      console.log(this.form.get('badgeIcon').value);
+      //console.log(this.form.get('badgeIcon').value);
       if(this.form.get('badgeIcon').value != null)
       {
         formData.append("badgeIcon", this.form.get('badgeIcon').value);
