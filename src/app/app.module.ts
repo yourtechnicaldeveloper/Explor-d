@@ -34,8 +34,11 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MyLoaderComponent } from './components/my-loader/my-loader.component';
+import { LoaderService } from './services/loader.service';
+import { LoaderInterceptor } from './interceptors/loader-interceptor.service';
 @NgModule({
-  declarations: [AppComponent, LoginComponent, FileTypeValidatorDirective, PrivacyPolicyComponent, FAQComponent],
+  declarations: [AppComponent, LoginComponent, FileTypeValidatorDirective, PrivacyPolicyComponent, FAQComponent, MyLoaderComponent],
   imports: [
     MatExpansionModule,
     MatFormFieldModule,
@@ -59,7 +62,7 @@ import { MatInputModule } from '@angular/material/input';
     ToursModule,
     BadgeModule,
   ],
-  providers: [{ provide: HTTP_INTERCEPTORS, useClass: RestAPIInterceptor, multi: true }],
+  providers: [LoaderService,{ provide: HTTP_INTERCEPTORS, useClass: RestAPIInterceptor, multi: true }, { provide: HTTP_INTERCEPTORS, useClass: LoaderInterceptor, multi: true } ],
   bootstrap: [AppComponent],
 })
 export class AppModule {

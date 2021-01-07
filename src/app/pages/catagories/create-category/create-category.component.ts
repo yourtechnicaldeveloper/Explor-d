@@ -59,7 +59,7 @@ export class CreateCategoryComponent implements OnInit {
   refresh(response){
     if(response['meta']['status'] == 201){
       this.router.navigate(['/pages/categories/category-list']);
-      alert("Category added Successfully");
+      //alert("Category added Successfully");
 
     this.openDialog();
     }

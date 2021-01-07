@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from 'app/core_auth/auth/auth.service';
 import { stat } from 'fs';
+import { HttpClient } from '@angular/common/http';
 
 @Component({ templateUrl: 'login.component.html' ,
 styleUrls: ['./login.component.scss'],})
@@ -11,7 +12,7 @@ export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   submitted = false;
   errorMessage: string;
-  constructor(private formBuilder: FormBuilder, private authService: AuthService, private router: Router) { }
+  constructor(public http: HttpClient, private formBuilder: FormBuilder, private authService: AuthService, private router: Router) { }
   ngOnInit() {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required]],
@@ -38,4 +39,11 @@ export class LoginComponent implements OnInit {
       alert('Email OR Password incorrect!');
     });
   }
+  makeHttpCall() {
+    this.http.get('https://jsonplaceholder.typicode.com/comments')
+      .subscribe((r) => {
+        console.log(r);
+      });
+  }
+
 }

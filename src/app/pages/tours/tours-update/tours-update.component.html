@@ -1,24 +1,26 @@
 <nav class="navbar navbar-expand-sm bg-primary navbar-dark">
     <!-- Links -->
     <ul class="navbar-nav">
-      <li class="nav-item">
-          <h2>Tour Update</h2>
-      </li>
-      <li class="nav-item right-btn">
-        <a href="/pages/tours/tours-list" routerlink="/pages/tours/tours-list" class="btn nav-link">Back</a>
-      </li>
+        <li class="nav-item">
+            <h2>Tour Update</h2>
+        </li>
+        <li class="nav-item right-btn">
+            <a href="/pages/tours/tours-list" routerlink="/pages/tours/tours-list" class="btn nav-link">Back</a>
+        </li>
     </ul>
-    </nav>
+</nav>
 <div class="container">
     <form [formGroup]="form">
         <div class="form-group">
             <label for="picture">Change Picture</label>
-            <input type="file" multiple (change)="uploadProfile($event)" id="picture" name="picture" class="form-control" formControlName="picture">
+            <input type="file" multiple (change)="uploadProfile($event)" id="picture" name="picture"
+                class="form-control" formControlName="picture">
         </div>
 
         <div class="form-group input-group-lg">
             <label for="name">Name</label>
-            <input class="form-control" placeholder="Name" id="name" name="name" formControlName="name" [(ngModel)]="tour.name" [ngClass]="{ 'is-invalid': submitted && f.name.errors }">
+            <input class="form-control" placeholder="Name" id="name" name="name" formControlName="name"
+                [(ngModel)]="tour.name" [ngClass]="{ 'is-invalid': submitted && f.name.errors }">
             <div *ngIf="submitted && f.name.errors" class="invalid-feedback">
                 <div *ngIf="f.name.errors.required">Name is required</div>
             </div>
@@ -26,7 +28,9 @@
 
         <div class="form-group input-group-lg">
             <label for="description">Description</label>
-            <textarea class="form-control" id="description" placeholder="Description" formControlName="description" [(ngModel)]="tour.description" [ngClass]="{ 'is-invalid': submitted && f.description.errors }"></textarea>
+            <textarea class="form-control" id="description" placeholder="Description" formControlName="description"
+                [(ngModel)]="tour.description"
+                [ngClass]="{ 'is-invalid': submitted && f.description.errors }"></textarea>
             <div *ngIf="submitted && f.description.errors" class="invalid-feedback">
                 <div *ngIf="f.description.errors.required">Name is required</div>
             </div>
@@ -34,25 +38,22 @@
 
         <div class="form-group input-group-lg">
             <label for="tours">Category Name</label>
-            <ng-multiselect-dropdown 
-                [placeholder]="'Select Tours'"
-                [data]="dropdownList" [(ngModel)]="selectedItems"
-                formControlName="categoryName" 
-                [settings]="dropdownSettings"
-                (onSelect)="onItemSelect($event)"
-                (onSelectAll)="onSelectAll($event)"
-                >
+            <ng-multiselect-dropdown [placeholder]="'Select Tours'" [data]="dropdownList" [(ngModel)]="selectedItems"
+                formControlName="categoryName" [settings]="dropdownSettings" (onSelect)="onItemSelect($event)"
+                (onSelectAll)="onSelectAll($event)">
             </ng-multiselect-dropdown>
         </div>
 
         <div class="form-group">
             <label for="audio">Change Audio</label>
-            <input type="file" (change)="uploadAudio($event)" name="audio" id="audio" class="form-control" formControlName="audio">
+            <input type="file" (change)="uploadAudio($event)" name="audio" id="audio" class="form-control"
+                formControlName="audio">
         </div>
 
         <div class="form-group input-group-lg">
             <label for="transcript">Transcript</label>
-            <textarea class="form-control" placeholder="Transcript" id="transcript" formControlName="transcript" [(ngModel)]="tour.transcript" [ngClass]="{ 'is-invalid': submitted && f.transcript.errors }"></textarea>
+            <textarea class="form-control" placeholder="Transcript" id="transcript" formControlName="transcript"
+                [(ngModel)]="tour.transcript" [ngClass]="{ 'is-invalid': submitted && f.transcript.errors }"></textarea>
             <div *ngIf="submitted && f.transcript.errors" class="invalid-feedback">
                 <div *ngIf="f.transcript.errors.required">Name is required</div>
             </div>
@@ -69,7 +70,7 @@
         <div class="form-group input-group-lg">
             <label for="location">Location</label>
             <div class="form-group">
-                <input id="pac-input" class="form-control" type="text" placeholder="Search Box"/>
+                <input id="pac-input" class="form-control" type="text" placeholder="Search Box" />
             </div>
             <div id="map"></div>
         </div>
