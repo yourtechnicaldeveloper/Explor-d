@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation  } from '@angular/core';
+import { Component, Inject, OnInit, ViewEncapsulation  } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpHeaders } from '@angular/common/http';
 import { RestService } from 'app/core_auth/services/rest.service';
@@ -7,7 +7,7 @@ import { HttpClient } from '@angular/common/http';
 import { Location } from '@angular/common';
 import { ActivatedRoute} from "@angular/router"; // ActivatedRoue is used to get the current associated components information.
 import { Category } from 'app/_model/category';
-
+import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 @Component({
   selector: 'ngx-update-category',
   templateUrl: './update-category.component.html',
@@ -18,14 +18,15 @@ import { Category } from 'app/_model/category';
 export class UpdateCategoryComponent implements OnInit {
   isNotShowDiv = true
   isShowDiv = false;
-  
+  massage: string;
+  msg: string;
   category: Category;
   private activeRoute: any;
   submitted = false;
   form: FormGroup;
   categories: any [];
   
-  constructor(private restService: RestService, private http: HttpClient, private router: Router, private route: ActivatedRoute, public fb: FormBuilder, private location: Location , private actRoute: ActivatedRoute) { 
+  constructor(private restService: RestService, private http: HttpClient, private router: Router, private route: ActivatedRoute, public fb: FormBuilder, private location: Location , private actRoute: ActivatedRoute,  public dialog: MatDialog) { 
     this.form = this.fb.group({
       name: ['', Validators.required ],
       icon: [null]
@@ -72,13 +73,30 @@ export class UpdateCategoryComponent implements OnInit {
     if (this.form.valid) {
       this.http.post('http://18.217.48.28:2000/category/categoryUpdate/' + id, formData, { headers: this.getHeader(FormData) }).subscribe(
       (response) => this.refresh(response),
+      (error) => {
+        alert("Something Went Wrong Please Check");
+        console.log(error)
+      }
     );
     }
   }
   refresh(response){
     if(response['meta']['status'] == 200){
+      //alert("Category Updated successfully");
       this.router.navigate(['/pages/categories/category-list']);
-    }    
+      this.openDialog();
+    }
+  }
+  openDialog(): void {
+    let dialogRef = this.dialog.open(DialogOverviewExampleDialog, {
+      direction: "ltr",
+      data: { massage: this.msg }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+      this.msg = result;
+    });
   }
   getHeader(isFormData?) {
     let headers: HttpHeaders = new HttpHeaders();
@@ -95,4 +113,20 @@ export class UpdateCategoryComponent implements OnInit {
       this.activeRoute.unsubscribe();
     }
   }
+}
+
+@Component({
+  selector: 'dialog-overview-example-dialog',
+  templateUrl: 'dialog-overview-example-dialog.html',
+})
+export class DialogOverviewExampleDialog {
+
+  constructor(
+    public dialogRef: MatDialogRef<DialogOverviewExampleDialog>,
+    @Inject(MAT_DIALOG_DATA) public data: any) { }
+
+  onNoClick(): void {
+    this.dialogRef.close();
+  }
+
 }

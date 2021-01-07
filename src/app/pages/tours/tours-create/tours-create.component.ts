@@ -1,11 +1,11 @@
-import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation  } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation, Inject  } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MapsAPILoader} from '@agm/core';
 import { RxwebValidators } from '@rxweb/reactive-form-validators';
 import { RestService } from 'app/core_auth/services/rest.service';
-
+import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 @Component({
   selector: 'ngx-tours-create',
   templateUrl: './tours-create.component.html',
@@ -16,7 +16,8 @@ export class ToursCreateComponent implements OnInit {
   dropdownList = [];
   selectedItems = [];
   dropdownSettings = {};
-
+  massage: string;
+  msg: string;
   categories: any[] = [];
   myFiles:string [] = [];
   submitted = false;
@@ -32,10 +33,7 @@ export class ToursCreateComponent implements OnInit {
 
   form: FormGroup;
   constructor(private http: HttpClient, private router: Router,public fb: FormBuilder, private mapsAPILoader: MapsAPILoader,
-    private ngZone: NgZone, private restService: RestService) {
-
-      
-    }
+    private ngZone: NgZone, private restService: RestService, public dialog: MatDialog) {}
      
      reloadData(){
       this.restService.get("/category/categoryList").subscribe((data) => {
@@ -225,7 +223,10 @@ get f() { return this.form.controls; }
 
       this.http.post('http://18.217.48.28:2000/tours/create', formData, { headers: this.getHeader(FormData) }).subscribe(
       (response) => this.refresh(response),
-      (error) => console.log(error)
+      (error) => {
+        alert ("Something Went Wrong");
+        console.log(error)
+      }
       
     );
      // console.table(this.form.value);
@@ -234,7 +235,20 @@ get f() { return this.form.controls; }
     refresh(response){
       if(response['meta']['status'] == 201){
         this.router.navigate(['/pages/tours/tours-list']);
+        //alert("Tours added Successfully")
+        this.openDialog();
       }    
+    }
+    openDialog(): void {
+      let dialogRef = this.dialog.open(DialogOverviewExampleDialog, {
+        direction: "ltr",
+        data: { massage: this.msg }
+      });
+  
+      dialogRef.afterClosed().subscribe(result => {
+        console.log('The dialog was closed');
+        this.msg = result;
+      });
     }
   getHeader(isFormData?) {
     let headers: HttpHeaders = new HttpHeaders();
@@ -244,6 +258,21 @@ get f() { return this.form.controls; }
     }
     headers = headers.append('Authorization', localStorage.getItem('access_token'));
     return headers;
+  }
+
+}
+@Component({
+  selector: 'dialog-overview-example-dialog',
+  templateUrl: 'dialog-overview-example-dialog.html',
+})
+export class DialogOverviewExampleDialog {
+
+  constructor(
+    public dialogRef: MatDialogRef<DialogOverviewExampleDialog>,
+    @Inject(MAT_DIALOG_DATA) public data: any) { }
+
+  onNoClick(): void {
+    this.dialogRef.close();
   }
 
 }

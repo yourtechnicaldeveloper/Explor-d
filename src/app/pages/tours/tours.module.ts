@@ -5,6 +5,7 @@ import { ToursUpdateComponent } from './tours-update/tours-update.component';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+
 import {
   NbActionsModule,
   NbButtonModule,
@@ -33,6 +34,7 @@ import { AngMusicPlayerModule } from  'ang-music-player';
 import { NgSelectModule } from '@ng-select/ng-select';
 import {  RxReactiveFormsModule } from "@rxweb/reactive-form-validators"
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
+import { MatDialogModule } from '@angular/material/dialog';
 
 @NgModule({
   declarations: [ToursListComponent, ToursCreateComponent, ToursUpdateComponent, ToursComponent, ToursDetailComponent],
@@ -57,6 +59,7 @@ import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
     NbSelectModule,
     NbListModule,
     NbIconModule,
+    MatDialogModule,
     NgxEchartsModule,
     AgmCoreModule.forRoot({
       apiKey: 'AIzaSyA8kDy8esoKflngRMg5xF1iytwF_ad1YM0',

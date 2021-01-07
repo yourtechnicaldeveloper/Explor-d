@@ -1,9 +1,11 @@
-import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation  } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation, Inject  } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from "@angular/forms";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MapsAPILoader} from '@agm/core';
 import { RestService } from 'app/core_auth/services/rest.service';
+import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
+import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'ngx-tours-update',
@@ -13,10 +15,12 @@ import { RestService } from 'app/core_auth/services/rest.service';
 })
 
 export class ToursUpdateComponent implements OnInit {
+  closeResult = '';
   dropdownList = [];
   selectedItems = [];
   dropdownSettings = {};
-
+  massage: string;
+  msg: string;
   private activeRoute: any;
   myFiles:string [] = [];
   categories: any[] = [];
@@ -36,7 +40,7 @@ export class ToursUpdateComponent implements OnInit {
   
   form: FormGroup;
   constructor(private http: HttpClient, private router: Router,public fb: FormBuilder, private mapsAPILoader: MapsAPILoader,
-    private ngZone: NgZone, private restService: RestService, private route:ActivatedRoute) {
+    private ngZone: NgZone, private restService: RestService, private route:ActivatedRoute, private modalService: NgbModal, public dialog: MatDialog) {
 
       this.form = this.fb.group({
         picture: [null],
@@ -251,17 +255,33 @@ export class ToursUpdateComponent implements OnInit {
     if (this.form.valid) {
       this.http.post('http://18.217.48.28:2000/tours/update/' + id, formData, { headers: this.getHeader(FormData) }).subscribe(
       (response) => this.refresh(response),
-      (error) => console.log(error)
+      (error) => {
+        alert("Something Went Wrong Please Check");
+        console.log(error)
+      }
     );
       //console.table(this.form.value);
     }
   }
     refresh(response){
-      
       if(response['meta']['status'] == 200){
+        //alert('Tours Updated Successfully')
         this.router.navigate(['/pages/tours/tours-list']);
-      }    
+        this.openDialog();
+      }
     }
+    openDialog(): void {
+      let dialogRef = this.dialog.open(DialogOverviewExampleDialog, {
+        direction: "ltr",
+        data: { massage: this.msg }
+      });
+  
+      dialogRef.afterClosed().subscribe(result => {
+        console.log('The dialog was closed');
+        this.msg = result;
+      });
+    }
+   
   getHeader(isFormData?) {
     let headers: HttpHeaders = new HttpHeaders();
     
@@ -275,6 +295,22 @@ export class ToursUpdateComponent implements OnInit {
     if (this.activeRoute) {
       this.activeRoute.unsubscribe();
     }
+    
+  }
+  
+}
+@Component({
+  selector: 'dialog-overview-example-dialog',
+  templateUrl: 'dialog-overview-example-dialog.html',
+})
+export class DialogOverviewExampleDialog {
+
+  constructor(
+    public dialogRef: MatDialogRef<DialogOverviewExampleDialog>,
+    @Inject(MAT_DIALOG_DATA) public data: any) { }
+
+  onNoClick(): void {
+    this.dialogRef.close();
   }
 
 }

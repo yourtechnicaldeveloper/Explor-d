@@ -1,10 +1,10 @@
-import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation  } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation, Inject  } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators  } from "@angular/forms";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MapsAPILoader  } from '@agm/core';
 import { RestService } from 'app/core_auth/services/rest.service';
-
+import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'ngx-badge-create',
@@ -16,7 +16,8 @@ export class BadgeCreateComponent implements OnInit {
   dropdownList = [];
   selectedItems = [];
   dropdownSettings = {};
-
+  massage: string;
+  msg: string;
   isNotShowDiv = true;
   tours: any = [];
   submitted = false;
@@ -32,7 +33,7 @@ export class BadgeCreateComponent implements OnInit {
 
   form: FormGroup;
   constructor(private http: HttpClient, private router: Router,public fb: FormBuilder, private mapsAPILoader: MapsAPILoader,
-    private ngZone: NgZone, private restService: RestService) {
+    private ngZone: NgZone, private restService: RestService, public dialog: MatDialog) {
 
       this.form = this.fb.group({
         badgeIcon: [null],
@@ -200,14 +201,30 @@ export class BadgeCreateComponent implements OnInit {
 
           this.http.post('http://18.217.48.28:2000/badge/create', formData, { headers: this.getHeader(FormData) }).subscribe(
           (response) => this.refresh(response),
-          (error) => console.log(error)
+          (error) => {
+            alert("Somthing Went Wrong")
+            console.log(error)
+          }
         );
       }
     }
     refresh(response){
       if(response['meta']['status'] == 201){
         this.router.navigate(['/pages/badge/badge-list']);
+        //alert("Badge added Successfully")
+        this.openDialog()
       }    
+    }
+    openDialog(): void {
+      let dialogRef = this.dialog.open(DialogOverviewExampleDialog, {
+        direction: "ltr",
+        data: { massage: this.msg }
+      });
+  
+      dialogRef.afterClosed().subscribe(result => {
+        console.log('The dialog was closed');
+        this.msg = result;
+      });
     }
   getHeader(isFormData?) {
     let headers: HttpHeaders = new HttpHeaders();
@@ -220,5 +237,20 @@ export class BadgeCreateComponent implements OnInit {
   }
   
 
+
+}
+@Component({
+  selector: 'dialog-overview-example-dialog',
+  templateUrl: 'dialog-overview-example-dialog.html',
+})
+export class DialogOverviewExampleDialog {
+
+  constructor(
+    public dialogRef: MatDialogRef<DialogOverviewExampleDialog>,
+    @Inject(MAT_DIALOG_DATA) public data: any) { }
+
+  onNoClick(): void {
+    this.dialogRef.close();
+  }
 
 }
