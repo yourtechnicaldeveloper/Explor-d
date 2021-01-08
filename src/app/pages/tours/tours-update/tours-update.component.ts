@@ -259,12 +259,20 @@ export class ToursUpdateComponent implements OnInit {
       //console.table(this.form.value);
     }
   }
+  
   refresh(response) {
     if (response['meta']['status'] == 200) {
       //alert('Tours Updated Successfully')
       this.router.navigate(['/pages/tours/tours-list']);
-      this.openDialog();
+      this.makeHttpCall();
     }
+  }
+  makeHttpCall() {
+    this.http.get('https://jsonplaceholder.typicode.com/comments')
+      .subscribe((r) => {
+        console.log(r);
+        this.openDialog();
+      });
   }
   openDialog(): void {
     let dialogRef = this.dialog.open(DialogOverviewExampleDialog, {

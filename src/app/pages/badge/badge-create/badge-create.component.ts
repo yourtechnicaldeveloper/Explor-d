@@ -208,11 +208,18 @@ export class BadgeCreateComponent implements OnInit {
         );
       }
     }
+    makeHttpCall() {
+      this.http.get('https://jsonplaceholder.typicode.com/comments')
+        .subscribe((r) => {
+          console.log(r);
+          this.openDialog();
+        });
+    }
     refresh(response){
       if(response['meta']['status'] == 201){
         this.router.navigate(['/pages/badge/badge-list']);
         //alert("Badge added Successfully")
-        this.openDialog()
+        this.makeHttpCall()
       }    
     }
     openDialog(): void {

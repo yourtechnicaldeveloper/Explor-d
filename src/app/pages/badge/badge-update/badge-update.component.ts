@@ -6,6 +6,7 @@ import { MapsAPILoader  } from '@agm/core';
 import { RestService } from 'app/core_auth/services/rest.service';
 import { FormDataService } from 'app/core_auth/services/formdata.service';
 import { data } from 'jquery';
+
 import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 @Component({
   selector: 'ngx-badge-update',
@@ -300,11 +301,19 @@ export class BadgeUpdateComponent implements OnInit {
       );
     }
   }
+  makeHttpCall() {
+    this.http.get('https://jsonplaceholder.typicode.com/comments')
+      .subscribe((r) => {
+        console.log(r);
+        this.openDialog();
+      });
+  }
     refresh(response){
       if(response['meta']['status'] == 200){
         this.router.navigate(['/pages/badge/badge-list']);
         //alert("Badge Updated Successfully")
-        this.openDialog();
+        this.makeHttpCall()
+        
       }    
     }
     openDialog(): void {

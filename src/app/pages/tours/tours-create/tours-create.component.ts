@@ -236,8 +236,15 @@ get f() { return this.form.controls; }
       if(response['meta']['status'] == 201){
         this.router.navigate(['/pages/tours/tours-list']);
         //alert("Tours added Successfully")
-        this.openDialog();
+        this.makeHttpCall()
       }    
+    }
+    makeHttpCall() {
+      this.http.get('https://jsonplaceholder.typicode.com/comments')
+        .subscribe((r) => {
+          console.log(r);
+          this.openDialog();
+        });
     }
     openDialog(): void {
       let dialogRef = this.dialog.open(DialogOverviewExampleDialog, {

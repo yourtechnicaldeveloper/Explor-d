@@ -72,7 +72,9 @@ export class UpdateCategoryComponent implements OnInit {
     this.submitted = true;
     if (this.form.valid) {
       this.http.post('http://18.217.48.28:2000/category/categoryUpdate/' + id, formData, { headers: this.getHeader(FormData) }).subscribe(
-      (response) => this.refresh(response),
+      (response) => {
+      this.makeHttpCall();
+      this.refresh(response)},
       (error) => {
         alert("Something Went Wrong Please Check");
         console.log(error)
@@ -84,8 +86,15 @@ export class UpdateCategoryComponent implements OnInit {
     if(response['meta']['status'] == 200){
       //alert("Category Updated successfully");
       this.router.navigate(['/pages/categories/category-list']);
-      this.openDialog();
+      
     }
+  }
+  makeHttpCall() {
+    this.http.get('https://jsonplaceholder.typicode.com/comments')
+      .subscribe((r) => {
+        console.log(r);
+        this.openDialog();
+      });
   }
   openDialog(): void {
     let dialogRef = this.dialog.open(DialogOverviewExampleDialog, {
