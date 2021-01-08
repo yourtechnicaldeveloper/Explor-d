@@ -15,7 +15,7 @@
     <form #heroForm="ngForm" [formGroup]="form" (ngSubmit)="submitForm()">
         <div class="form-group">
             <label for="picture">Picture</label>
-            <input type="file" multiple (change)="uploadProfile($event)" id="picture" name="picture" class="form-control" accept="image/jpg, image/jpeg, image/png" [ngClass]="{ 'is-invalid': submitted && f.picture.errors }">
+            <input type="file" multiple (change)="uploadProfile($event)" id="picture" name="picture" class="form-control" accept=".png, .jpeg, .jpg" [ngClass]="{ 'is-invalid': submitted && f.picture.errors }">
             <div *ngIf="submitted && f.picture.errors" class="invalid-feedback">
                 <div *ngIf="f.picture.errors.required">Picture is required</div>
             </div>
@@ -63,7 +63,7 @@
 
         <div class="form-group">
             <label for="audio">Audio</label>
-            <input type="file" (change)="uploadAudio($event)" name="audio" id="audio" class="form-control" formControlName="audio" [ngClass]="{ 'is-invalid': submitted && f.audio.errors }">
+            <input type="file" (change)="uploadAudio($event)" name="audio" id="audio" class="form-control" formControlName="audio" [ngClass]="{ 'is-invalid': submitted && f.audio.errors }" accept=".mp3, .wav">
             <div *ngIf="submitted && f.audio.errors" class="invalid-feedback">
                 <div *ngIf="f.audio.errors.required">Audio is required</div>
             </div>

@@ -14,7 +14,7 @@
       <form [formGroup]="form" (ngSubmit)="submitForm()">
         <div class="form-group">
           <label for="icon">Icon</label>
-          <input type="file" (change)="uploadFile($event)" class="form-control" name="icon" [ngClass]="{ 'is-invalid': (isFormSubmitted && form.controls.icon.errors) || (!form.controls.icon.pristine && form.controls.icon.invalid) }">
+          <input type="file" (change)="uploadFile($event)" class="form-control" name="icon" [ngClass]="{ 'is-invalid': (isFormSubmitted && form.controls.icon.errors) || (!form.controls.icon.pristine && form.controls.icon.invalid) }" accept=".png, .jpeg, .jpg">
           <div class="invalid-feedback"
               *ngIf="(isFormSubmitted && form.controls.icon.errors) || (!form.controls.icon.pristine && form.controls.icon.invalid)">
               <div *ngIf="form.controls.icon.errors.required">Email is required</div>

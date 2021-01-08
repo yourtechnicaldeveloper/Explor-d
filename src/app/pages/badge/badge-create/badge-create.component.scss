@@ -61,7 +61,7 @@ li.nav-item.right-btn a.nav-link, li.nav-item.left-btn a.nav-link{color: #000 !i
 nav.navbar.navbar-expand-sm.bg-primary.navbar-dark {
   height: 70px;
 }
-li h2 {color: #fff;margin: 0;}
+li h2 {color: #fff !important;margin: 0 !important;}
 button{
   margin-left: 10px
 }

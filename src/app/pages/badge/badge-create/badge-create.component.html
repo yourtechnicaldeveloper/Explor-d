@@ -34,7 +34,7 @@
 
         <div class="form-group">
             <label for="badgeIcon">Badge Icon</label>
-            <input type="file" (change)="uploadProfile($event)" id="badgeIcon" name="badgeIcon" class="form-control" formControlName="badgeIcon" [ngClass]="{ 'is-invalid': submitted && f.badgeIcon.errors }">
+            <input type="file" (change)="uploadProfile($event)" id="badgeIcon" name="badgeIcon" class="form-control" formControlName="badgeIcon" [ngClass]="{ 'is-invalid': submitted && f.badgeIcon.errors }" accept=".png, .jpeg, .jpg">
             <div *ngIf="submitted && f.badgeIcon.errors" class="invalid-feedback">
                 <div *ngIf="f.badgeIcon.errors.required">Badge Icon is required</div>
             </div>
