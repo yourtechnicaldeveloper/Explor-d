@@ -16,6 +16,5 @@ import { Component } from '@angular/core';
 </div>`,
 })
 export class BadgeComponent {
-
-    title = 'Angular 9 + Spring Boot 2 CRUD Tutorial';
+    
 }

@@ -16,7 +16,7 @@
       <tbody>
         <tr>
           <th>Picture</th>
-          <td><div class="binding" *ngFor="let picture of tours.picture"><a href="{{picture}}" target="_blank"><img src="{{picture}}" alt="Picture"></a></div></td>
+          <td><div class="binding" *ngFor="let picture of tours.picture; let id = index"><a href="{{picture}}" target="_blank"><img src="{{picture}}" alt="Picture"></a><button  value="{{id + 1}}" class="delete-entry" style="cursor: pointer;" (click)="deleteImage(picture)">x</button></div></td>
         </tr>
         <tr>
           <th>Name</th>

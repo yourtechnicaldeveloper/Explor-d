@@ -44,9 +44,10 @@ export class BadgeUpdateComponent implements OnInit {
         badgeIcon: [null],
         lat:[''],
         long:[''],
-        name: ['', Validators.required],
-        tours: ['', Validators.required],
+        name: [''],
+        tours: [''],
         toggle:[],
+        about:[''],
         benefits:[''],
       })
 
@@ -219,6 +220,7 @@ export class BadgeUpdateComponent implements OnInit {
       let sel = [];
       this.restService.post("/badge/view", id).subscribe((data) => {
         this.badges = data.data;
+        console.log(this.badges.about)
         // console.log(this.badges.lat);
         // console.log(this.badges.name);
         this.toggleDisplayDiv(this.badges.toggle)
@@ -276,10 +278,10 @@ export class BadgeUpdateComponent implements OnInit {
         formData.append("badgeIcon", this.form.get('badgeIcon').value);
       }
       formData.append("name", this.form.value.name);
+
       for (let i = 0; i < this.form.get('tours').value.length; i++) {
         val.push(this.form.get('tours').value[i].item_id);
       }
-      //console.log(val);
       formData.append("tours", JSON.stringify(val));
       formData.append("toggle", this.form.value.toggle ? 1 : 0);
       if (this.form.value.toggle == true){
@@ -287,6 +289,7 @@ export class BadgeUpdateComponent implements OnInit {
           formData.append("long", this.marker.getPosition().lng());
       }
       formData.append("benefits", this.form.value.benefits);
+      formData.append("about", this.form.value.about);
       formData.append("_id", this.badges._id);
       this.submitted = true;
       
@@ -295,7 +298,7 @@ export class BadgeUpdateComponent implements OnInit {
         this.http.post('http://18.217.48.28:2000/badge/update', formData, { headers: this.getHeader(FormData) }).subscribe(
         (response) => this.refresh(response),
         (error) => {
-          alert("Somthing Went Wrong")
+          alert("Something Went Wrong Please Check");
           console.log(error)
         }
       );

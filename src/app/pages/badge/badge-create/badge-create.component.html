@@ -39,6 +39,14 @@
                 <div *ngIf="f.badgeIcon.errors.required">Badge Icon is required</div>
             </div>
         </div>
+        
+        <div class="form-group input-group-lg">
+            <label for="about">About</label>
+            <textarea class="form-control" id="about" rows="4" cols="50" placeholder="about" formControlName="about" [ngClass]="{ 'is-invalid': submitted && f.about.errors }"></textarea>
+            <div *ngIf="submitted && f.about.errors" class="invalid-feedback">
+                <div *ngIf="f.about.errors.required">about is required</div>
+            </div>
+        </div>
 
         <div class="form-group input-group-lg">
             <label for="benefits">benefits</label>

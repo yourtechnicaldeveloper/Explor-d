@@ -1,6 +1,7 @@
 ///<reference types="@types/googlemaps" />;
-import { Component, OnInit, ViewChild, ElementRef, NgZone  } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, NgZone, ɵConsole  } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { json } from '@rxweb/reactive-form-validators';
 import { RestService } from 'app/core_auth/services/rest.service';
 import { tap } from 'rxjs/operators';
 
@@ -86,7 +87,27 @@ export class ToursDetailComponent implements OnInit {
     console.log(error)
   });
   }
-
+  deleteImage(picture_url){
+    var removeImageReq = {
+      "_id" : this.tours._id,
+      "picture_url" : [picture_url]
+    }
+    this.restService.post("/tours/remove_picture" , removeImageReq).subscribe(
+      (response) => {this.refresh(response)},
+      (error) => {
+        alert ("Something Went Wrong");
+        console.log(error)
+      }
+      
+    );
+  }
+  refresh(response){
+    if(response['meta']['status'] == 200){
+      //alert("Category Updated successfully");
+      window.location.reload();
+      
+    }
+  }
   ngOnDestroy() {
     if (this.activeRoute) {
       this.activeRoute.unsubscribe();

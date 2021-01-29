@@ -42,6 +42,7 @@ export class BadgeCreateComponent implements OnInit {
         name: ['', Validators.required],
         tours: ['', Validators.required],
         toggle:[false],
+        about:[''],
         benefits:[''],
       })
 
@@ -191,6 +192,7 @@ export class BadgeCreateComponent implements OnInit {
         formData.append("toggle", this.form.value.toggle ? 1 : 0);
         //console.log(JSON.stringify(this.form.get('tours').value));
         formData.append("benefits", this.form.value.benefits);
+        formData.append("about", this.form.value.about);
         if (this.form.value.toggle == true)
         {
           formData.append("lat", this.marker.getPosition().lat());

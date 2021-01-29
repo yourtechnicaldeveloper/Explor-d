@@ -35,10 +35,18 @@
         <div class="form-group">
             <label for="badgeIcon">Badge Icon</label>
             <input type="file" (change)="uploadProfile($event)" id="badgeIcon" name="badgeIcon" class="form-control" formControlName="badgeIcon" accept=".png, .jpeg, .jpg">
+        </div>
+        
+        <div class="form-group input-group-lg">
+            <label for="about">About</label>
+            <textarea rows="4" cols="50" class="form-control" id="about" placeholder="about" formControlName="about" [(ngModel)]="badges.about" [ngClass]="{ 'is-invalid': submitted && f.about.errors }"></textarea>
+            <div *ngIf="submitted && f.about.errors" class="invalid-feedback">
+                <div *ngIf="f.about.errors.required">About is required</div>
+            </div>
         </div> 
 
         <div class="form-group input-group-lg">
-            <label for="benefits">benefits</label>
+            <label for="benefits">Benefits</label>
             <textarea rows="4" cols="50" class="form-control" id="benefits" placeholder="benefits" formControlName="benefits" [(ngModel)]="badges.benefits" [ngClass]="{ 'is-invalid': submitted && f.benefits.errors }"></textarea>
             <div *ngIf="submitted && f.benefits.errors" class="invalid-feedback">
                 <div *ngIf="f.benefits.errors.required">Benefits is required</div>

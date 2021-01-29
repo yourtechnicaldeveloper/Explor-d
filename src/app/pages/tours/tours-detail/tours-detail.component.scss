@@ -5,6 +5,7 @@ td div.binding {
     margin-right: 0px;
     border-right: 2px solid #000;
     padding: 0 10px;
+    position: relative;
 }
 td div.binding:last-child {border-right: none;}
 th {
@@ -53,4 +54,21 @@ button svg {
 }
 button svg:hover{
     fill: red;
+}
+.toursimage{position: relative;}
+button.delete-entry{
+    position: absolute;
+    color: red;
+    font-weight: 900;
+    top: 0px;
+    right: 10px;
+    border: 2px solid;
+    border-radius: 50%;
+    line-height: 0px;
+    padding: 0;
+    font-size: 14px;
+    background: #fff;
+    width: 18px;
+    height: 18px;
+    text-align: center;
 }
