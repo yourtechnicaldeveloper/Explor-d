@@ -7,7 +7,6 @@ import { BadgeUpdateComponent } from './badge-update/badge-update.component';
 import { BadgeCreateComponent } from './badge-create/badge-create.component';
 import { BadgeViewComponent } from './badge-view/badge-view.component';
 import { BadgeListComponent } from './badge-list/badge-list.component';
-import { AgmCoreModule } from '@agm/core';
 import {NbToggleModule} from '@nebular/theme';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 
@@ -52,10 +51,6 @@ import { from } from 'rxjs';
     NbListModule,
     NbIconModule,
     NgxEchartsModule,
-    AgmCoreModule.forRoot({
-      apiKey: 'AIzaSyA8kDy8esoKflngRMg5xF1iytwF_ad1YM0',
-      libraries: ['places']
-    })
   ]
 })
 export class BadgeModule { }

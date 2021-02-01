@@ -12,6 +12,10 @@
     },
     {
       "path": "./src/tsconfig.spec.json"
-    }
-  ]
+    },
+    
+  ],
+  "compilerOptions": {
+    "types": ["googlemaps"]
+  }
 }

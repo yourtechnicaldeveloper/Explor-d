@@ -2,7 +2,6 @@ import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation, In
 import { FormBuilder, FormControl, FormGroup, Validators } from "@angular/forms";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MapsAPILoader } from '@agm/core';
 import { RestService } from 'app/core_auth/services/rest.service';
 import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
 import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -39,7 +38,7 @@ export class ToursUpdateComponent implements OnInit {
   public searchElementRef: ElementRef;
 
   form: FormGroup;
-  constructor(private http: HttpClient, private router: Router, public fb: FormBuilder, private mapsAPILoader: MapsAPILoader,
+  constructor(private http: HttpClient, private router: Router, public fb: FormBuilder,
     private ngZone: NgZone, private restService: RestService, private route: ActivatedRoute, private modalService: NgbModal, public dialog: MatDialog) {
 
     this.form = this.fb.group({

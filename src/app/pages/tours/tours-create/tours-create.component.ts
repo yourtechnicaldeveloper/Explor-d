@@ -2,7 +2,6 @@ import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation, In
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { MapsAPILoader} from '@agm/core';
 import { RxwebValidators } from '@rxweb/reactive-form-validators';
 import { RestService } from 'app/core_auth/services/rest.service';
 import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -32,7 +31,7 @@ export class ToursCreateComponent implements OnInit {
   public searchElementRef: ElementRef;
 
   form: FormGroup;
-  constructor(private http: HttpClient, private router: Router,public fb: FormBuilder, private mapsAPILoader: MapsAPILoader,
+  constructor(private http: HttpClient, private router: Router,public fb: FormBuilder,
     private ngZone: NgZone, private restService: RestService, public dialog: MatDialog) {}
      
      reloadData(){

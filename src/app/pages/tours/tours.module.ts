@@ -25,7 +25,6 @@ import { FormsModule } from '@angular/forms';
 import { ToursRoutingModule } from './tours-routing.module';
 import { ToursComponent } from './tours.component';
 import { from } from 'rxjs';
-import { AgmCoreModule } from '@agm/core';
 import { ToursDetailComponent } from './tours-detail/tours-detail.component';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 
@@ -60,11 +59,7 @@ import { MatDialogModule } from '@angular/material/dialog';
     NbListModule,
     NbIconModule,
     MatDialogModule,
-    NgxEchartsModule,
-    AgmCoreModule.forRoot({
-      apiKey: 'AIzaSyA8kDy8esoKflngRMg5xF1iytwF_ad1YM0',
-      libraries: ['places']
-    })
+    NgxEchartsModule
   ]
 })
 export class ToursModule { }
