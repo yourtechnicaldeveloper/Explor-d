@@ -52,10 +52,40 @@ export class BadgeUpdateComponent implements OnInit {
 
      }
      get f() { return this.form.controls; }
+
+
      toggleDisplayDiv(toggle) {
       //alert(toggle);
       this.isNotShowDiv = !this.isNotShowDiv;
-      if(toggle == 1)
+      console.log(toggle);
+      console.log(this.isNotShowDiv);
+      
+    }
+
+    
+  ngOnInit(): void {
+    //this.reloadData();
+    //getData(): void {
+      let tmp = [];
+      this.restService.get("/tours/list").subscribe(data => {
+          //console.log(data.data[0]._id);
+          for (let i = 0; i < data.data.length; i++) {
+            tmp.push({ item_id: data.data[i]._id, item_text: data.data[i].name });
+          }
+          this.dropdownList = tmp;
+      });
+
+      var id;
+      this.activeRoute = this.route.params.subscribe(params => {
+        id = { "_id" : params['id'] };
+      });
+      let sel = [];
+      this.restService.post("/badge/view", id).subscribe((data) => {
+        this.badges = data.data;        
+        console.log(this.badges.about)
+        // console.log(this.badges.lat);
+        // console.log(this.badges.name);
+        if(this.badges.toggle == 1)
       {
         let myLatlng = {lat: parseFloat(this.badges.lat), lng: parseFloat(this.badges.long) }
         const map = new google.maps.Map(document.getElementById("map"), {
@@ -198,31 +228,7 @@ export class BadgeUpdateComponent implements OnInit {
             map.fitBounds(bounds);
           });
       }
-    }
-
-    
-  ngOnInit(): void {
-    //this.reloadData();
-    //getData(): void {
-      let tmp = [];
-      this.restService.get("/tours/list").subscribe(data => {
-          //console.log(data.data[0]._id);
-          for (let i = 0; i < data.data.length; i++) {
-            tmp.push({ item_id: data.data[i]._id, item_text: data.data[i].name });
-          }
-          this.dropdownList = tmp;
-      });
-      var id;
-      this.activeRoute = this.route.params.subscribe(params => {
-        id = { "_id" : params['id'] };
-      });
-      let sel = [];
-      this.restService.post("/badge/view", id).subscribe((data) => {
-        this.badges = data.data;
-        console.log(this.badges.about)
-        // console.log(this.badges.lat);
-        // console.log(this.badges.name);
-        this.toggleDisplayDiv(this.badges.toggle)
+        this.toggleDisplayDiv(this.badges.toggle);
         
         for (let i = 0; i < this.badges.tours.length; i++) {
           sel.push({ item_id: this.badges.tours[i].toursId, item_text: this.badges.tours[i].tourName });
@@ -241,6 +247,7 @@ export class BadgeUpdateComponent implements OnInit {
           itemsShowLimit: 6,
           allowSearchFilter: true
         };
+        
   }
   onItemSelect(item: any) {
     console.log(item);

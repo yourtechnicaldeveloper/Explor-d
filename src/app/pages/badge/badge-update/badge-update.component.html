@@ -57,7 +57,7 @@
             <nb-toggle formControlName="toggle" (click)=toggleDisplayDiv(badges.toggle) [(ngModel)]="badges.toggle">Location</nb-toggle>
         </div>
 
-        <div class="form-group input-group-lg mapdiv" [hidden]="isNotShowDiv" [ngClass]="{'show': badges.toggle == 1 }">
+        <div class="form-group input-group-lg mapdiv" [ngClass]="{'show': badges.toggle == 1, 'hide': badges.toggle == 0 }">
             <label for="location">Location</label>
             <div class="form-group">
                 <input id="pac-input" class="form-control" type="text" placeholder="Search Box"/>

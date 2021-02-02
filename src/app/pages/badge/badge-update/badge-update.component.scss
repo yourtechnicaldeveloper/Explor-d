@@ -111,12 +111,12 @@ div#map {
   #target {
     width: 345px;
   }
-  .form-group.input-group-lg.mapdiv.show {
-    display: block !important;
-}
-.form-group.input-group-lg.mapdiv {
-  display: none !important;
-}
+   .mapdiv.show {
+     display: block;
+ }
+  .mapdiv.hide {
+   display: none ;
+  }
 form {
   margin-top: 20px;
 }
