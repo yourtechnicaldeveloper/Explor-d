@@ -23609,6 +23609,7 @@
           this.paste = new _angular_core__WEBPACK_IMPORTED_MODULE_0__["EventEmitter"]();
           this.drop = new _angular_core__WEBPACK_IMPORTED_MODULE_0__["EventEmitter"]();
           this._value = '';
+          this.destroyed = false;
         }
 
         _createClass(CKEditorComponent, [{
@@ -23625,12 +23626,18 @@
         }, {
           key: "ngOnDestroy",
           value: function ngOnDestroy() {
-            if (this.instance) {
-              this.instance.removeAllListeners();
-              CKEDITOR.instances[this.instance.name].destroy();
-              this.instance.destroy();
-              this.instance = null;
-            }
+            var _this3 = this;
+
+            this.destroyed = true;
+            this.zone.runOutsideAngular(function () {
+              if (_this3.instance) {
+                CKEDITOR.removeAllListeners();
+
+                _this3.instance.destroy();
+
+                _this3.instance = null;
+              }
+            });
           }
           /**
            * On component view init
@@ -23639,6 +23646,10 @@
         }, {
           key: "ngAfterViewInit",
           value: function ngAfterViewInit() {
+            if (this.destroyed) {
+              return;
+            }
+
             this.ckeditorInit(this.config || {});
           }
           /**
@@ -23657,16 +23668,16 @@
         }, {
           key: "updateValue",
           value: function updateValue(value) {
-            var _this3 = this;
+            var _this4 = this;
 
             this.zone.run(function () {
-              _this3.value = value;
+              _this4.value = value;
 
-              _this3.onChange(value);
+              _this4.onChange(value);
 
-              _this3.onTouched();
+              _this4.onTouched();
 
-              _this3.change.emit(value);
+              _this4.change.emit(value);
             });
           }
           /**
@@ -23676,7 +23687,7 @@
         }, {
           key: "ckeditorInit",
           value: function ckeditorInit(config) {
-            var _this4 = this;
+            var _this5 = this;
 
             if (typeof CKEDITOR === 'undefined') {
               console.warn('CKEditor 4.x is missing (http://ckeditor.com/)');
@@ -23698,71 +23709,71 @@
               this.instance.on('instanceReady', function (evt) {
                 // if value has changed while instance loading
                 // update instance with current component value
-                if (_this4.instance.getData() !== _this4.value) {
-                  _this4.instance.setData(_this4.value);
+                if (_this5.instance.getData() !== _this5.value) {
+                  _this5.instance.setData(_this5.value);
                 } // send the evt to the EventEmitter
 
 
-                _this4.ready.emit(evt);
+                _this5.ready.emit(evt);
               }); // CKEditor change event
 
               this.instance.on('change', function (evt) {
-                _this4.onTouched();
+                _this5.onTouched();
 
-                var value = _this4.instance.getData();
+                var value = _this5.instance.getData();
 
-                if (_this4.value !== value) {
+                if (_this5.value !== value) {
                   // Debounce update
-                  if (_this4.debounce) {
-                    if (_this4.debounceTimeout) clearTimeout(_this4.debounceTimeout);
-                    _this4.debounceTimeout = setTimeout(function () {
-                      _this4.updateValue(value);
+                  if (_this5.debounce) {
+                    if (_this5.debounceTimeout) clearTimeout(_this5.debounceTimeout);
+                    _this5.debounceTimeout = setTimeout(function () {
+                      _this5.updateValue(value);
 
-                      _this4.debounceTimeout = null;
-                    }, parseInt(_this4.debounce)); // Live update
+                      _this5.debounceTimeout = null;
+                    }, parseInt(_this5.debounce)); // Live update
                   } else {
-                    _this4.updateValue(value);
+                    _this5.updateValue(value);
                   }
                 } // Original ckeditor event dispatch
 
 
-                _this4.editorChange.emit(evt);
+                _this5.editorChange.emit(evt);
               }); // CKEditor blur event
 
               this.instance.on('blur', function (evt) {
-                _this4.blur.emit(evt);
+                _this5.blur.emit(evt);
               }); // CKEditor focus event
 
               this.instance.on('focus', function (evt) {
-                _this4.focus.emit(evt);
+                _this5.focus.emit(evt);
               }); // CKEditor contentDom event
 
               this.instance.on('contentDom', function (evt) {
-                _this4.contentDom.emit(evt);
+                _this5.contentDom.emit(evt);
               }); // CKEditor fileUploadRequest event
 
               this.instance.on('fileUploadRequest', function (evt) {
-                _this4.fileUploadRequest.emit(evt);
+                _this5.fileUploadRequest.emit(evt);
               }); // CKEditor fileUploadResponse event
 
               this.instance.on('fileUploadResponse', function (evt) {
-                _this4.fileUploadResponse.emit(evt);
+                _this5.fileUploadResponse.emit(evt);
               }); // CKEditor paste event
 
               this.instance.on('paste', function (evt) {
-                _this4.paste.emit(evt);
+                _this5.paste.emit(evt);
               }); // CKEditor drop event
 
               this.instance.on('drop', function (evt) {
-                _this4.drop.emit(evt);
+                _this5.drop.emit(evt);
               }); // Add Toolbar Groups to Editor. This will also add Buttons within groups.
 
               this.toolbarGroups.forEach(function (group) {
-                group.initialize(_this4);
+                group.initialize(_this5);
               }); // Add Toolbar Buttons to Editor.
 
               this.toolbarButtons.forEach(function (button) {
-                button.initialize(_this4);
+                button.initialize(_this5);
               });
             }
           }

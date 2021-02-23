@@ -329,41 +329,45 @@ class MapEventManager {
         /** Pending listeners that were added before the target was set. */
         this._pending = [];
         this._listeners = [];
+        this._targetStream = new rxjs__WEBPACK_IMPORTED_MODULE_2__["BehaviorSubject"](undefined);
     }
     /** Clears all currently-registered event listeners. */
     _clearListeners() {
-        for (let listener of this._listeners) {
+        for (const listener of this._listeners) {
             listener.remove();
         }
         this._listeners = [];
     }
     /** Gets an observable that adds an event listener to the map when a consumer subscribes to it. */
     getLazyEmitter(name) {
-        const observable = new rxjs__WEBPACK_IMPORTED_MODULE_2__["Observable"](observer => {
-            // If the target hasn't been initialized yet, cache the observer so it can be added later.
-            if (!this._target) {
-                this._pending.push({ observable, observer });
-                return undefined;
-            }
-            const listener = this._target.addListener(name, (event) => {
-                this._ngZone.run(() => observer.next(event));
+        return this._targetStream.pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_3__["switchMap"])(target => {
+            const observable = new rxjs__WEBPACK_IMPORTED_MODULE_2__["Observable"](observer => {
+                // If the target hasn't been initialized yet, cache the observer so it can be added later.
+                if (!target) {
+                    this._pending.push({ observable, observer });
+                    return undefined;
+                }
+                const listener = target.addListener(name, (event) => {
+                    this._ngZone.run(() => observer.next(event));
+                });
+                this._listeners.push(listener);
+                return () => listener.remove();
             });
-            this._listeners.push(listener);
-            return () => listener.remove();
-        });
-        return observable;
+            return observable;
+        }));
     }
     /** Sets the current target that the manager should bind events to. */
     setTarget(target) {
-        if (target === this._target) {
+        const currentTarget = this._targetStream.value;
+        if (target === currentTarget) {
             return;
         }
         // Clear the listeners from the pre-existing target.
-        if (this._target) {
+        if (currentTarget) {
             this._clearListeners();
             this._pending = [];
         }
-        this._target = target;
+        this._targetStream.next(target);
         // Add the listeners that were bound before the map was initialized.
         this._pending.forEach(subscriber => subscriber.observable.subscribe(subscriber.observer));
         this._pending = [];
@@ -372,7 +376,7 @@ class MapEventManager {
     destroy() {
         this._clearListeners();
         this._pending = [];
-        this._target = undefined;
+        this._targetStream.complete();
     }
 }
 
@@ -701,10 +705,11 @@ class GoogleMap {
     _combineOptions() {
         return Object(rxjs__WEBPACK_IMPORTED_MODULE_2__["combineLatest"])([this._options, this._center, this._zoom])
             .pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_3__["map"])(([options, center, zoom]) => {
+            var _a;
             const combinedOptions = Object.assign(Object.assign({}, options), { 
-                // It's important that we set **some** kind of `center`, otherwise
+                // It's important that we set **some** kind of `center` and `zoom`, otherwise
                 // Google Maps will render a blank rectangle which looks broken.
-                center: center || options.center || DEFAULT_OPTIONS.center, zoom: zoom !== undefined ? zoom : options.zoom, mapTypeId: this.mapTypeId });
+                center: center || options.center || DEFAULT_OPTIONS.center, zoom: (_a = zoom !== null && zoom !== void 0 ? zoom : options.zoom) !== null && _a !== void 0 ? _a : DEFAULT_OPTIONS.zoom, mapTypeId: this.mapTypeId });
             return combinedOptions;
         }));
     }

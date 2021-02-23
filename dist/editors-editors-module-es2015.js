@@ -1252,6 +1252,7 @@ class CKEditorComponent {
         this.paste = new _angular_core__WEBPACK_IMPORTED_MODULE_0__["EventEmitter"]();
         this.drop = new _angular_core__WEBPACK_IMPORTED_MODULE_0__["EventEmitter"]();
         this._value = '';
+        this.destroyed = false;
     }
     get value() {
         return this._value;
@@ -1271,17 +1272,22 @@ class CKEditorComponent {
      * On component destroy
      */
     ngOnDestroy() {
-        if (this.instance) {
-            this.instance.removeAllListeners();
-            CKEDITOR.instances[this.instance.name].destroy();
-            this.instance.destroy();
-            this.instance = null;
-        }
+        this.destroyed = true;
+        this.zone.runOutsideAngular(() => {
+            if (this.instance) {
+                CKEDITOR.removeAllListeners();
+                this.instance.destroy();
+                this.instance = null;
+            }
+        });
     }
     /**
      * On component view init
      */
     ngAfterViewInit() {
+        if (this.destroyed) {
+            return;
+        }
         this.ckeditorInit(this.config || {});
     }
     /**

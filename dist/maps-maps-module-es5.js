@@ -468,6 +468,7 @@
 
           this._pending = [];
           this._listeners = [];
+          this._targetStream = new rxjs__WEBPACK_IMPORTED_MODULE_2__["BehaviorSubject"](undefined);
         }
         /** Clears all currently-registered event listeners. */
 
@@ -498,48 +499,53 @@
           value: function getLazyEmitter(name) {
             var _this2 = this;
 
-            var observable = new rxjs__WEBPACK_IMPORTED_MODULE_2__["Observable"](function (observer) {
-              // If the target hasn't been initialized yet, cache the observer so it can be added later.
-              if (!_this2._target) {
-                _this2._pending.push({
-                  observable: observable,
-                  observer: observer
+            return this._targetStream.pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_3__["switchMap"])(function (target) {
+              var observable = new rxjs__WEBPACK_IMPORTED_MODULE_2__["Observable"](function (observer) {
+                // If the target hasn't been initialized yet, cache the observer so it can be added later.
+                if (!target) {
+                  _this2._pending.push({
+                    observable: observable,
+                    observer: observer
+                  });
+
+                  return undefined;
+                }
+
+                var listener = target.addListener(name, function (event) {
+                  _this2._ngZone.run(function () {
+                    return observer.next(event);
+                  });
                 });
 
-                return undefined;
-              }
+                _this2._listeners.push(listener);
 
-              var listener = _this2._target.addListener(name, function (event) {
-                _this2._ngZone.run(function () {
-                  return observer.next(event);
-                });
+                return function () {
+                  return listener.remove();
+                };
               });
-
-              _this2._listeners.push(listener);
-
-              return function () {
-                return listener.remove();
-              };
-            });
-            return observable;
+              return observable;
+            }));
           }
           /** Sets the current target that the manager should bind events to. */
 
         }, {
           key: "setTarget",
           value: function setTarget(target) {
-            if (target === this._target) {
+            var currentTarget = this._targetStream.value;
+
+            if (target === currentTarget) {
               return;
             } // Clear the listeners from the pre-existing target.
 
 
-            if (this._target) {
+            if (currentTarget) {
               this._clearListeners();
 
               this._pending = [];
             }
 
-            this._target = target; // Add the listeners that were bound before the map was initialized.
+            this._targetStream.next(target); // Add the listeners that were bound before the map was initialized.
+
 
             this._pending.forEach(function (subscriber) {
               return subscriber.observable.subscribe(subscriber.observer);
@@ -555,7 +561,8 @@
             this._clearListeners();
 
             this._pending = [];
-            this._target = undefined;
+
+            this._targetStream.complete();
           }
         }]);
 
@@ -960,11 +967,13 @@
                   center = _ref2[1],
                   zoom = _ref2[2];
 
+              var _a;
+
               var combinedOptions = Object.assign(Object.assign({}, options), {
-                // It's important that we set **some** kind of `center`, otherwise
+                // It's important that we set **some** kind of `center` and `zoom`, otherwise
                 // Google Maps will render a blank rectangle which looks broken.
                 center: center || options.center || DEFAULT_OPTIONS.center,
-                zoom: zoom !== undefined ? zoom : options.zoom,
+                zoom: (_a = zoom !== null && zoom !== void 0 ? zoom : options.zoom) !== null && _a !== void 0 ? _a : DEFAULT_OPTIONS.zoom,
                 mapTypeId: _this4.mapTypeId
               });
               return combinedOptions;
