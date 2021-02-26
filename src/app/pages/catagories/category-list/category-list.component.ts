@@ -23,7 +23,7 @@ export class CategoryListComponent implements OnInit {
     this.restService.get("/category/categoryList").subscribe((data) => {
       this.categories = data.data;
     }, (error) => {
-      console.log(error)
+      alert(error['error']['meta']['msg']);
     });
   }
   deleteCategory(id: string) {

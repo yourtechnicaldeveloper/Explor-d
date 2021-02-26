@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation, Inject  } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators  } from "@angular/forms";
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpEventType, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { RestService } from 'app/core_auth/services/rest.service';
 import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -12,6 +12,8 @@ import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dial
   encapsulation: ViewEncapsulation.None // Add this line
 })
 export class BadgeCreateComponent implements OnInit {
+  percentDone : any;
+  loading : boolean;
   dropdownList = [];
   selectedItems = [];
   dropdownSettings = {};
@@ -199,28 +201,33 @@ export class BadgeCreateComponent implements OnInit {
         }
         this.submitted = true;
         if (this.form.valid) {
-
-          this.http.post('http://18.217.48.28:2000/badge/create', formData, { headers: this.getHeader(FormData) }).subscribe(
-          (response) => this.refresh(response),
-          (error) => {
-            alert("Somthing Went Wrong")
-            console.log(error)
-          }
-        );
+          this.loading = true;
+          this.http.post('http://13.58.33.101:2000/badge/create', formData, {reportProgress: true, observe: 'events', headers: this.getHeader(FormData) }).subscribe(
+            (response) => {
+              if (response.type === HttpEventType.UploadProgress) {
+                this.percentDone = Math.round(100 * response.loaded / response.total);
+                console.log('Progress ' + this.percentDone + '%');
+            }
+              if(response['body'] != undefined)
+              {
+                this.refresh(response);
+              }
+            },
+            (error) => {
+              alert(error['error']['meta']['msg']);
+              //console.log(error);
+              this.loading = !this.loading;
+            }
+          );
       }
     }
-    makeHttpCall() {
-      this.http.get('https://jsonplaceholder.typicode.com/comments')
-        .subscribe((r) => {
-          console.log(r);
-          this.openDialog();
-        });
-    }
+   
     refresh(response){
-      if(response['meta']['status'] == 201){
+      if(response['body']['meta']['status'] == 201){
+        this.loading = !this.loading;
         this.router.navigate(['/pages/badge/badge-list']);
-        //alert("Badge added Successfully")
-        this.makeHttpCall()
+        //alert("Badge Updated Successfully")
+        this.openDialog()
       }    
     }
     openDialog(): void {

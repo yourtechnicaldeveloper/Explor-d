@@ -26,7 +26,7 @@ export class AppComponent implements OnInit {
     this.seoService.trackCanonicalChanges();
   }
   makeHttpCall() {
-    this.http.get('http://18.217.48.28:2000/admin/login')
+    this.http.get('http://13.58.33.101:2000/admin/login')
       .subscribe((r) => {
         console.log(r);
       });

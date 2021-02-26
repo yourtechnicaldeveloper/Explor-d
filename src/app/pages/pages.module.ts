@@ -16,6 +16,7 @@ import {
 } from '@nebular/theme';
 
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
+import { DashboardComponent } from './dashboard/dashboard.component';
 
 
 
@@ -39,6 +40,7 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
   declarations: [
     PagesComponent,
     UserListComponent,
+    DashboardComponent,
   ],
  
 })

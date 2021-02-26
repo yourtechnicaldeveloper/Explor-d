@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation, Inject  } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators  } from "@angular/forms";
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpEventType, HttpHeaders } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RestService } from 'app/core_auth/services/rest.service';
 import { FormDataService } from 'app/core_auth/services/formdata.service';
@@ -14,6 +14,8 @@ import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dial
   encapsulation: ViewEncapsulation.None
 })
 export class BadgeUpdateComponent implements OnInit {
+  percentDone : any;
+  loading : boolean;
   isNotShowDiv = true;
   private activeRoute: any;
   massage: string;
@@ -81,10 +83,8 @@ export class BadgeUpdateComponent implements OnInit {
       });
       let sel = [];
       this.restService.post("/badge/view", id).subscribe((data) => {
-        this.badges = data.data;        
-        console.log(this.badges.about)
-        // console.log(this.badges.lat);
-        // console.log(this.badges.name);
+        this.badges = data.data;
+        
         if(this.badges.toggle == 1)
       {
         let myLatlng = {lat: parseFloat(this.badges.lat), lng: parseFloat(this.badges.long) }
@@ -300,29 +300,32 @@ export class BadgeUpdateComponent implements OnInit {
       this.submitted = true;
       
       if (this.form.valid) {
-
-        this.http.post('http://18.217.48.28:2000/badge/update', formData, { headers: this.getHeader(FormData) }).subscribe(
-        (response) => this.refresh(response),
-        (error) => {
-          alert("Something Went Wrong Please Check");
-          console.log(error)
-        }
-      );
+        this.loading = true;
+        this.http.post('http://13.58.33.101:2000/badge/update', formData, {reportProgress: true, observe: 'events', headers: this.getHeader(FormData) }).subscribe(
+          (response) => {
+            if (response.type === HttpEventType.UploadProgress) {
+              this.percentDone = Math.round(100 * response.loaded / response.total);
+              console.log('Progress ' + this.percentDone + '%');
+          }
+            if(response['body'] != undefined)
+            {
+              this.refresh(response);
+            }
+          },
+          (error) => {
+            alert(error['error']['meta']['msg']);
+            this.loading = !this.loading;
+          }
+        );
     }
   }
-  makeHttpCall() {
-    this.http.get('https://jsonplaceholder.typicode.com/comments')
-      .subscribe((r) => {
-        console.log(r);
-        this.openDialog();
-      });
-  }
     refresh(response){
-      if(response['meta']['status'] == 200){
-        this.router.navigate(['/pages/badge/badge-list']);
-        //alert("Badge Updated Successfully")
-        this.makeHttpCall()
+      if(response['body']['meta']['status'] == 200){
         
+        this.router.navigate(['/pages/badge/badge-list']);
+        this.loading = !this.loading;
+        //alert("Badge Updated Successfully")
+        this.openDialog()
       }    
     }
     openDialog(): void {

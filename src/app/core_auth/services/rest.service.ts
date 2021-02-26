@@ -6,7 +6,7 @@ import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
 const endpoint = environment.appUrl;
-const baseUrl = 'http://18.217.48.28:2000/admin/search';
+const baseUrl = 'http://13.58.33.101:2000/admin/search';
 const baseUrl2 = `${environment.appUrl}`;
 
 @Injectable({

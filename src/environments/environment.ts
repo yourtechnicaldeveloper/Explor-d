@@ -10,5 +10,5 @@
 
 export const environment = {
   production: false,
-  appUrl: 'http://18.217.48.28:2000'
+  appUrl: 'http://13.58.33.101:2000'
 };

@@ -61,13 +61,13 @@ export class BadgeViewComponent implements OnInit {
       console.log(this.badges.benefits)
       this.ngAfterContentInit(this.badges.lat, this.badges.long);
     }, (error) => {
-      console.log(error)
+      alert(error['error']['meta']['msg']);
     });
     
     this.restService.get("/tours/list").subscribe((data) => {
       this.tours = data.data;
     }, (error) => {
-      console.log(error)
+      alert(error['error']['meta']['msg']);
     });
 
   }

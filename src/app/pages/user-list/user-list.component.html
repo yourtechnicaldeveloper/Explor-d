@@ -14,28 +14,30 @@
                 <input type="text" class="form-control" [(ngModel)]="email" placeholder="Search by name"/>
             </div>
             <div class="panel-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Id</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Email</th>
-                            <th>No Of Tours</th>
-                            <th>No Of Badges</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let user of users | filter:email;let i = index">
-                            <td>{{ i + 1 }}</td>
-                            <td>{{user.first_name}}</td>
-                            <td>{{user.last_name}}</td>
-                            <td>{{user.email}}</td>
-                            <td>{{user.noOftours}}</td>
-                            <td>{{user.noOfbadges}}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Email</th>
+                                <th>No Of Tours</th>
+                                <th>No Of Badges</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let user of users | filter:email;let i = index">
+                                <td>{{ i + 1 }}</td>
+                                <td>{{user.first_name}}</td>
+                                <td>{{user.last_name}}</td>
+                                <td>{{user.email}}</td>
+                                <td>{{user.noOftours}}</td>
+                                <td>{{user.noOfbadges}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         </div>

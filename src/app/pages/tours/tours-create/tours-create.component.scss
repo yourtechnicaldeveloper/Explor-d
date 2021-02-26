@@ -114,3 +114,24 @@ li.nav-item.right-btn {
   font-weight: 400;
   
 }
+.loading-spinner{
+  background-color: #0000001f;
+  position: absolute;
+  width: 100%;
+  top: 0px;
+  left: 0px;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  display: grid;
+}
+
+.loading-spinner img{
+  align-self: end;
+  margin: 0 auto;
+}
+
+.loading-message{
+  text-align: center;
+  align-self: start;
+}

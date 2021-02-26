@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, NgZone, ViewEncapsulation, Inject } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from "@angular/forms";
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpEventType, HttpHeaders } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RestService } from 'app/core_auth/services/rest.service';
 import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
@@ -14,6 +14,8 @@ import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dial
 })
 
 export class ToursUpdateComponent implements OnInit {
+  percentDone:any;
+  loading : boolean;
   closeResult = '';
   dropdownList = [];
   selectedItems = [];
@@ -248,11 +250,22 @@ export class ToursUpdateComponent implements OnInit {
     });
     this.submitted = true;
     if (this.form.valid) {
-      this.http.post('http://18.217.48.28:2000/tours/update/' + id, formData, { headers: this.getHeader(FormData) }).subscribe(
-        (response) => this.refresh(response),
+      this.loading = true;
+      this.http.post('http://13.58.33.101:2000/tours/update/' + id, formData, {reportProgress: true, observe: 'events', headers: this.getHeader(FormData) }).subscribe(
+        (response) => {
+          if (response.type === HttpEventType.UploadProgress) {
+            this.percentDone = Math.round(100 * response.loaded / response.total);
+          }
+          if(response['body'] != undefined)
+          {
+            this.refresh(response);
+          }
+          console.log(response);
+        },
         (error) => {
-          alert("Something Went Wrong Please Check");
-          console.log(error)
+          alert(error['error']['meta']['msg']);
+          console.log(error);
+          this.loading = !this.loading;
         }
       );
       //console.table(this.form.value);
@@ -260,7 +273,8 @@ export class ToursUpdateComponent implements OnInit {
   }
   
   refresh(response) {
-    if (response['meta']['status'] == 200) {
+    if (response['body']['meta']['status'] == 200) {
+      this.loading = !this.loading;
       //alert('Tours Updated Successfully')
       this.router.navigate(['/pages/tours/tours-list']);
       this.makeHttpCall();

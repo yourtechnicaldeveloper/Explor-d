@@ -1,0 +1,89 @@
+<div id="ditailinfo">
+    <div class="container">
+        <div class="maincard_detail">
+            <div class="row">
+                <div class="col-lg-4 col-md-4 col-xs-12">
+                    <div class="card">
+                        <div class="imgBx">
+                          <h3>Tours</h3>
+                        </div>
+                        <div class="content">
+                            <div class="table-responsive">
+                                <div class="table">
+                                    <thead>
+                                        <tr>
+                                            <th width="10%">#Sr</th>
+                                            <th width="50%">Tours Name</th>
+                                            <th width="30%">No. Of User Visited</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr *ngFor="let ToursDetail of detail.ToursDetails; let i = index">
+                                            <td width="2%">{{i + 1}}</td>
+                                            <td width="50%">{{ToursDetail.nameOfTours}}</td>
+                                            <td>{{ToursDetail.userCountOFvisiteTour}}</td>
+                                        </tr>
+                                    </tbody>
+                                </div>
+                            </div>
+                        </div>
+                      </div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-xs-12">
+                    <div class="card">
+                        <div class="imgBx">
+                          <h3>Badge</h3>
+                        </div>
+                        <div class="content">
+                            <div class="table-responsive">
+                                <div class="table">
+                                    <thead>
+                                        <tr>
+                                            <th width="10%">#Sr</th>
+                                            <th width="50%">Badge Name</th>
+                                            <th width="50%">No. Of User Completed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr *ngFor="let  BadgeDetail of detail.BadgeDetails; let i = index">
+                                            <td width="2%">{{i + 1}}</td>
+                                            <td width="50%">{{BadgeDetail.badgeName}}</td>
+                                            <td>{{BadgeDetail.numberUserCompleteThisBadge}}</td>
+                                        </tr>
+                                    </tbody>
+                                </div>
+                            </div>
+                        </div>
+                      </div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-xs-12">
+                    <div class="card">
+                        <div class="imgBx">
+                          <h3>Country</h3>
+                        </div>
+                        <div class="content">
+                            <div class="table-responsive">
+                                <div class="table">
+                                    <thead>
+                                        <tr>
+                                            <th width="10%">#Sr</th>
+                                            <th width="50%">Country</th>
+                                            <th width="50%">No. Of Registered User</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr *ngFor="let CountryDetail of detail.CountryDetails; let i = index">
+                                            <td width="2%">{{i + 1}}</td>
+                                            <td width="50%">{{CountryDetail.countryName}}</td>
+                                            <td>{{CountryDetail.numberOFuser}}</td>
+                                        </tr>
+                                    </tbody>
+                                </div>
+                            </div>
+                        </div>
+                      </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

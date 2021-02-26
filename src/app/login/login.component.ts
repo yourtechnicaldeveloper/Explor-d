@@ -36,7 +36,7 @@ export class LoginComponent implements OnInit {
         // alert('Login form submited successfully!');
       }
     }, (error) => {
-      alert('Email OR Password incorrect!');
+      console.log(error);
     });
   }
   makeHttpCall() {

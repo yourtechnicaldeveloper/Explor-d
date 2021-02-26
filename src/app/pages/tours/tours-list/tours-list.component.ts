@@ -20,7 +20,7 @@ export class ToursListComponent implements OnInit {
     this.restService.get("/tours/list").subscribe((data) => {
       this.tours = data.data;
     }, (error) => {
-      console.log(error)
+      alert(error['error']['meta']['msg']);
     });
   }
   

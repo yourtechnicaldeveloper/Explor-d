@@ -2,11 +2,11 @@ import { RouterModule, Routes } from '@angular/router';
 import { NgModule } from '@angular/core';
 
 import { PagesComponent } from './pages.component';
-import { DashboardComponent } from './dashboard/dashboard.component';
-import { ECommerceComponent } from './e-commerce/e-commerce.component';
+
 import { NotFoundComponent } from './miscellaneous/not-found/not-found.component';
 import { UserListComponent } from './user-list/user-list.component';
 import { AuthGuard } from 'app/core_auth/auth/auth.guard';
+import { DashboardComponent } from './dashboard/dashboard.component';
 
 
 const routes: Routes = [{
@@ -15,12 +15,9 @@ const routes: Routes = [{
   children: [
     {
       path: 'dashboard',
-      component: ECommerceComponent,
-    },
-    {
-      path: 'iot-dashboard',
       component: DashboardComponent,
     },
+    
     {
       path: 'layout',
       loadChildren: () => import('./layout/layout.module')
@@ -93,7 +90,7 @@ const routes: Routes = [{
     },
     {
       path: '',
-      redirectTo: 'user',
+      redirectTo: 'dashboard',
       pathMatch: 'full',
     },
     {

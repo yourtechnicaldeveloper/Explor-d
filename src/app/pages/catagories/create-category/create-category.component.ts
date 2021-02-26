@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit, ViewEncapsulation  } from '@angular/core';
 import { Router } from '@angular/router';
-import { HttpHeaders } from '@angular/common/http';
+import { HttpEventType, HttpHeaders } from '@angular/common/http';
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { HttpClient } from '@angular/common/http';
 import { Location } from '@angular/common';
@@ -13,6 +13,8 @@ import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dial
   encapsulation: ViewEncapsulation.None
 })
 export class CreateCategoryComponent implements OnInit {
+  percentDone : any;
+  loading : boolean;
   isFormSubmitted = false;
   massage: string;
   msg: string;
@@ -45,31 +47,37 @@ export class CreateCategoryComponent implements OnInit {
     if (this.form.invalid) {
       return;
     }
+    this.loading = true;
     var formData: any = new FormData();
     formData.append("name", this.form.get('name').value);
     formData.append("icon", this.form.get('icon').value);
-    this.http.post('http://18.217.48.28:2000/category/create', formData, { headers: this.getHeader(FormData) }).subscribe(
-      (response) => this.refresh(response),
+    this.http.post('http://13.58.33.101:2000/category/create', formData, {reportProgress: true, observe: 'events', headers: this.getHeader(FormData) }).subscribe(
+      (response) => {
+        if (response.type === HttpEventType.UploadProgress) {
+          this.percentDone = Math.round(100 * response.loaded / response.total);
+          //console.log('Progress ' + this.percentDone + '%');
+      }
+        if(response['body'] != undefined)
+        {
+          this.refresh(response);
+        }
+      },
       (error) => {
-        alert("Something Went Wrong Please Check");
+        alert(error['error']['meta']['msg']);
         console.log(error)
+        this.loading = !this.loading;
       }
     )
   }
   refresh(response){
-    if(response['meta']['status'] == 201){
+    if(response['body']['meta']['status'] == 201){
+      this.loading = !this.loading;
       this.router.navigate(['/pages/categories/category-list']);
       //alert("Category added Successfully");
-      this.makeHttpCall();
+      this.openDialog();
     }
   }
-  makeHttpCall() {
-    this.http.get('https://jsonplaceholder.typicode.com/comments')
-      .subscribe((r) => {
-        console.log(r);
-        this.openDialog();
-      });
-  }
+ 
   openDialog(): void {
     let dialogRef = this.dialog.open(DialogOverviewExampleDialog, {
       direction: "ltr",

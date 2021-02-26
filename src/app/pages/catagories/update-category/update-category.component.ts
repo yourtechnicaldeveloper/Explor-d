@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit, ViewEncapsulation  } from '@angular/core';
 import { Router } from '@angular/router';
-import { HttpHeaders } from '@angular/common/http';
+import { HttpEventType, HttpHeaders } from '@angular/common/http';
 import { RestService } from 'app/core_auth/services/rest.service';
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { HttpClient } from '@angular/common/http';
@@ -16,6 +16,8 @@ import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dial
 })
 
 export class UpdateCategoryComponent implements OnInit {
+  loading : boolean;
+  percentDone: any;
   isNotShowDiv = true
   isShowDiv = false;
   massage: string;
@@ -71,31 +73,33 @@ export class UpdateCategoryComponent implements OnInit {
     });
     this.submitted = true;
     if (this.form.valid) {
-      this.http.post('http://18.217.48.28:2000/category/categoryUpdate/' + id, formData, { headers: this.getHeader(FormData) }).subscribe(
-      (response) => {
-      this.makeHttpCall();
-      this.refresh(response)},
-      (error) => {
-        alert("Something Went Wrong Please Check");
-        console.log(error)
-      }
-    );
+      this.loading = true;
+      this.http.post('http://13.58.33.101:2000/category/categoryUpdate/' + id, formData, {reportProgress: true, observe: 'events', headers: this.getHeader(FormData) }).subscribe(
+        (response) => {
+          if (response.type === HttpEventType.UploadProgress) {
+            this.percentDone = Math.round(100 * response.loaded / response.total);
+            console.log('Progress ' + this.percentDone + '%');
+        }
+          if(response['body'] != undefined)
+          {
+            this.refresh(response);
+          }
+        },
+        (error) => {
+          alert(error['error']['meta']['msg']);
+          this.loading = !this.loading;
+        }
+      );
     }
   }
   refresh(response){
-    if(response['meta']['status'] == 200){
+    if(response['body']['meta']['status'] == 200){
       //alert("Category Updated successfully");
       this.router.navigate(['/pages/categories/category-list']);
-      
+      this.openDialog();
     }
   }
-  makeHttpCall() {
-    this.http.get('https://jsonplaceholder.typicode.com/comments')
-      .subscribe((r) => {
-        console.log(r);
-        this.openDialog();
-      });
-  }
+ 
   openDialog(): void {
     let dialogRef = this.dialog.open(DialogOverviewExampleDialog, {
       direction: "ltr",

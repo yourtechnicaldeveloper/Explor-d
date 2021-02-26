@@ -24,3 +24,24 @@ form {
   }
   .form-control, .form-control::placeholder{height: calc(1.5em + 0.75rem + 8px) !important;font-size: 17px;color: #222b45 !important;font-family: inherit;font-weight: 400;color: #000;
   }
+
+  .loading-spinner{
+    background-color: #0000001f;
+    position: absolute;
+    width: 100%;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    display: grid;
+}
+
+.loading-spinner img{
+    align-self: end;
+    margin: 0 auto;
+  }
+.loading-message{
+    text-align: center;
+    align-self: start;
+}

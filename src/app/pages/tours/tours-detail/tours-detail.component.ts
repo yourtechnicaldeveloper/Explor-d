@@ -95,7 +95,7 @@ export class ToursDetailComponent implements OnInit {
     this.restService.post("/tours/remove_picture" , removeImageReq).subscribe(
       (response) => {this.refresh(response)},
       (error) => {
-        alert ("Something Went Wrong");
+        alert(error['error']['meta']['msg']);
         console.log(error)
       }
       

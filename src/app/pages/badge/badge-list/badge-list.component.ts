@@ -20,7 +20,7 @@ export class BadgeListComponent implements OnInit {
     this.restService.post("/badge/listing").subscribe((data) => {
       this.badges = data.data;
     }, (error) => {
-      console.log(error)
+      alert(error['error']['meta']['msg']);
     });
   }
 }

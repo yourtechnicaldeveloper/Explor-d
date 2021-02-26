@@ -11,26 +11,28 @@
   </nav>
 <div class="panel panel-primary">
      <div class="panel-body">
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>Id</th>
-            <th>Name</th>
-            <th>No Of Tours</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let badge of badges ; let id = index">
-            <td>{{ id + 1}}</td>
-            <td>{{badge.name}}</td>
-            <td>{{badge.noOFtoures}}</td>
-            <td>
-                <button routerLink="/pages/badge/update/{{badge._id}}" class="btn btn-info" style="margin-left: 10px">Update</button>
-                <button routerLink="/pages/badge/details/{{badge._id}}" class="btn btn-info" style="margin-left: 10px">Details</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Id</th>
+              <th>Name</th>
+              <th>No Of Tours</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let badge of badges ; let id = index">
+              <td>{{ id + 1}}</td>
+              <td>{{badge.name}}</td>
+              <td>{{badge.noOFtoures}}</td>
+              <td>
+                  <button routerLink="/pages/badge/update/{{badge._id}}" class="btn btn-info" style="margin-left: 10px">Update</button>
+                  <button routerLink="/pages/badge/details/{{badge._id}}" class="btn btn-info" style="margin-left: 10px">Details</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>

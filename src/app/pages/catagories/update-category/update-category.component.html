@@ -35,6 +35,12 @@
           <button (click)=toggleDisplayDiv() [hidden]="isShowDiv" class="btn btn-info" style="margin-left: 10px;">Update</button>
           <button [hidden]="isNotShowDiv" (click)="submitForm()" class="btn btn-info" style="margin-left: 10px;">Save</button>
       </div>
+      <div class="progress-loader" [hidden]="!loading">
+        <div class="loading-spinner">
+            <img src="assets/images/loader.gif">
+            <span class="loading-message">Progress {{percentDone}} %</span>
+        </div>
+    </div>
   </form>
   </div>
 </div>
